@@ -42,5 +42,6 @@ $router->get('/api/territories', [TerritoryController::class, 'index'], [AuthMid
 
 $router->get('/api/admin/dashboard', [AdminController::class, 'dashboard'], [AuthMiddleware::class]);
 $router->get('/api/admin/audit', [AdminController::class, 'audit'], [AuthMiddleware::class]);
+$router->post('/api/admin/users/{id}/energy/refill', [AdminController::class, 'refillEnergy'], [AuthMiddleware::class]);
 
 $router->get('/api/admin/economy', [EconomyController::class, 'status'], [AuthMiddleware::class]);
