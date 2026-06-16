@@ -1,0 +1,185 @@
+CREATE TABLE IF NOT EXISTS users (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  username VARCHAR(50) NOT NULL UNIQUE,
+  email VARCHAR(150) NOT NULL UNIQUE,
+  password VARCHAR(255) NOT NULL,
+  role ENUM('player','admin') NOT NULL DEFAULT 'player',
+  cash BIGINT UNSIGNED NOT NULL DEFAULT 5000,
+  bank_cash BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  crypto BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  gold BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  energy INT NOT NULL DEFAULT 100,
+  max_energy INT NOT NULL DEFAULT 100,
+  heat INT NOT NULL DEFAULT 0,
+  level INT NOT NULL DEFAULT 1,
+  experience BIGINT NOT NULL DEFAULT 0,
+  strength INT NOT NULL DEFAULT 1,
+  intelligence INT NOT NULL DEFAULT 1,
+  charisma INT NOT NULL DEFAULT 1,
+  combat INT NOT NULL DEFAULT 1,
+  leadership INT NOT NULL DEFAULT 1,
+  prison_until DATETIME NULL,
+  created_at TIMESTAMP NULL,
+  updated_at TIMESTAMP NULL
+);
+CREATE TABLE IF NOT EXISTS api_tokens (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_id BIGINT UNSIGNED NOT NULL,
+  token_hash CHAR(64) NOT NULL UNIQUE,
+  created_at TIMESTAMP NULL,
+  expires_at DATETIME NULL,
+  INDEX(user_id), FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+CREATE TABLE IF NOT EXISTS crimes (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  description TEXT NULL,
+  risk_level INT NOT NULL DEFAULT 1,
+  energy_cost INT NOT NULL,
+  success_rate INT NOT NULL,
+  reward_min BIGINT UNSIGNED NOT NULL,
+  reward_max BIGINT UNSIGNED NOT NULL,
+  heat_gain INT NOT NULL,
+  experience_gain INT NOT NULL,
+  created_at TIMESTAMP NULL,
+  updated_at TIMESTAMP NULL
+);
+CREATE TABLE IF NOT EXISTS crime_logs (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_id BIGINT UNSIGNED NOT NULL,
+  crime_id BIGINT UNSIGNED NOT NULL,
+  success TINYINT(1) NOT NULL,
+  reward BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  heat_gained INT NOT NULL DEFAULT 0,
+  created_at TIMESTAMP NULL,
+  INDEX(user_id), INDEX(crime_id), FOREIGN KEY (user_id) REFERENCES users(id), FOREIGN KEY (crime_id) REFERENCES crimes(id)
+);
+CREATE TABLE IF NOT EXISTS weapons (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  class VARCHAR(50) NOT NULL,
+  damage INT NOT NULL,
+  accuracy INT NOT NULL,
+  reliability INT NOT NULL,
+  concealment INT NOT NULL,
+  maintenance_cost INT NOT NULL DEFAULT 0,
+  price BIGINT UNSIGNED NOT NULL,
+  created_at TIMESTAMP NULL,
+  updated_at TIMESTAMP NULL
+);
+CREATE TABLE IF NOT EXISTS user_weapons (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_id BIGINT UNSIGNED NOT NULL,
+  weapon_id BIGINT UNSIGNED NOT NULL,
+  quantity INT NOT NULL DEFAULT 0,
+  created_at TIMESTAMP NULL,
+  updated_at TIMESTAMP NULL,
+  UNIQUE KEY unique_user_weapon(user_id, weapon_id), FOREIGN KEY (user_id) REFERENCES users(id), FOREIGN KEY (weapon_id) REFERENCES weapons(id)
+);
+CREATE TABLE IF NOT EXISTS drugs (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  base_price BIGINT UNSIGNED NOT NULL,
+  risk_factor INT NOT NULL,
+  quality_modifier DECIMAL(5,2) NOT NULL DEFAULT 1.00
+);
+CREATE TABLE IF NOT EXISTS drug_prices (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  drug_id BIGINT UNSIGNED NOT NULL,
+  region VARCHAR(80) NOT NULL,
+  price BIGINT UNSIGNED NOT NULL,
+  supply INT NOT NULL DEFAULT 100,
+  demand INT NOT NULL DEFAULT 100,
+  police_pressure INT NOT NULL DEFAULT 0,
+  updated_at TIMESTAMP NULL,
+  UNIQUE KEY unique_drug_region(drug_id, region), FOREIGN KEY (drug_id) REFERENCES drugs(id)
+);
+CREATE TABLE IF NOT EXISTS user_drugs (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_id BIGINT UNSIGNED NOT NULL,
+  drug_id BIGINT UNSIGNED NOT NULL,
+  quantity BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  UNIQUE KEY unique_user_drug(user_id, drug_id), FOREIGN KEY (user_id) REFERENCES users(id), FOREIGN KEY (drug_id) REFERENCES drugs(id)
+);
+CREATE TABLE IF NOT EXISTS businesses (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  owner_id BIGINT UNSIGNED NOT NULL,
+  territory_id BIGINT UNSIGNED NULL,
+  name VARCHAR(100) NOT NULL,
+  type ENUM('restaurant','club','casino','warehouse','drug_lab','arms_factory','smuggling_hub','laundromat') NOT NULL,
+  legal TINYINT(1) NOT NULL DEFAULT 1,
+  level INT NOT NULL DEFAULT 1,
+  hourly_income BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  heat_hourly INT NOT NULL DEFAULT 0,
+  created_at TIMESTAMP NULL,
+  updated_at TIMESTAMP NULL,
+  INDEX(owner_id), FOREIGN KEY (owner_id) REFERENCES users(id)
+);
+CREATE TABLE IF NOT EXISTS gangs (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(100) NOT NULL UNIQUE,
+  boss_user_id BIGINT UNSIGNED NOT NULL,
+  treasury BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  reputation BIGINT NOT NULL DEFAULT 0,
+  created_at TIMESTAMP NULL,
+  updated_at TIMESTAMP NULL,
+  FOREIGN KEY (boss_user_id) REFERENCES users(id)
+);
+CREATE TABLE IF NOT EXISTS gang_members (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  gang_id BIGINT UNSIGNED NOT NULL,
+  user_id BIGINT UNSIGNED NOT NULL,
+  `rank` ENUM('boss','underboss','captain','member') NOT NULL DEFAULT 'member',
+  joined_at DATETIME NOT NULL,
+  UNIQUE KEY unique_gang_user(gang_id, user_id), FOREIGN KEY (gang_id) REFERENCES gangs(id), FOREIGN KEY (user_id) REFERENCES users(id)
+);
+CREATE TABLE IF NOT EXISTS territories (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  population BIGINT UNSIGNED NOT NULL,
+  wealth INT NOT NULL,
+  crime_rate INT NOT NULL,
+  government_presence INT NOT NULL,
+  owner_gang_id BIGINT UNSIGNED NULL,
+  tax_income BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  created_at TIMESTAMP NULL,
+  updated_at TIMESTAMP NULL,
+  FOREIGN KEY (owner_gang_id) REFERENCES gangs(id) ON DELETE SET NULL
+);
+CREATE TABLE IF NOT EXISTS officials (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  department ENUM('police','anti_drug','customs','intelligence','courts','politics') NOT NULL,
+  loyalty INT NOT NULL DEFAULT 0,
+  price BIGINT UNSIGNED NOT NULL DEFAULT 10000,
+  exposure_risk INT NOT NULL DEFAULT 10
+);
+CREATE TABLE IF NOT EXISTS corruption_links (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_id BIGINT UNSIGNED NOT NULL,
+  official_id BIGINT UNSIGNED NOT NULL,
+  influence INT NOT NULL DEFAULT 0,
+  exposed TINYINT(1) NOT NULL DEFAULT 0,
+  created_at TIMESTAMP NULL,
+  UNIQUE KEY unique_user_official(user_id, official_id), FOREIGN KEY (user_id) REFERENCES users(id), FOREIGN KEY (official_id) REFERENCES officials(id)
+);
+CREATE TABLE IF NOT EXISTS market_listings (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  seller_id BIGINT UNSIGNED NOT NULL,
+  item_type VARCHAR(50) NOT NULL,
+  item_id BIGINT UNSIGNED NOT NULL,
+  quantity BIGINT UNSIGNED NOT NULL,
+  price BIGINT UNSIGNED NOT NULL,
+  status ENUM('active','sold','cancelled') NOT NULL DEFAULT 'active',
+  created_at TIMESTAMP NULL,
+  updated_at TIMESTAMP NULL,
+  FOREIGN KEY (seller_id) REFERENCES users(id)
+);
+CREATE TABLE IF NOT EXISTS audit_logs (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_id BIGINT UNSIGNED NULL,
+  action VARCHAR(120) NOT NULL,
+  payload JSON NULL,
+  created_at TIMESTAMP NULL,
+  INDEX(user_id), INDEX(action)
+);

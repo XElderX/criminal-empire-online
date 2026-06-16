@@ -1,0 +1,50 @@
+services:
+  backend:
+    build:
+      context: ./docker/php
+    container_name: criminal_backend
+    working_dir: /var/www/backend
+    volumes:
+      - ./backend:/var/www/backend
+    env_file:
+      - ./backend/.env
+    depends_on:
+      - mysql
+      - redis
+    ports:
+      - "8085:8085"
+    command: php -S 0.0.0.0:8085 -t public public/index.php
+
+  frontend:
+    image: node:22-alpine
+    container_name: criminal_frontend
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+    ports:
+      - "5199:5173"
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    depends_on:
+      - backend
+
+  mysql:
+    image: mysql:8.4
+    container_name: criminal_mysql
+    environment:
+      MYSQL_DATABASE: criminal_empire
+      MYSQL_USER: criminal
+      MYSQL_PASSWORD: criminal
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  redis:
+    image: redis:7-alpine
+    container_name: criminal_redis
+    ports:
+      - "6380:6379"
+
+volumes:
+  mysql_data:
