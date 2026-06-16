@@ -1,6 +1,7 @@
 <?php
 namespace App\Controllers;
 use App\Core\Database;
+use App\Core\Request;
 use App\Core\Response;
 use App\Middleware\AdminMiddleware;
 use App\Services\AuditService;
@@ -56,6 +57,47 @@ final class AdminController
                 'message' => 'Energy refilled',
                 'user_id' => $targetUserId,
                 'energy' => (int)$target['max_energy'],
+            ]);
+        } catch (Throwable $e) {
+            Response::json(['message' => $e->getMessage()], 422);
+        }
+    }
+
+    public function setCash(array $params, array $context): void
+    {
+        try {
+            AdminMiddleware::ensure($context['user']);
+            $targetUserId = isset($params['id']) ? (int)$params['id'] : 0;
+            $payload = Request::json();
+            $amount = isset($payload['amount']) ? (int)$payload['amount'] : null;
+            if ($targetUserId <= 0) {
+                throw new RuntimeException('Valid user id is required');
+            }
+            if ($amount === null || $amount < 0) {
+                throw new RuntimeException('Valid cash amount is required');
+            }
+
+            $pdo = Database::pdo();
+            $stmt = $pdo->prepare('SELECT id, username, cash FROM users WHERE id = ? LIMIT 1');
+            $stmt->execute([$targetUserId]);
+            $target = $stmt->fetch();
+            if (!$target) {
+                throw new RuntimeException('User not found');
+            }
+
+            $pdo->prepare('UPDATE users SET cash = ?, updated_at = NOW() WHERE id = ?')
+                ->execute([$amount, $targetUserId]);
+            AuditService::log((int)$context['user']['id'], 'admin.cash_set', [
+                'target_user_id' => $targetUserId,
+                'target_username' => $target['username'],
+                'previous_cash' => (int)$target['cash'],
+                'new_cash' => $amount,
+            ]);
+
+            Response::json([
+                'message' => 'Cash updated',
+                'user_id' => $targetUserId,
+                'cash' => $amount,
             ]);
         } catch (Throwable $e) {
             Response::json(['message' => $e->getMessage()], 422);
