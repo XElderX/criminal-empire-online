@@ -41,3 +41,9 @@ Default admin:
 email: admin@criminal.test
 password: password
 ```
+
+## Native installation without Docker
+
+See [`docs/INSTALL_NATIVE_MYSQL.md`](docs/INSTALL_NATIVE_MYSQL.md).
+
+The current game direction is a single-player criminal empire simulation. New players begin with $500 and advance through NPC-provided jobs and recruitable NPC gang members.
