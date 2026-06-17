@@ -1,0 +1,4 @@
+<?php
+namespace App\Controllers;
+use App\Core\Request;use App\Core\Response;use App\Services\JobService;use Throwable;
+final class JobController{public function index(array $p,array $c):void{Response::json(['data'=>(new JobService())->listForUser($c['user'])]);}public function active(array $p,array $c):void{Response::json(['data'=>(new JobService())->active($c['user'])]);}public function start(array $p,array $c):void{try{$d=Request::json();Response::json((new JobService())->start($c['user'],(int)$p['id'],$d['member_ids']??[],(string)($d['idempotency_key']??'')),201);}catch(Throwable $e){Response::json(['message'=>$e->getMessage()],422);}}public function complete(array $p,array $c):void{try{Response::json((new JobService())->complete($c['user'],(int)$p['id']));}catch(Throwable $e){Response::json(['message'=>$e->getMessage()],422);}}}
