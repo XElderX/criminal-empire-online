@@ -11,6 +11,8 @@ final class JobService
 {
     public function listForUser(array $user): array
     {
+        $this->restoreLegalStarterJobsIfNeeded();
+
         $statement = Database::pdo()->prepare(
             <<<'SQL'
                 SELECT
@@ -54,6 +56,58 @@ final class JobService
         }
 
         return $jobs;
+    }
+
+    private function restoreLegalStarterJobsIfNeeded(): void
+    {
+        $pdo = Database::pdo();
+
+        $activeLegalRuns = (int) $pdo->query(
+            <<<'SQL'
+                SELECT COUNT(*)
+                FROM job_runs run
+                JOIN job_opportunities opportunity
+                    ON opportunity.id = run.opportunity_id
+                JOIN jobs job
+                    ON job.id = opportunity.job_id
+                WHERE run.status = 'active'
+                  AND job.category = 'legal'
+            SQL
+        )->fetchColumn();
+
+        if ($activeLegalRuns > 0) {
+            return;
+        }
+
+        $availableLegalJobs = (int) $pdo->query(
+            <<<'SQL'
+                SELECT COUNT(*)
+                FROM job_opportunities opportunity
+                JOIN jobs job
+                    ON job.id = opportunity.job_id
+                WHERE opportunity.status = 'available'
+                  AND opportunity.available_from <= NOW()
+                  AND (opportunity.expires_at IS NULL OR opportunity.expires_at > NOW())
+                  AND job.category = 'legal'
+            SQL
+        )->fetchColumn();
+
+        if ($availableLegalJobs > 0) {
+            return;
+        }
+
+        $pdo->exec(
+            <<<'SQL'
+                UPDATE job_opportunities opportunity
+                JOIN jobs job ON job.id = opportunity.job_id
+                SET
+                    opportunity.status = 'available',
+                    opportunity.available_from = NOW(),
+                    opportunity.expires_at = DATE_ADD(NOW(), INTERVAL 90 DAY)
+                WHERE job.category = 'legal'
+                  AND job.active = 1
+            SQL
+        );
     }
 
     public function active(array $user): array

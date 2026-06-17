@@ -155,6 +155,7 @@ export interface InventoryResponse {
 export interface StarterJob {
   opportunity_id: number;
   job_id: number;
+  category: 'legal' | 'criminal';
   title: string;
   description: string;
   territory_name: string;

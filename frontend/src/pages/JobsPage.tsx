@@ -1,7 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api } from '../api/client';
 import { Notice } from '../components/Notice';
-import type { CrewMember, StarterJob, StarterJobRun } from '../types';
+import type {
+  CrewMember,
+  StarterJob,
+  StarterJobRun,
+  TutorialState,
+} from '../types';
 
 interface JobsPageProps {
   onChanged: () => void;
@@ -11,6 +16,7 @@ export function JobsPage({ onChanged }: JobsPageProps) {
   const [jobs, setJobs] = useState<StarterJob[]>([]);
   const [activeRuns, setActiveRuns] = useState<StarterJobRun[]>([]);
   const [crew, setCrew] = useState<CrewMember[]>([]);
+  const [tutorial, setTutorial] = useState<TutorialState | null>(null);
   const [selectedMembers, setSelectedMembers] = useState<number[]>([]);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -19,15 +25,17 @@ export function JobsPage({ onChanged }: JobsPageProps) {
 
   async function load(): Promise<void> {
     try {
-      const [jobResponse, runResponse, crewResponse] = await Promise.all([
+      const [jobResponse, runResponse, crewResponse, tutorialResponse] = await Promise.all([
         api<{ data: StarterJob[] }>('/jobs'),
         api<{ data: StarterJobRun[] }>('/jobs/active'),
         api<{ data: CrewMember[] }>('/my-gang'),
+        api<{ tutorial: TutorialState }>('/tutorial'),
       ]);
 
       setJobs(jobResponse.data);
       setActiveRuns(runResponse.data);
       setCrew(crewResponse.data);
+      setTutorial(tutorialResponse.tutorial);
     } catch (requestError) {
       setError((requestError as Error).message);
     }
@@ -45,6 +53,16 @@ export function JobsPage({ onChanged }: JobsPageProps) {
   const availableCrew = useMemo(
     () => crew.filter((member) => member.status === 'active'),
     [crew],
+  );
+
+  const legalJobs = useMemo(
+    () => jobs.filter((job) => job.category === 'legal'),
+    [jobs],
+  );
+
+  const criminalJobs = useMemo(
+    () => jobs.filter((job) => job.category === 'criminal'),
+    [jobs],
   );
 
   function toggleMember(memberId: number): void {
@@ -126,6 +144,14 @@ export function JobsPage({ onChanged }: JobsPageProps) {
         </div>
       </header>
 
+      {tutorial?.status === 'active' && tutorial.current_step && (
+        <section className="card section-card">
+          <p className="eyebrow">Current objective</p>
+          <h2>{tutorial.current_step.title}</h2>
+          <p>{tutorial.current_step.objective}</p>
+        </section>
+      )}
+
       {message && <Notice message={message} kind="success" />}
       {error && <Notice message={error} kind="error" />}
 
@@ -187,6 +213,62 @@ export function JobsPage({ onChanged }: JobsPageProps) {
         </section>
       )}
 
+      <JobGroup
+        title="Legal starter jobs"
+        jobs={legalJobs}
+        loading={loading}
+        onStartJob={startJob}
+      />
+
+      <JobGroup
+        title="Other starter jobs"
+        jobs={criminalJobs}
+        loading={loading}
+        onStartJob={startJob}
+      />
+
+      {jobs.length === 0 && (
+        <div className="card empty-state">
+          No starter jobs are available right now. Process the world or check
+          again after existing jobs finish.
+        </div>
+      )}
+    </section>
+  );
+}
+
+function displayName(member: CrewMember): string {
+  const nickname = member.nickname ? ` “${member.nickname}”` : '';
+  return `${member.first_name}${nickname} ${member.last_name}`;
+}
+
+function jobGiver(job: StarterJob): string {
+  if (job.giver_nickname) {
+    return job.giver_nickname;
+  }
+
+  const fullName = `${job.giver_first_name || ''} ${job.giver_last_name || ''}`.trim();
+  return fullName || 'a local contact';
+}
+
+function JobGroup({
+  title,
+  jobs,
+  loading,
+  onStartJob,
+}: {
+  title: string;
+  jobs: StarterJob[];
+  loading: boolean;
+  onStartJob: (opportunityId: number) => Promise<void>;
+}) {
+  if (jobs.length === 0) {
+    return null;
+  }
+
+  return (
+    <section className="section-card">
+      <h2>{title}</h2>
       <div className="card-grid">
         {jobs.map((job) => (
           <article className="card" key={job.opportunity_id}>
@@ -214,7 +296,9 @@ export function JobsPage({ onChanged }: JobsPageProps) {
               </div>
               <div>
                 <dt>Expected heat</dt>
-                <dd>{job.heat_min}–{job.heat_max}</dd>
+                <dd>
+                  {job.heat_min}–{job.heat_max}
+                </dd>
               </div>
             </dl>
 
@@ -227,34 +311,13 @@ export function JobsPage({ onChanged }: JobsPageProps) {
             <button
               className="btn primary full-width"
               disabled={loading || !job.can_start}
-              onClick={() => startJob(job.opportunity_id)}
+              onClick={() => onStartJob(job.opportunity_id)}
             >
               Start job
             </button>
           </article>
         ))}
       </div>
-
-      {jobs.length === 0 && (
-        <div className="card empty-state">
-          No starter jobs are available right now. Process the world or check
-          again after existing jobs finish.
-        </div>
-      )}
     </section>
   );
-}
-
-function displayName(member: CrewMember): string {
-  const nickname = member.nickname ? ` “${member.nickname}”` : '';
-  return `${member.first_name}${nickname} ${member.last_name}`;
-}
-
-function jobGiver(job: StarterJob): string {
-  if (job.giver_nickname) {
-    return job.giver_nickname;
-  }
-
-  const fullName = `${job.giver_first_name || ''} ${job.giver_last_name || ''}`.trim();
-  return fullName || 'a local contact';
 }
