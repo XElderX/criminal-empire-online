@@ -38,11 +38,23 @@ export function WarehousePage({ onChanged }: WarehousePageProps) {
         api<InventoryResponse>('/inventory'),
       ]);
 
-      setOverview(warehouseResponse);
-      setInventory(inventoryResponse);
+      const normalizedOverview = normalizeOverview(warehouseResponse);
+      const normalizedInventory = normalizeInventory(inventoryResponse);
 
-      if (!selectedWarehouseId && warehouseResponse.warehouses.length > 0) {
-        setSelectedWarehouseId(warehouseResponse.warehouses[0].id);
+      setOverview(normalizedOverview);
+      setInventory(normalizedInventory);
+
+      const warehouseExists = normalizedOverview.warehouses.some(
+        (warehouse) => warehouse.id === selectedWarehouseId,
+      );
+
+      if (
+        normalizedOverview.warehouses.length > 0
+        && (!selectedWarehouseId || !warehouseExists)
+      ) {
+        setSelectedWarehouseId(normalizedOverview.warehouses[0].id);
+      } else if (normalizedOverview.warehouses.length === 0) {
+        setSelectedWarehouseId(null);
       }
     } catch (requestError) {
       setError((requestError as Error).message);
@@ -527,8 +539,45 @@ function StoredAssetRow({
 }
 
 function humanize(value: string): string {
+  if (typeof value !== 'string' || value.trim() === '') {
+    return 'Unknown';
+  }
+
   return value
     .split('_')
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(' ');
+}
+
+function normalizeOverview(overview: WarehouseOverview): WarehouseOverview {
+  return {
+    warehouses: Array.isArray(overview.warehouses)
+      ? overview.warehouses.map(normalizeWarehouse)
+      : [],
+    listings: Array.isArray(overview.listings) ? overview.listings : [],
+    upgrade_catalog: Array.isArray(overview.upgrade_catalog)
+      ? overview.upgrade_catalog.map((upgrade) => ({
+          ...upgrade,
+          effects: upgrade.effects || {},
+        }))
+      : [],
+  };
+}
+
+function normalizeInventory(inventory: InventoryResponse): InventoryResponse {
+  return {
+    items: Array.isArray(inventory.items) ? inventory.items : [],
+    weapons: Array.isArray(inventory.weapons) ? inventory.weapons : [],
+    drugs: Array.isArray(inventory.drugs) ? inventory.drugs : [],
+  };
+}
+
+function normalizeWarehouse(warehouse: Warehouse): Warehouse {
+  return {
+    ...warehouse,
+    storage: Array.isArray(warehouse.storage) ? warehouse.storage : [],
+    vehicles: Array.isArray(warehouse.vehicles) ? warehouse.vehicles : [],
+    upgrades: Array.isArray(warehouse.upgrades) ? warehouse.upgrades : [],
+    recent_logs: Array.isArray(warehouse.recent_logs) ? warehouse.recent_logs : [],
+  };
 }
