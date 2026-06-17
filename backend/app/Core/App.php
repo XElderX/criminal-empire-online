@@ -58,7 +58,12 @@ final class App
             }
 
             [$key, $value] = explode('=', $trimmedLine, 2);
-            self::$env[trim($key)] = trim($value);
+            $key = trim($key);
+            $value = trim($value);
+
+            self::$env[$key] = $value;
+            $_ENV[$key] = $value;
+            putenv("{$key}={$value}");
         }
     }
 
