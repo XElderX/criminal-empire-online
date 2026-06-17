@@ -244,7 +244,7 @@ final class JobService
                 throw new RuntimeException('Job has already been resolved.');
             }
 
-            if (strtotime($run['completes_at']) > time()) {
+            if ((int) ($run['seconds_remaining'] ?? 0) > 0) {
                 throw new RuntimeException('Job is not complete yet.');
             }
 
@@ -515,6 +515,7 @@ final class JobService
             <<<'SQL'
                 SELECT
                     run.*,
+                    TIMESTAMPDIFF(SECOND, NOW(), run.completes_at) AS seconds_remaining,
                     opportunity.job_id,
                     opportunity.territory_id,
                     opportunity.giver_npc_id,
