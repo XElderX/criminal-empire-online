@@ -115,6 +115,11 @@ final class DirtyJobService
 
     public function detail(array $user, int $opportunityId): array
     {
+        $crewCount = $this->availableCrewCount((int) $user['id']);
+        $hasWarehouse = (new WarehouseService())->firstWarehouseForUser(
+            (int) $user['id']
+        ) !== null;
+
         $opportunity = $this->loadOpportunity(
             (int) $user['id'],
             $opportunityId
@@ -137,7 +142,18 @@ final class DirtyJobService
         $run = $runStatement->fetch();
 
         return [
-            'opportunity' => $this->formatOpportunity($opportunity),
+            'opportunity' => $this->formatOpportunity($opportunity) + [
+                'can_accept' => (int) $user['level'] >= (int) $opportunity['min_level']
+                    && (int) $user['reputation'] >= (int) $opportunity['min_reputation']
+                    && $crewCount >= (int) $opportunity['min_crew_size']
+                    && (!(bool) $opportunity['requires_warehouse'] || $hasWarehouse),
+                'requirement_messages' => $this->requirementMessages(
+                    $user,
+                    $opportunity,
+                    $crewCount,
+                    $hasWarehouse
+                ),
+            ],
             'run' => $run ? $this->hydrateRun($run) : null,
             'crew_roles' => GameConfig::crewRoleDefinitions(),
         ];
@@ -661,7 +677,7 @@ final class DirtyJobService
                 throw new RuntimeException('This Dirty Job has already been resolved or is not executing.');
             }
 
-            if ($run['completes_at'] === null || strtotime($run['completes_at']) > time()) {
+            if ((int) ($run['seconds_remaining'] ?? 0) > 0) {
                 throw new RuntimeException('Dirty Job execution is not complete yet.');
             }
 
@@ -1823,6 +1839,7 @@ final class DirtyJobService
             <<<'SQL'
                 SELECT
                     run.*,
+                    TIMESTAMPDIFF(SECOND, NOW(), run.completes_at) AS seconds_remaining,
                     opportunity.template_id,
                     opportunity.contact_id,
                     opportunity.territory_id,

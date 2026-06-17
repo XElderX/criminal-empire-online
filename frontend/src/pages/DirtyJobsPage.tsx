@@ -238,14 +238,16 @@ export function DirtyJobsPage({ onChanged }: DirtyJobsPageProps) {
 
   const event = (detail?.run?.event || {}) as EventPayload;
   const eventChoices = event.options || event.choices || [];
-  const secondsRemaining = detail?.run?.completes_at
-    ? Math.max(
-        0,
-        Math.ceil(
-          (new Date(detail.run.completes_at).getTime() - clock) / 1_000,
-        ),
-      )
-    : 0;
+  const secondsRemaining =
+    detail?.run?.seconds_remaining ??
+    (detail?.run?.completes_at
+      ? Math.max(
+          0,
+          Math.ceil(
+            (new Date(detail.run.completes_at).getTime() - clock) / 1_000,
+          ),
+        )
+      : 0);
 
   return (
     <section className="page-section dirty-jobs-layout">
