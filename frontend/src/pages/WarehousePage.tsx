@@ -15,6 +15,8 @@ interface WarehousePageProps {
   onChanged: () => void;
 }
 
+const SELECTED_WAREHOUSE_STORAGE_KEY = 'criminal-empire-online-selected-warehouse';
+
 export function WarehousePage({ onChanged }: WarehousePageProps) {
   const [overview, setOverview] = useState<WarehouseOverview>({
     warehouses: [],
@@ -26,7 +28,9 @@ export function WarehousePage({ onChanged }: WarehousePageProps) {
     weapons: [],
     drugs: [],
   });
-  const [selectedWarehouseId, setSelectedWarehouseId] = useState<number | null>(null);
+  const [selectedWarehouseId, setSelectedWarehouseId] = useState<number | null>(() =>
+    loadSavedWarehouseId(),
+  );
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -52,9 +56,15 @@ export function WarehousePage({ onChanged }: WarehousePageProps) {
         normalizedOverview.warehouses.length > 0
         && (!selectedWarehouseId || !warehouseExists)
       ) {
-        setSelectedWarehouseId(normalizedOverview.warehouses[0].id);
+        const nextWarehouseId = normalizedOverview.warehouses[0].id;
+        setSelectedWarehouseId(nextWarehouseId);
+        localStorage.setItem(
+          SELECTED_WAREHOUSE_STORAGE_KEY,
+          String(nextWarehouseId),
+        );
       } else if (normalizedOverview.warehouses.length === 0) {
         setSelectedWarehouseId(null);
+        localStorage.removeItem(SELECTED_WAREHOUSE_STORAGE_KEY);
       }
     } catch (requestError) {
       setError((requestError as Error).message);
@@ -206,7 +216,14 @@ export function WarehousePage({ onChanged }: WarehousePageProps) {
               </div>
               <select
                 value={selectedWarehouseId || ''}
-                onChange={(event) => setSelectedWarehouseId(Number(event.target.value))}
+                onChange={(event) => {
+                  const nextWarehouseId = Number(event.target.value);
+                  setSelectedWarehouseId(nextWarehouseId);
+                  localStorage.setItem(
+                    SELECTED_WAREHOUSE_STORAGE_KEY,
+                    String(nextWarehouseId),
+                  );
+                }}
               >
                 {overview.warehouses.map((warehouse) => (
                   <option value={warehouse.id} key={warehouse.id}>
@@ -580,4 +597,20 @@ function normalizeWarehouse(warehouse: Warehouse): Warehouse {
     upgrades: Array.isArray(warehouse.upgrades) ? warehouse.upgrades : [],
     recent_logs: Array.isArray(warehouse.recent_logs) ? warehouse.recent_logs : [],
   };
+}
+
+function loadSavedWarehouseId(): number | null {
+  const savedValue = localStorage.getItem(SELECTED_WAREHOUSE_STORAGE_KEY);
+
+  if (!savedValue) {
+    return null;
+  }
+
+  const parsedValue = Number(savedValue);
+
+  if (!Number.isFinite(parsedValue) || parsedValue <= 0) {
+    return null;
+  }
+
+  return parsedValue;
 }

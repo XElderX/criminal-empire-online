@@ -17,16 +17,28 @@ import { TerritoriesPage } from './pages/TerritoriesPage';
 import { WarehousePage } from './pages/WarehousePage';
 import type { PageName, TutorialState, User } from './types';
 
+const ACTIVE_PAGE_STORAGE_KEY = 'criminal-empire-online-active-page';
+
 export function App() {
   const [user, setUser] = useState<User | null>(null);
-  const [page, setPage] = useState<PageName>('dashboard');
+  const [page, setPage] = useState<PageName>(() => loadSavedPage());
   const [tutorialOpen, setTutorialOpen] = useState(false);
   const [tutorialRefreshKey, setTutorialRefreshKey] = useState(0);
   const [booting, setBooting] = useState(true);
 
   useEffect(() => {
+    localStorage.setItem(ACTIVE_PAGE_STORAGE_KEY, page);
+  }, [page]);
+
+  useEffect(() => {
     void restoreSession();
   }, []);
+
+  useEffect(() => {
+    if (user?.role !== 'admin' && page === 'admin') {
+      setPage('dashboard');
+    }
+  }, [page, user?.role]);
 
   async function restoreSession(): Promise<void> {
     if (!getToken()) {
@@ -71,6 +83,7 @@ export function App() {
   function authenticated(authenticatedUser: User): void {
     setUser(authenticatedUser);
     setPage('dashboard');
+    localStorage.setItem(ACTIVE_PAGE_STORAGE_KEY, 'dashboard');
     setTutorialRefreshKey((current) => current + 1);
     void openTutorialForNewPlayer();
   }
@@ -79,6 +92,7 @@ export function App() {
     clearToken();
     setUser(null);
     setPage('dashboard');
+    localStorage.setItem(ACTIVE_PAGE_STORAGE_KEY, 'dashboard');
     setTutorialOpen(false);
   }
 
@@ -131,6 +145,28 @@ export function App() {
       />
     </div>
   );
+}
+
+function loadSavedPage(): PageName {
+  const savedPage = localStorage.getItem(ACTIVE_PAGE_STORAGE_KEY);
+
+  if (
+    savedPage === 'dashboard'
+    || savedPage === 'jobs'
+    || savedPage === 'dirty jobs'
+    || savedPage === 'recruitment'
+    || savedPage === 'crew'
+    || savedPage === 'equipment'
+    || savedPage === 'warehouse'
+    || savedPage === 'crimes'
+    || savedPage === 'market'
+    || savedPage === 'territories'
+    || savedPage === 'admin'
+  ) {
+    return savedPage;
+  }
+
+  return 'dashboard';
 }
 
 function PageContent({
