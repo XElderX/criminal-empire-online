@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Criminal Empire Online
+Comment=Start backend and frontend development servers
+Exec=/var/www/criminal-empire-online/start-dev.sh
+Icon=utilities-terminal
+Terminal=false
+Categories=Development;Utility;

@@ -1,46 +1,40 @@
 # Roadmap
 
-## v0.1 Included
+## v0.3 — Dirty Jobs Expansion
 
-- Auth
-- Crimes
-- Energy/heat/cash/XP
-- Weapons
-- Inventory
-- Drug market read model
-- Gangs
-- Territories
-- Admin stats and audit logs
-- Native local setup
+Implemented:
 
-## v0.2 Suggested Next Patch
+- Guided tutorial
+- Structured Dirty Jobs
+- Crew roles, equipment, injuries, arrests, dismissal, and history
+- Purchasable warehouse and coherent storage
+- NPC contacts and expiring opportunities
+- Abstract warehouse production operation
+- Expanded world processing and developer tools
 
-- Buy/sell drugs
-- Business purchasing
-- Hourly business income command
-- Energy regeneration command
-- Heat decay command
-- Marketplace listings
+## Recommended v0.4 — Living City Economy
 
-## v0.3
+Focus the next release on the city simulation rather than adding unrelated feature breadth:
 
-- Gang invitations
-- Gang warehouse
-- Gang treasury deposits/withdrawals
-- Territory attacks
-- Territory defense upgrades
+- Aggregated district civilian population and household spending
+- NPC-owned businesses with stock, workers, wages, revenue, expenses, and insolvency
+- Player-owned starter businesses serving NPC customers
+- Suppliers and NPC fences for physical Dirty Job loot
+- Daily district demand and bounded market-price history
+- Rival NPC gang treasuries, recruitment, businesses, and low-level reactions
+- Police investigations connected to evidence, contacts, vehicles, and warehouses
+- Warehouse raid defense and insurance/recovery choices
+- Contact trust progression and generated story chains
+- Additional vehicle ownership, repair, stripping, identification, and sale systems
+- Admin economy charts and simulation diagnostics
 
-## v0.4
+## Later releases
 
-- Government AI scheduler
-- Police crackdowns
-- Corruption actions
-- Prison/arrest logic
+- Safehouses, garages, workshops, bars, nightclubs, docks, offices, and other building types
+- Territory influence and rival-gang diplomacy
+- Smuggling and organized robbery chains
+- Corrupt officials, lawyers, bribes, and legal cases
+- Crew relationships, promotions, conflicts, addictions, and personal events
+- Politics and elections after the single-player city simulation is stable
 
-## v1.0
-
-- Full economy simulation
-- PvP combat
-- Heists
-- Politics/elections
-- Large-scale balancing
+Multiplayer can be considered later, but no core single-player progression should depend on another human player.
