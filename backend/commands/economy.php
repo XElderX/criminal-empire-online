@@ -1,2 +1,13 @@
 <?php
-require_once __DIR__ . '/../app/Core/Autoload.php';use App\Core\App;use App\Core\Database;App::boot(dirname(__DIR__));$p=Database::pdo();echo json_encode(['player_money'=>(int)$p->query('SELECT COALESCE(SUM(cash+bank_cash+dirty_money),0) FROM users')->fetchColumn(),'npc_money'=>(int)$p->query('SELECT COALESCE(SUM(personal_cash+bank_cash),0) FROM npcs')->fetchColumn(),'job_rewards'=>(int)$p->query("SELECT COALESCE(SUM(amount),0) FROM economy_transactions WHERE category='job_reward'")->fetchColumn(),'salary_payments'=>(int)$p->query("SELECT COALESCE(SUM(amount),0) FROM economy_transactions WHERE category='salary_payment'")->fetchColumn(),'recruitment_fees'=>(int)$p->query("SELECT COALESCE(SUM(amount),0) FROM economy_transactions WHERE category='recruitment_fee'")->fetchColumn()],JSON_PRETTY_PRINT).PHP_EOL;
+
+require_once __DIR__ . '/../app/Core/Autoload.php';
+
+use App\Core\App;
+use App\Services\EconomyStatusService;
+
+App::boot(dirname(__DIR__));
+
+$report = (new EconomyStatusService())->report();
+
+echo json_encode($report, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+echo PHP_EOL;

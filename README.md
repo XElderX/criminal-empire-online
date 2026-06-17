@@ -1,49 +1,108 @@
-# Criminal Empire Online v0.1
+# Criminal Empire Online v0.3 — Dirty Jobs Expansion
 
-Browser-based multiplayer crime strategy MVP inspired by classic Mafia Wars/Mob Wars.
+Criminal Empire Online is a browser-based, primarily single-player criminal empire simulation. The player begins with $500, performs small NPC-provided jobs, recruits a crew, equips members, plans structured Dirty Jobs, manages heat and consequences, and works toward owning a warehouse.
 
-This first version includes:
+## Technology
 
-- PHP 8 REST API backend
-- MySQL/MariaDB database
-- React + Vite frontend
-- Native local setup
-- Secure registration/login with token auth
-- Crimes, energy, heat, XP and cash
-- Weapons and inventory
-- Drug market with regional prices
-- Businesses with hourly income
-- Gangs and gang membership
-- Territories and simple territory attacks
-- Corruption/bribery system
-- Basic government AI tick
-- Admin panel API endpoints
-- Installation guide
+- PHP 8.2+ custom REST API
+- PDO with MySQL 8 or MariaDB
+- React, TypeScript, and Vite
+- Bearer-token authentication
+- Raw SQL migrations and seeders
 
-See `docs/INSTALL.md`.
+This project is **not Laravel**. Business logic is organized into readable controllers and services under `backend/app`.
 
-## Quick start
+## v0.3 highlights
+
+- Persistent 10-step new-player tutorial
+- NPC-generated Dirty Job opportunities
+- Preparation, crew roles, execution, decisions, and five outcome levels
+- Crew equipment, structured item effects, slots, durability, damage, and loss
+- Crew injuries, arrests, recovery, dismissal, and permanent history
+- Purchasable warehouses with item, weapon, drug, and vehicle storage
+- Warehouse capacity, security, operating costs, upgrades, and transfer logs
+- Abstract, fictional marijuana production operation integrated with warehouse storage
+- Heat reduction and expanded world-processing commands
+- New players still begin with exactly $500; existing balances are never reset
+
+## Native quick start
 
 ```bash
 cp backend/.env.example backend/.env
-php backend/database/migrate.php
-php -S 127.0.0.1:8085 -t backend/public backend/public/index.php
+nano backend/.env
+
+cd backend
+php database/migrate.php
+php -S 127.0.0.1:8085 -t public public/index.php
 ```
 
-Then open:
+In a second terminal:
 
-- Frontend: http://localhost:5173
-- Backend API: http://localhost:8085/api
+```bash
+cd frontend
+npm install
+npm run dev -- --host 127.0.0.1
+```
 
-Default admin:
+Open `http://127.0.0.1:5173`.
+
+For the complete Ubuntu and MySQL setup, see [`docs/INSTALL_NATIVE_MYSQL.md`](docs/INSTALL_NATIVE_MYSQL.md).
+
+## Default development administrator
 
 ```text
-email: admin@criminal.test
-password: password
+Email: admin@criminal.test
+Password: password
 ```
 
-## Native installation without Docker
+Create a separate normal account to test the intended tutorial and $500 starting state.
 
-See [`docs/INSTALL_NATIVE_MYSQL.md`](docs/INSTALL_NATIVE_MYSQL.md).
+## Useful commands
 
-The current game direction is a single-player criminal empire simulation. New players begin with $500 and advance through NPC-provided jobs and recruitable NPC gang members.
+Run these from `backend`:
+
+```bash
+php commands/world.php status
+php commands/world.php process-hour
+php commands/world.php process-day
+php commands/world.php process-week
+php commands/dirty-jobs.php status
+php commands/dirty-jobs.php refresh
+php commands/warehouse.php status
+php commands/economy.php
+```
+
+Development-only tutorial reset:
+
+```bash
+php commands/tutorial.php reset player@example.com
+```
+
+## Tests
+
+```bash
+php tests/v03_unit.php
+php tests/v03_contract.php
+php tests/v03_mysql_integration.php
+```
+
+The MySQL integration test intentionally refuses to run against a database whose name does not end in `_test`.
+
+Frontend verification:
+
+```bash
+cd ../frontend
+npm run build
+```
+
+## Documentation
+
+- [`docs/INSTALL_NATIVE_MYSQL.md`](docs/INSTALL_NATIVE_MYSQL.md)
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
+- [`docs/V03_DIRTY_JOBS.md`](docs/V03_DIRTY_JOBS.md)
+- [`backend/docs-api.md`](backend/docs-api.md)
+- [`docs/ER_DIAGRAM.md`](docs/ER_DIAGRAM.md)
+- [`docs/VERIFICATION.md`](docs/VERIFICATION.md)
+- [`CHANGELOG.md`](CHANGELOG.md)
+- [`docs/DEVELOPMENT_LOG.md`](docs/DEVELOPMENT_LOG.md)
+- [`docs/ROADMAP.md`](docs/ROADMAP.md)

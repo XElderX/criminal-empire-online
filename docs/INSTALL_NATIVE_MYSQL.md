@@ -1,74 +1,110 @@
-# Native installation (Ubuntu + MySQL, no Docker)
+# Criminal Empire Online v0.3 native installation
 
-## 1. Install requirements
+This guide installs the project on Ubuntu with MySQL and normal terminal commands. Docker is not required.
+
+## 1. Install system packages
 
 ```bash
 sudo apt update
-sudo apt install -y mysql-server php-cli php-mysql php-mbstring php-curl unzip curl nodejs npm
+sudo apt install -y \
+    mysql-server \
+    php-cli \
+    php-mysql \
+    php-mbstring \
+    php-curl \
+    php-json \
+    unzip \
+    curl \
+    nodejs \
+    npm
+
 sudo systemctl enable --now mysql
+```
+
+Verify the tools:
+
+```bash
 php -v
+php -m | grep -i pdo_mysql
 mysql --version
 node -v
 npm -v
 ```
 
-PHP 8.2+ and Node.js 18+ are recommended.
+PHP 8.2 or newer and Node.js 18 or newer are recommended.
 
-## 2. Open the project
+## 2. Put the project in place
+
+Example location:
 
 ```bash
-cd /var/www/criminal-empire-online
+sudo mkdir -p /var/www
+sudo chown -R "$USER":"$USER" /var/www
+cd /var/www
+unzip criminal-empire-online-v0.3-dirty-jobs-expansion.zip
+cd criminal-empire-online
 ```
 
-## 3. Create a MySQL database and user
+If the ZIP extracts directly into the project files, simply enter that extracted directory.
 
-On Ubuntu, log in through the local administrative socket:
+## 3. Create the MySQL database and user
+
+Ubuntu commonly authenticates the MySQL root user through the local Unix socket. Use:
 
 ```bash
 sudo mysql
 ```
 
-Then run:
+Then execute:
 
 ```sql
-CREATE DATABASE criminal_empire CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE USER 'criminal_user'@'localhost' IDENTIFIED BY 'change_this_password';
-GRANT ALL PRIVILEGES ON criminal_empire.* TO 'criminal_user'@'localhost';
+CREATE DATABASE criminal_empire
+    CHARACTER SET utf8mb4
+    COLLATE utf8mb4_unicode_ci;
+
+CREATE USER 'criminal_user'@'localhost'
+    IDENTIFIED BY 'replace_with_a_strong_password';
+
+GRANT ALL PRIVILEGES ON criminal_empire.*
+    TO 'criminal_user'@'localhost';
+
 FLUSH PRIVILEGES;
 EXIT;
 ```
 
-This avoids the common `Access denied for user 'root'@'localhost'` error caused by Ubuntu's socket-authenticated MySQL root account.
-
 ## 4. Configure the backend
 
 ```bash
-cd backend
+cd /var/www/criminal-empire-online/backend
 cp .env.example .env
 nano .env
 ```
 
-Use:
+Example local configuration:
 
 ```env
 APP_ENV=local
-APP_DEBUG=true
+APP_KEY=replace-with-a-long-random-local-key
+
 DB_HOST=127.0.0.1
 DB_PORT=3306
 DB_DATABASE=criminal_empire
 DB_USERNAME=criminal_user
-DB_PASSWORD=change_this_password
-CORS_ALLOWED_ORIGIN=http://localhost:5173
+DB_PASSWORD=replace_with_a_strong_password
+
+CORS_ALLOWED_ORIGIN=http://127.0.0.1:5173
 JOB_DURATION_MULTIPLIER=1
 ```
 
-For fast development timers, use:
+For shorter development timers:
 
 ```env
 JOB_DURATION_MULTIPLIER=0.05
 ```
 
-## 5. Run migrations and seed data
+Do not commit `backend/.env` to Git.
+
+## 5. Run migrations and seeders
 
 From the `backend` directory:
 
@@ -76,24 +112,18 @@ From the `backend` directory:
 php database/migrate.php
 ```
 
-Expected final output:
+A successful fresh installation applies:
 
 ```text
-Migrated: .../001_schema.sql
-Migrated: .../002_single_player_foundation.sql
-Seeded: .../001_seed.sql
-Seeded: .../002_single_player_seed.sql
-Done.
+001_schema.sql
+002_single_player_foundation.sql
+003_dirty_jobs_expansion.sql
+001_seed.sql
+002_single_player_seed.sql
+003_dirty_jobs_seed.sql
 ```
 
-The migration does not reset balances for existing users. The new $500 starting balance applies only to newly registered players.
-
-For a completely fresh development reset:
-
-```bash
-sudo mysql -e "DROP DATABASE IF EXISTS criminal_empire; CREATE DATABASE criminal_empire CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci; GRANT ALL PRIVILEGES ON criminal_empire.* TO 'criminal_user'@'localhost'; FLUSH PRIVILEGES;"
-php database/migrate.php
-```
+The v0.3 migration does not reset existing player cash, inventory, crew, or tutorial progress. Existing players are placed in a completed tutorial state so they are not forced through new-player onboarding. Newly registered players receive the active tutorial and exactly $500.
 
 ## 6. Start the PHP API
 
@@ -103,15 +133,17 @@ From `backend`:
 php -S 127.0.0.1:8085 -t public public/index.php
 ```
 
-Keep that terminal open. The API will be available at:
+Keep this terminal open. The API is available at:
 
 ```text
 http://127.0.0.1:8085/api
 ```
 
-## 7. Install and start the React frontend
+Check it by registering or logging in through the frontend. Authenticated `/api/me` responses include the current application version and release title.
 
-Open a second terminal:
+## 7. Install and start the frontend
+
+Open another terminal:
 
 ```bash
 cd /var/www/criminal-empire-online/frontend
@@ -132,29 +164,57 @@ Email: admin@criminal.test
 Password: password
 ```
 
-Create a new normal account to test the intended single-player start with exactly `$500`.
+Use a newly registered normal account to test the complete tutorial and early-game progression.
 
-## 8. World and economy commands
+## 8. Process the game world manually
 
-From `backend`:
+Run commands from `backend`.
+
+World status and processing:
 
 ```bash
 php commands/world.php status
 php commands/world.php process-hour
 php commands/world.php process-day
 php commands/world.php process-week
+```
+
+Dirty Job opportunity tools:
+
+```bash
+php commands/dirty-jobs.php status
+php commands/dirty-jobs.php refresh
+php commands/dirty-jobs.php expire
+```
+
+Warehouse tools:
+
+```bash
+php commands/warehouse.php status
+php commands/warehouse.php process-costs
+```
+
+Economy report:
+
+```bash
 php commands/economy.php
 ```
 
-`process-week` handles due gang-member salary payments. Re-running it immediately does not pay the same weekly salary twice because each member's `last_salary_at` is updated.
+Development-only tutorial reset, requiring `APP_ENV=local`:
 
-## 9. Optional automatic processing with cron
+```bash
+php commands/tutorial.php reset player@example.com
+```
+
+## 9. Optional cron scheduling
+
+Edit the current user’s cron configuration:
 
 ```bash
 crontab -e
 ```
 
-Add:
+Example schedule:
 
 ```cron
 0 * * * * cd /var/www/criminal-empire-online/backend && /usr/bin/php commands/world.php process-hour >> /tmp/criminal-world-hour.log 2>&1
@@ -162,7 +222,67 @@ Add:
 10 0 * * 1 cd /var/www/criminal-empire-online/backend && /usr/bin/php commands/world.php process-week >> /tmp/criminal-world-week.log 2>&1
 ```
 
-## Common fixes
+Do not process the economy from page rendering. Use these commands or another scheduler.
+
+## 10. Run tests
+
+Static and service-level tests do not modify the normal game database:
+
+```bash
+cd /var/www/criminal-empire-online/backend
+php tests/v03_unit.php
+php tests/v03_contract.php
+```
+
+For the real MySQL integration test, create a dedicated database whose name ends in `_test`:
+
+```bash
+sudo mysql
+```
+
+```sql
+CREATE DATABASE criminal_empire_test
+    CHARACTER SET utf8mb4
+    COLLATE utf8mb4_unicode_ci;
+
+GRANT ALL PRIVILEGES ON criminal_empire_test.*
+    TO 'criminal_user'@'localhost';
+
+FLUSH PRIVILEGES;
+EXIT;
+```
+
+Run the integration test with temporary environment variables:
+
+```bash
+TEST_DB_DATABASE=criminal_empire_test \
+TEST_DB_USERNAME=criminal_user \
+TEST_DB_PASSWORD=replace_with_a_strong_password \
+php tests/v03_mysql_integration.php
+```
+
+The test drops and recreates its configured test database. It refuses to run unless the database name ends in `_test`.
+
+Frontend verification:
+
+```bash
+cd /var/www/criminal-empire-online/frontend
+npm install
+npm run build
+```
+
+## 11. Fresh development reset
+
+This destroys all local game data:
+
+```bash
+sudo mysql -e "DROP DATABASE IF EXISTS criminal_empire; CREATE DATABASE criminal_empire CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci; GRANT ALL PRIVILEGES ON criminal_empire.* TO 'criminal_user'@'localhost'; FLUSH PRIVILEGES;"
+
+cd /var/www/criminal-empire-online/backend
+php database/migrate.php
+```
+
+## Common problems
 
 ### MySQL root access denied
 
@@ -172,19 +292,36 @@ Use:
 sudo mysql
 ```
 
-Do not use `mysql -u root -p` unless you explicitly configured a root password authentication method.
+Do not use `mysql -u root -p` unless you explicitly configured password authentication for MySQL root.
 
 ### `could not find driver`
+
+Install the PHP MySQL extension and confirm it is loaded:
 
 ```bash
 sudo apt install -y php-mysql
 php -m | grep -i pdo_mysql
 ```
 
-### Frontend cannot reach API
+Restart a web server or PHP-FPM service if you use one. The built-in PHP server only needs to be restarted.
 
-Confirm the API is running on port `8085` and `backend/.env` contains:
+### Frontend cannot reach the API
+
+Confirm:
+
+```text
+API:      http://127.0.0.1:8085
+Frontend: http://127.0.0.1:5173
+```
+
+And ensure `backend/.env` has:
 
 ```env
-CORS_ALLOWED_ORIGIN=http://localhost:5173
+CORS_ALLOWED_ORIGIN=http://127.0.0.1:5173
 ```
+
+Use the same hostname in both places. `localhost` and `127.0.0.1` are different origins to a browser.
+
+### Migration fails halfway
+
+Read the first SQL error, correct the database state, then use a fresh local database during development. Raw SQL migration files are intentionally explicit and are not Laravel migrations.

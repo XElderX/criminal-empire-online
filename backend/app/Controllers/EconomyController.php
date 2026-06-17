@@ -1,3 +1,19 @@
 <?php
-namespace App\Controllers;use App\Core\Database;use App\Core\Response;use App\Middleware\AdminMiddleware;
-final class EconomyController{public function status(array $p,array $c):void{AdminMiddleware::ensure($c['user']);$pdo=Database::pdo();Response::json(['data'=>['player_cash'=>(int)$pdo->query('SELECT COALESCE(SUM(cash+bank_cash+dirty_money),0) FROM users')->fetchColumn(),'npc_cash'=>(int)$pdo->query('SELECT COALESCE(SUM(personal_cash+bank_cash),0) FROM npcs')->fetchColumn(),'salary_paid'=>(int)$pdo->query("SELECT COALESCE(SUM(amount),0) FROM economy_transactions WHERE category='salary_payment'")->fetchColumn(),'job_rewards'=>(int)$pdo->query("SELECT COALESCE(SUM(amount),0) FROM economy_transactions WHERE category='job_reward'")->fetchColumn(),'transactions'=>(int)$pdo->query('SELECT COUNT(*) FROM economy_transactions')->fetchColumn()]]);}}
+
+namespace App\Controllers;
+
+use App\Core\Response;
+use App\Middleware\AdminMiddleware;
+use App\Services\EconomyStatusService;
+
+final class EconomyController
+{
+    public function status(array $params, array $context): void
+    {
+        AdminMiddleware::ensure($context['user']);
+
+        Response::json([
+            'data' => (new EconomyStatusService())->report(),
+        ]);
+    }
+}

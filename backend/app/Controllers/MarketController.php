@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Controllers;
 
 use App\Core\Database;
@@ -8,6 +9,20 @@ final class MarketController
 {
     public function drugs(array $params = [], array $context = []): void
     {
-        Response::json(['data' => Database::pdo()->query('SELECT d.*, dp.region, dp.price, dp.supply, dp.demand FROM drugs d JOIN drug_prices dp ON dp.drug_id=d.id ORDER BY dp.region,d.name')->fetchAll()]);
+        $drugs = Database::pdo()->query(
+            <<<'SQL'
+                SELECT
+                    drug.*,
+                    price.region,
+                    price.price,
+                    price.supply,
+                    price.demand
+                FROM drugs drug
+                JOIN drug_prices price ON price.drug_id = drug.id
+                ORDER BY price.region, drug.name
+            SQL
+        )->fetchAll();
+
+        Response::json(['data' => $drugs]);
     }
 }
