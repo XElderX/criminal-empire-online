@@ -103,7 +103,7 @@ function processHour(): array
     return [
         'command' => 'process-hour',
         'processed_at' => date(DATE_ATOM),
-        'energy' => (new EnergyService())->regenerate(10),
+        'energy' => (new EnergyService())->regenerate(25),
         'crew_recovery' => (new CrewRecoveryService())->process(),
         'dirty_jobs_expired' => $generator->expireOldOpportunities(),
     ];
