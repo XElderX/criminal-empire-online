@@ -115,6 +115,7 @@ INSERT INTO item_definitions (
   'dark_clothing',
   'Dark Clothing',
   'clothing',
+  'clothing',
   'Basic low-profile clothing for night work.',
   65,
   1,
