@@ -244,6 +244,12 @@ export function DirtyJobsPage({ onChanged }: DirtyJobsPageProps) {
         Math.ceil((new Date(detail.run.completes_at).getTime() - clock) / 1_000),
       )
     : detail?.run?.seconds_remaining ?? 0;
+  const assignedCrewCount = detail?.run?.assignments?.length || 0;
+  const requiredRoles = detail?.opportunity?.required_roles || [];
+  const assignedRoles = detail?.run?.assignments?.map((assignment) => assignment.role_code) || [];
+  const missingRequiredRoles = requiredRoles.filter(
+    (role) => !assignedRoles.includes(role),
+  );
 
   return (
     <section className="page-section dirty-jobs-layout">
@@ -363,6 +369,28 @@ export function DirtyJobsPage({ onChanged }: DirtyJobsPageProps) {
                 </div>
               </dl>
 
+              {detail.run && (
+                <div className="assignment-status">
+                  <p>
+                    Assigned crew: <strong>{assignedCrewCount}</strong> /{' '}
+                    <strong>{detail.opportunity.min_crew_size}</strong>
+                  </p>
+                  {requiredRoles.length > 0 && (
+                    <p>
+                      Required roles:{' '}
+                      <strong>{requiredRoles.join(', ')}</strong>
+                    </p>
+                  )}
+                  {missingRequiredRoles.length > 0 && (
+                    <p className="danger">
+                      Missing required role
+                      {missingRequiredRoles.length > 1 ? 's' : ''}:{' '}
+                      {missingRequiredRoles.join(', ')}
+                    </p>
+                  )}
+                </div>
+              )}
+
               {detail.opportunity.requirement_messages.length > 0 && (
                 <ul className="requirement-list">
                   {detail.opportunity.requirement_messages.map((requirement) => (
@@ -463,6 +491,15 @@ function OperationWorkspace({
   const completedPreparationCodes = new Set(
     (run.preparations || []).map((entry) => String(entry.action_code || '')),
   );
+  const assignedRoles = (run.assignments || []).map(
+    (assignment) => assignment.role_code,
+  );
+  const missingRequiredRoles = detail.opportunity.required_roles.filter(
+    (role) => !assignedRoles.includes(role),
+  );
+  const takenRoles = new Set(
+    Object.values(roleSelections).filter((roleCode) => roleCode !== ''),
+  );
 
   return (
     <>
@@ -541,7 +578,11 @@ function OperationWorkspace({
                   >
                     <option value="">Not assigned</option>
                     {Object.entries(detail.crew_roles).map(([code, definition]) => (
-                      <option value={code} key={code}>
+                      <option
+                        value={code}
+                        key={code}
+                        disabled={takenRoles.has(code) && roleSelections[member.id] !== code}
+                      >
                         {definition.name} ({definition.stats.join(', ')})
                       </option>
                     ))}
@@ -560,6 +601,23 @@ function OperationWorkspace({
               <p>
                 Required roles:{' '}
                 <strong>{detail.opportunity.required_roles.join(', ')}</strong>
+              </p>
+            )}
+
+            <p className="muted">
+              Assigned crew: {run.assignments?.length || 0} /{' '}
+              {detail.opportunity.min_crew_size}
+            </p>
+            <p className="muted">
+              Each role can only be assigned once. If you need 2 crew members,
+              give the second one a different role or leave them unassigned.
+            </p>
+
+            {missingRequiredRoles.length > 0 && (
+              <p className="danger">
+                Missing required role
+                {missingRequiredRoles.length > 1 ? 's' : ''}:{' '}
+                {missingRequiredRoles.join(', ')}
               </p>
             )}
 

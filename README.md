@@ -48,6 +48,29 @@ Open `http://127.0.0.1:5173`.
 
 For the complete Ubuntu and MySQL setup, see [`docs/INSTALL_NATIVE_MYSQL.md`](docs/INSTALL_NATIVE_MYSQL.md).
 
+## One-click launcher
+
+If you want a single script to start both servers and install the recommended cron jobs for world processing, run:
+
+```bash
+cd /var/www/criminal-empire-online
+./start-dev.sh
+```
+
+This script:
+
+- opens separate terminals for the backend and frontend
+- installs or refreshes a named cron block for the current user
+- preserves any other existing crontab entries
+
+The cron block runs:
+
+- `php commands/world.php process-hour`
+- `php commands/world.php process-day`
+- `php commands/world.php process-week`
+- `php commands/dirty-jobs.php expire`
+- `php commands/dirty-jobs.php refresh`
+
 ## Default development administrator
 
 ```text
