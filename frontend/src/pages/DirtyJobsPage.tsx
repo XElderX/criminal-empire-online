@@ -335,6 +335,7 @@ export function DirtyJobsPage({ onChanged }: DirtyJobsPageProps) {
           <>
             <CrimePictureCard
               image={getJobImage(detail.opportunity.title || detail.opportunity.code)}
+              fallbackImage="/assets/placeholders/default_job.svg"
               title={detail.opportunity.title}
               eyebrow={`Tier ${detail.opportunity.tier} · ${humanize(detail.opportunity.category)}`}
               description={detail.opportunity.introduction}
