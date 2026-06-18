@@ -479,3 +479,248 @@ export interface Crime {
   reward_min: number;
   reward_max: number;
 }
+
+export interface CrimeDiscoveryLocation {
+  id: number;
+  code: string;
+  name: string;
+  description: string;
+  energy_cost: number;
+  cash_cost: number;
+  min_level: number;
+  risk_level: string;
+  can_explore: boolean;
+  blocked_reason?: string | null;
+}
+
+export interface CrimePreparationRecord {
+  id: number;
+  code: string;
+  name: string;
+  description: string;
+  cash_cost: number;
+  energy_cost: number;
+  effects: Record<string, number>;
+  applied_at?: string;
+}
+
+export interface CrimePreparationOption {
+  code: string;
+  name: string;
+  description: string;
+  cash_cost: number;
+  energy_cost: number;
+  effects: Record<string, number>;
+}
+
+export interface CrimeOpportunityAssignment {
+  id: number;
+  gang_member_id: number;
+  role_code: string;
+  first_name?: string;
+  last_name?: string;
+  nickname?: string | null;
+  status?: string;
+}
+
+export interface CrimeOpportunityEquipment {
+  id: number;
+  asset_type: 'item' | 'weapon';
+  asset_id: number;
+  name: string;
+  category?: string | null;
+  quantity: number;
+  effects: Record<string, number>;
+}
+
+export interface CrimeOpportunity {
+  id: number;
+  code: string;
+  category: string;
+  tier: number;
+  title: string;
+  briefing: string;
+  target_name?: string | null;
+  information_level: 'rumor' | 'lead' | 'confirmed' | 'trap';
+  status: string;
+  source_type: string;
+  source_description?: string | null;
+  quality: string;
+  reliability: number;
+  estimated_reward_min: number;
+  estimated_reward_max: number;
+  estimated_heat_min: number;
+  estimated_heat_max: number;
+  energy_cost: number;
+  min_crew: number;
+  max_crew: number;
+  recommended_roles: string[];
+  required_items: string[];
+  relevant_stats: string[];
+  location_name: string;
+  territory_name?: string | null;
+  source_name?: string;
+  expires_at?: string | null;
+  is_expired: boolean;
+  can_investigate: boolean;
+  can_prepare: boolean;
+  can_execute: boolean;
+  preparations: CrimePreparationRecord[];
+  assignments: CrimeOpportunityAssignment[];
+  equipment: CrimeOpportunityEquipment[];
+  preparation_options: CrimePreparationOption[];
+}
+
+export interface CrimeCrewOption {
+  id: number;
+  npc_id: number;
+  role_code: string;
+  status: string;
+  first_name: string;
+  last_name: string;
+  nickname?: string | null;
+  strength: number;
+  shooting: number;
+  driving: number;
+  intelligence: number;
+  stealth: number;
+  intimidation: number;
+  discipline: number;
+  street_knowledge: number;
+  endurance: number;
+  loyalty: number;
+  morale: number;
+}
+
+export interface CrimeEquipmentOption {
+  asset_type: 'item' | 'weapon';
+  asset_id: number;
+  name: string;
+  category?: string | null;
+  effects: Record<string, number> | string;
+  quantity: number;
+  available_quantity: number;
+}
+
+export interface CrimeEventChoice {
+  code: string;
+  label: string;
+  description?: string;
+}
+
+export interface CrimeRunEvent {
+  id: number;
+  event_code: string;
+  title: string;
+  description: string;
+  status: string;
+  choices: CrimeEventChoice[];
+}
+
+export interface CrimeRun {
+  id: number;
+  opportunity_id: number;
+  status: string;
+  outcome?: string | null;
+  success_chance: number;
+  disaster_chance: number;
+  police_chance: number;
+  reward_dirty_cash: number;
+  heat_gained: number;
+  result?: {
+    outcome?: string;
+    title?: string;
+    description?: string;
+    decision_code?: string | null;
+    crew_consequences?: Array<Record<string, unknown>>;
+  } | null;
+  event?: CrimeRunEvent | null;
+  started_at?: string;
+  completed_at?: string | null;
+}
+
+export interface NpcContact {
+  id: number;
+  npc_id: number;
+  relationship_type: string;
+  trust: number;
+  fear: number;
+  respect: number;
+  suspicion: number;
+  full_name: string;
+  nickname?: string | null;
+  role: string;
+  status: string;
+  alive: number;
+  territory_name?: string | null;
+  portrait?: CrewPortraitData;
+}
+
+export interface CrimeOverview {
+  legacy_crimes: Crime[];
+  locations: CrimeDiscoveryLocation[];
+  opportunities: CrimeOpportunity[];
+  active_runs: CrimeRun[];
+  history: CrimeRun[];
+  contacts: NpcContact[];
+  crew: CrimeCrewOption[];
+  equipment: CrimeEquipmentOption[];
+  preparation_options: CrimePreparationOption[];
+}
+
+export interface AdminNpcSummary {
+  id: number;
+  full_name: string;
+  display_name: string;
+  nickname?: string | null;
+  age: number;
+  gender?: string | null;
+  role: string;
+  occupation?: string | null;
+  biography?: string | null;
+  organization?: string | null;
+  affiliation?: string | null;
+  status: string;
+  alive: number;
+  is_dead: boolean;
+  health: number;
+  personal_cash: number;
+  reputation: number;
+  wealth_class: string;
+  territory_name?: string | null;
+  business_name?: string | null;
+  current_activity?: string | null;
+  death_category?: string | null;
+  death_game_date?: string | null;
+  death_notes?: string | null;
+  last_seen_at?: string | null;
+  source_event?: string | null;
+  notes?: string | null;
+  portrait: CrewPortraitData;
+  life_stage: CrewLifeStage;
+  flags: Record<string, boolean>;
+  stats: Record<string, number>;
+}
+
+export interface AdminNpcListResponse {
+  data: AdminNpcSummary[];
+  pagination: {
+    total: number;
+    limit: number;
+    offset: number;
+  };
+  filters: {
+    statuses: string[];
+    roles: string[];
+    districts: string[];
+  };
+}
+
+export interface AdminNpcDetailResponse {
+  npc: AdminNpcSummary & {
+    relationships: Array<Record<string, unknown>>;
+    timeline: Array<Record<string, unknown>>;
+    crime_involvement: Array<Record<string, unknown>>;
+    status_logs: Array<Record<string, unknown>>;
+  };
+}

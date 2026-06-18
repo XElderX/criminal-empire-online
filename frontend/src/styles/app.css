@@ -2726,3 +2726,363 @@ small {
 .admin-asset-table td strong {
   color: var(--accent-money);
 }
+
+/* v0.4 — Crimes Expansion */
+.crimes-v04-page {
+  display: grid;
+  gap: 1.35rem;
+}
+
+.crime-loop-panel,
+.crime-event-panel {
+  border-color: rgba(185, 136, 74, 0.35);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+}
+
+.crime-location-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 1rem;
+}
+
+.crime-location-card,
+.crime-opportunity-card,
+.crime-event-card,
+.prep-option-card,
+.selector-chip,
+.equipment-selector-card,
+.contact-row-v04,
+.admin-npc-card,
+.admin-npc-detail {
+  background: linear-gradient(145deg, rgba(22, 23, 23, 0.96), rgba(9, 10, 11, 0.96));
+  border: 1px solid rgba(130, 105, 73, 0.35);
+  border-radius: 14px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03), 0 12px 32px rgba(0, 0, 0, 0.25);
+}
+
+.crime-location-card {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem;
+}
+
+.crime-location-card h3,
+.crime-opportunity-card h3,
+.crime-detail-panel h3,
+.crime-event-card h3 {
+  margin: 0;
+}
+
+.warning-text {
+  color: var(--accent-risk);
+  margin: 0;
+}
+
+.crime-v04-main-grid {
+  align-items: start;
+}
+
+.crime-opportunity-list {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.crime-opportunity-card {
+  padding: 0.75rem;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.crime-opportunity-card.selected {
+  border-color: rgba(76, 160, 255, 0.65);
+  box-shadow: 0 0 0 1px rgba(76, 160, 255, 0.18), 0 16px 40px rgba(0, 0, 0, 0.35);
+}
+
+.crime-opportunity-select {
+  appearance: none;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 106px 1fr;
+  gap: 0.85rem;
+  color: inherit;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+.crime-opportunity-select img {
+  width: 106px;
+  height: 86px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid rgba(185, 136, 74, 0.38);
+}
+
+.crime-opportunity-select p,
+.crime-location-card p,
+.crime-event-card p,
+.crime-briefing-box p {
+  color: var(--text-muted);
+  margin: 0.35rem 0 0;
+  line-height: 1.45;
+}
+
+.info-pill {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 0.18rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid rgba(185, 136, 74, 0.35);
+  color: var(--accent-risk);
+  background: rgba(185, 136, 74, 0.1);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.info-pill.confirmed,
+.info-pill.strong {
+  color: var(--accent-money);
+  border-color: rgba(97, 220, 120, 0.35);
+  background: rgba(97, 220, 120, 0.08);
+}
+
+.info-pill.trap,
+.info-pill.suspicious {
+  color: var(--accent-heat);
+  border-color: rgba(255, 89, 89, 0.42);
+  background: rgba(255, 89, 89, 0.08);
+}
+
+.crime-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 0.75rem;
+}
+
+.crime-detail-panel {
+  display: grid;
+  gap: 1.1rem;
+}
+
+.crime-briefing-box {
+  border: 1px solid rgba(76, 160, 255, 0.22);
+  border-radius: 14px;
+  padding: 1rem;
+  background: linear-gradient(135deg, rgba(26, 42, 58, 0.28), rgba(8, 9, 11, 0.9));
+}
+
+.crime-prep-grid,
+.crime-selector-grid,
+.crime-equipment-grid {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.crime-prep-grid {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.crime-selector-grid {
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
+.crime-equipment-grid {
+  grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+}
+
+.prep-option-card,
+.selector-chip,
+.equipment-selector-card {
+  color: inherit;
+  text-align: left;
+  padding: 0.75rem;
+}
+
+.prep-option-card {
+  cursor: pointer;
+}
+
+.prep-option-card span,
+.selector-chip small {
+  display: block;
+  margin-top: 0.35rem;
+  color: var(--text-muted);
+  line-height: 1.35;
+}
+
+.prep-option-card.applied {
+  border-color: rgba(97, 220, 120, 0.45);
+  opacity: 0.75;
+}
+
+.selector-chip {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 0.6rem;
+  align-items: center;
+}
+
+.selector-chip input,
+.equipment-selector-card input {
+  accent-color: var(--accent-blue);
+}
+
+.equipment-selector-card {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.equipment-selector-card .item-icon-card {
+  margin: 0;
+}
+
+.crime-event-card {
+  padding: 1rem;
+  margin-top: 0.8rem;
+  border-color: rgba(255, 187, 65, 0.45);
+}
+
+.contact-list-v04 {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.contact-row-v04 {
+  display: grid;
+  grid-template-columns: 52px 1fr;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.65rem;
+}
+
+.contact-row-v04 img {
+  width: 52px;
+  height: 52px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid rgba(185, 136, 74, 0.4);
+}
+
+.admin-npc-browser {
+  margin-top: 1rem;
+}
+
+.npc-filter-row {
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
+.admin-npc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.admin-npc-card {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  gap: 0.85rem;
+  padding: 0.8rem;
+}
+
+.admin-npc-card.dead,
+.admin-npc-detail.dead {
+  border-color: rgba(142, 45, 45, 0.6);
+  background: linear-gradient(145deg, rgba(28, 18, 18, 0.96), rgba(8, 8, 8, 0.98));
+}
+
+.admin-npc-portrait-wrap,
+.admin-npc-detail-card {
+  position: relative;
+}
+
+.admin-npc-portrait-wrap img {
+  width: 96px;
+  height: 118px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid rgba(185, 136, 74, 0.38);
+}
+
+.admin-npc-card.dead img,
+.admin-npc-detail.dead img {
+  filter: grayscale(1);
+  opacity: 0.58;
+}
+
+.dead-watermark {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: rgba(255, 85, 85, 0.85);
+  font-size: 1.4rem;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  transform: rotate(-18deg);
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+}
+
+.detail-watermark {
+  font-size: 3rem;
+}
+
+.admin-npc-body {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.admin-npc-body p,
+.dead-note {
+  margin: 0;
+}
+
+.dead-note {
+  color: var(--accent-heat);
+  font-weight: 700;
+}
+
+.admin-npc-detail {
+  margin-top: 1rem;
+  padding: 1rem;
+}
+
+.admin-npc-detail-card img {
+  width: 100%;
+  max-height: 360px;
+  object-fit: cover;
+  border-radius: 14px;
+  border: 1px solid rgba(185, 136, 74, 0.35);
+}
+
+.small-heading {
+  margin-bottom: 0.5rem;
+}
+
+.compact-details-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 720px) {
+  .crime-opportunity-select,
+  .admin-npc-card {
+    grid-template-columns: 1fr;
+  }
+
+  .crime-opportunity-select img,
+  .admin-npc-portrait-wrap img {
+    width: 100%;
+    height: 150px;
+  }
+
+  .crime-action-row {
+    flex-direction: column;
+  }
+}

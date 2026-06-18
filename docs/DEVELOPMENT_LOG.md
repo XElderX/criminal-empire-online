@@ -1,3 +1,24 @@
+## 2026-06-18 — Criminal Empire Online v0.4 — Crimes Expansion
+
+- Bumped application metadata to v0.4.0 / `Criminal Empire Online v0.4 — Crimes Expansion`.
+- Reworked the Crimes page from a primitive static click-result list into a multi-step crime loop: explore locations, discover rumors/leads, investigate, prepare, assign crew/equipment, execute, handle random decision events, and review outcomes.
+- Added backend v0.4 crime lifecycle tables for discovery locations, crime templates, player-specific opportunities, preparations, opportunity crew/equipment selections, runs, events, NPC involvement, NPC relationships, NPC timeline events, and NPC status logs.
+- Added v0.4 seed data for bar/street/garage/pawn-shop/warehouse discovery locations, reusable crime templates, persistent NPC contacts/informants/rivals, a dead historical NPC sample, and new equipment items.
+- Added focused backend services: `CrimeOpportunityService`, `CrimeRiskCalculator`, `CrimeNarrativeService`, and `NpcAdminService`.
+- Added player API endpoints for exploring locations, viewing/investigating/preparing opportunities, assigning crew/equipment, starting crime runs, resolving decision events, abandoning opportunities, listing contacts, and viewing crime history.
+- Added admin API endpoints for NPC list/detail browsing with filters/search/sorting and timeline/relationship/involvement data.
+- Added dead NPC visual behavior in the admin UI: grayscale portrait, reduced opacity, visible `DEAD` watermark, death status notes, and readable dead status text.
+- Updated v0.4 Crimes frontend with known opportunities, leads/rumors, active decision events, preparation cards, crew/equipment selectors, contacts, recent outcomes, and legacy quick-crime fallback.
+- Updated Admin frontend with an NPC World browser, filters, searchable cards, detail drawer, stats, flags, timelines, relationships, and death records.
+- Added v0.4 tests for risk calculation, event/preparation definitions, backend contract coverage, endpoints, admin NPC browser, frontend payload types, and asset mapping.
+
+## 2026-06-18 — Criminal Empire Online v0.3.6.5 — v0.4 Asset Primer
+
+- Applied the new supplied territory, dirty job, and crime art sheets to the current local asset system before the v0.4 feature work.
+- Refreshed WebP and matching SVG wrapper assets for territory backgrounds, dirty-job thumbnails, and crime thumbnails so stale `.svg` paths still render real visuals.
+- Added new v0.4 inventory art cards for `Screwdriver Set`, `First-Aid Kit`, `Surveillance Kit`, `Dark Clothing`, `Work Uniform`, `Vehicle Tools`, and `Duffel Bag`.
+- Updated `itemIconMap.ts` aliases so new v0.4 equipment appears in Inventory/Admin/Crimes selectors with local WebP art.
+
 ## 2026-06-18 — Criminal Empire Online v0.3.6.4 — Territory, Job & Crime Art Refresh
 
 - Bumped the application version to v0.3.6.4.

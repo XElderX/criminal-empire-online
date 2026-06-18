@@ -7,6 +7,7 @@ use App\Core\Request;
 use App\Core\Response;
 use App\Middleware\AdminMiddleware;
 use App\Services\AuditService;
+use App\Services\NpcAdminService;
 use RuntimeException;
 use Throwable;
 
@@ -178,6 +179,27 @@ final class AdminController
             'users' => $users,
             'assets' => array_merge($items, $weapons, $drugs),
         ]);
+    }
+
+
+    public function npcs(array $params, array $context): void
+    {
+        try {
+            AdminMiddleware::ensure($context['user']);
+            Response::json((new NpcAdminService())->list($_GET));
+        } catch (Throwable $exception) {
+            Response::json(['message' => $exception->getMessage()], 422);
+        }
+    }
+
+    public function npcDetail(array $params, array $context): void
+    {
+        try {
+            AdminMiddleware::ensure($context['user']);
+            Response::json((new NpcAdminService())->detail((int) $params['id']));
+        } catch (Throwable $exception) {
+            Response::json(['message' => $exception->getMessage()], 422);
+        }
     }
 
     public function refillEnergy(array $params, array $context): void

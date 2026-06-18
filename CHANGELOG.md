@@ -1,4 +1,8 @@
-## v0.3.6.4
+## v0.4.0
+- Implemented Crimes Expansion: discovery locations, player-specific crime opportunities, investigation/preparation/execution flow, event decisions, NPC relationships, NPC timeline memory, admin NPC browser, dead NPC watermark UI, and v0.4 equipment/image mappings.
+- Added v0.3.6.5 asset primer: refreshed supplied crime/job/territory art and new item art for Screwdriver Set, First-Aid Kit, Surveillance Kit, Dark Clothing, Work Uniform, Vehicle Tools, and Duffel Bag.
+
+## v0.4.0
 - Refreshed territory, dirty job, and crime visual assets with the new supplied art set.
 - Updated matching SVG wrappers for backward compatibility.
 
