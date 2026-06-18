@@ -4,8 +4,8 @@ namespace App\Config;
 
 final class GameConfig
 {
-    public const VERSION = '0.3.6.1';
-    public const RELEASE_TITLE = 'Criminal Empire Online v0.3.6.1 — Visual Redesign & Asset Integration (Weapon Asset Refresh)';
+    public const VERSION = '0.3.6.2';
+    public const RELEASE_TITLE = 'Criminal Empire Online v0.3.6.2 — Visual Redesign & Asset Integration (Expanded Item Assets & Admin Inventory Tools)';
 
     public const STARTING_CASH = 500;
     public const STARTING_BANK_CASH = 0;

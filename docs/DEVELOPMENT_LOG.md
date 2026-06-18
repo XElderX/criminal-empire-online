@@ -1,3 +1,12 @@
+## 2026-06-18 — Criminal Empire Online v0.3.6.2 — Expanded Item Assets & Admin Inventory Tools
+
+- Bumped the application version to v0.3.6.2.
+- Added the new supplied tools, clothing, vehicle, valuables, and contraband item art into the real local asset folders under `frontend/public/assets/icons/items/`.
+- Refreshed `itemIconMap.ts` so the new asset names and the main legacy aliases resolve to the updated visuals instead of older placeholders.
+- Added backend admin endpoints for a full obtainables catalog and for granting items, weapons, or drugs directly into a player inventory by user id.
+- Expanded the Admin page with an obtainables/equipmentables reference table, quick user list, asset id lookup, and an "Add to inventory" tool.
+- Added a new seeder `005_v0362_items_admin.sql` with additional item definitions for the new utility, clothing, transport, valuables, and contraband entries.
+
 
 ## 2026-06-18 — Criminal Empire Online v0.3.6.1 — Weapons Asset Refresh
 
