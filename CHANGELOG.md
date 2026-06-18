@@ -1,3 +1,7 @@
+## v0.3.6.4
+- Refreshed territory, dirty job, and crime visual assets with the new supplied art set.
+- Updated matching SVG wrappers for backward compatibility.
+
 # Changelog
 
 ## 0.3.5 — 2026-06-18

@@ -1,3 +1,11 @@
+## 2026-06-18 — Criminal Empire Online v0.3.6.4 — Territory, Job & Crime Art Refresh
+
+- Bumped the application version to v0.3.6.4.
+- Replaced the territory background art with the new supplied noir district cards for slums, downtown, industrial zone, docks, suburbs, nightlife district, market district, police district, rich district, and old town.
+- Replaced the dirty job images with the new supplied job card art for back alley collection, warehouse pickup, night delivery, evidence cleanup, protection visit, stolen goods pickup, debt pressure, fake document run, and dockside drop.
+- Replaced the crime images with the new supplied card art for pickpocket, wallet snatch, shoplifting, car break-in, bike theft, street scam, store robbery, cargo theft, and heist planning.
+- Refreshed matching `.svg` wrappers so stale references still render the updated local WebP visuals.
+
 ## 2026-06-18 — Criminal Empire Online v0.3.6.3 — Navigation & Status Icons Refresh + Admin Item Counts
 
 - Bumped the application version to v0.3.6.3.
