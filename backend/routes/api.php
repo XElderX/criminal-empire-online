@@ -223,6 +223,57 @@ $router->get(
     [AuthMiddleware::class]
 );
 
+$router->post(
+    '/api/crime-locations/{code}/explore',
+    [CrimeController::class, 'explore'],
+    [AuthMiddleware::class]
+);
+$router->get(
+    '/api/crime-opportunities/{id}',
+    [CrimeController::class, 'showOpportunity'],
+    [AuthMiddleware::class]
+);
+$router->post(
+    '/api/crime-opportunities/{id}/investigate',
+    [CrimeController::class, 'investigate'],
+    [AuthMiddleware::class]
+);
+$router->post(
+    '/api/crime-opportunities/{id}/prepare',
+    [CrimeController::class, 'prepare'],
+    [AuthMiddleware::class]
+);
+$router->post(
+    '/api/crime-opportunities/{id}/assign-crew',
+    [CrimeController::class, 'assignCrew'],
+    [AuthMiddleware::class]
+);
+$router->post(
+    '/api/crime-opportunities/{id}/assign-equipment',
+    [CrimeController::class, 'assignEquipment'],
+    [AuthMiddleware::class]
+);
+$router->post(
+    '/api/crime-opportunities/{id}/start',
+    [CrimeController::class, 'start'],
+    [AuthMiddleware::class]
+);
+$router->post(
+    '/api/crime-opportunities/{id}/abandon',
+    [CrimeController::class, 'abandon'],
+    [AuthMiddleware::class]
+);
+$router->post(
+    '/api/crime-runs/{id}/decision',
+    [CrimeController::class, 'decide'],
+    [AuthMiddleware::class]
+);
+$router->get(
+    '/api/npc-contacts',
+    [CrimeController::class, 'contacts'],
+    [AuthMiddleware::class]
+);
+
 $router->get('/api/drug-market', [MarketController::class, 'drugs'], [AuthMiddleware::class]);
 $router->get('/api/gangs', [GangController::class, 'index'], [AuthMiddleware::class]);
 $router->post('/api/gangs', [GangController::class, 'create'], [AuthMiddleware::class]);
@@ -240,6 +291,17 @@ $router->get(
 $router->get(
     '/api/admin/audit',
     [AdminController::class, 'audit'],
+    [AuthMiddleware::class]
+);
+
+$router->get(
+    '/api/admin/npcs',
+    [AdminController::class, 'npcs'],
+    [AuthMiddleware::class]
+);
+$router->get(
+    '/api/admin/npcs/{id}',
+    [AdminController::class, 'npcDetail'],
     [AuthMiddleware::class]
 );
 

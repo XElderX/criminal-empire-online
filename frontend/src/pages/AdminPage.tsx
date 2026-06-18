@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { api } from '../api/client';
 import { Notice } from '../components/Notice';
 import { getItemIcon } from '../data/assetManifest';
-import type { User } from '../types';
+import type { AdminNpcDetailResponse, AdminNpcListResponse, AdminNpcSummary, User } from '../types';
 
 interface AdminPageProps {
   currentUser: User;
@@ -427,6 +427,8 @@ export function AdminPage({ currentUser, onChanged }: AdminPageProps) {
         </div>
       </section>
 
+      <AdminNpcBrowser />
+
       <section className="card section-card">
         <h2>Audit log</h2>
         <div className="timeline compact-timeline">
@@ -438,6 +440,222 @@ export function AdminPage({ currentUser, onChanged }: AdminPageProps) {
           ))}
         </div>
       </section>
+    </section>
+  );
+}
+
+
+function AdminNpcBrowser() {
+  const [npcs, setNpcs] = useState<AdminNpcSummary[]>([]);
+  const [total, setTotal] = useState(0);
+  const [statuses, setStatuses] = useState<string[]>([]);
+  const [roles, setRoles] = useState<string[]>([]);
+  const [search, setSearch] = useState('');
+  const [status, setStatus] = useState('');
+  const [alive, setAlive] = useState('');
+  const [role, setRole] = useState('');
+  const [flag, setFlag] = useState('');
+  const [sort, setSort] = useState('last_seen');
+  const [detail, setDetail] = useState<AdminNpcDetailResponse['npc'] | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    void loadNpcs();
+  }, [search, status, alive, role, flag, sort]);
+
+  async function loadNpcs(): Promise<void> {
+    setLoading(true);
+    setError('');
+
+    try {
+      const params = new URLSearchParams();
+      if (search.trim() !== '') params.set('search', search.trim());
+      if (status !== '') params.set('status', status);
+      if (alive !== '') params.set('alive', alive);
+      if (role !== '') params.set('role', role);
+      if (flag !== '') params.set('flag', flag);
+      if (sort !== '') params.set('sort', sort);
+
+      const response = await api<AdminNpcListResponse>(`/admin/npcs?${params.toString()}`);
+      setNpcs(response.data);
+      setTotal(response.pagination.total);
+      setStatuses(response.filters.statuses);
+      setRoles(response.filters.roles);
+    } catch (requestError) {
+      setError((requestError as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function openDetail(npcId: number): Promise<void> {
+    setError('');
+
+    try {
+      const response = await api<AdminNpcDetailResponse>(`/admin/npcs/${npcId}`);
+      setDetail(response.npc);
+    } catch (requestError) {
+      setError((requestError as Error).message);
+    }
+  }
+
+  return (
+    <section className="card section-card admin-npc-browser">
+      <div className="card-heading">
+        <div>
+          <p className="eyebrow">v0.4 NPC world</p>
+          <h2>Admin NPC browser</h2>
+          <p className="muted">
+            Inspect persistent contacts, witnesses, rivals, police-linked NPCs, and dead historical records. Dead NPCs stay visible but cannot act.
+          </p>
+        </div>
+        <span className="version-badge">{loading ? 'loading' : `${total} NPCs`}</span>
+      </div>
+
+      {error && <Notice message={error} kind="error" />}
+
+      <div className="admin-filter-row npc-filter-row">
+        <label>
+          Search
+          <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Name, nickname, notes, district" />
+        </label>
+        <label>
+          Status
+          <select value={status} onChange={(event) => setStatus(event.target.value)}>
+            <option value="">All</option>
+            {statuses.map((entry) => <option key={entry} value={entry}>{entry}</option>)}
+          </select>
+        </label>
+        <label>
+          Alive
+          <select value={alive} onChange={(event) => setAlive(event.target.value)}>
+            <option value="">All</option>
+            <option value="1">Alive</option>
+            <option value="0">Dead</option>
+          </select>
+        </label>
+        <label>
+          Role
+          <select value={role} onChange={(event) => setRole(event.target.value)}>
+            <option value="">All</option>
+            {roles.map((entry) => <option key={entry} value={entry}>{entry}</option>)}
+          </select>
+        </label>
+        <label>
+          Flag
+          <select value={flag} onChange={(event) => setFlag(event.target.value)}>
+            <option value="">All</option>
+            <option value="contact">Contact</option>
+            <option value="informant">Informant</option>
+            <option value="witness">Witness</option>
+            <option value="rival">Rival</option>
+            <option value="police">Police</option>
+            <option value="recruitable">Recruitable</option>
+          </select>
+        </label>
+        <label>
+          Sort
+          <select value={sort} onChange={(event) => setSort(event.target.value)}>
+            <option value="last_seen">Last seen</option>
+            <option value="name">Name</option>
+            <option value="age">Age</option>
+            <option value="status">Status</option>
+            <option value="district">District</option>
+            <option value="money">Money</option>
+            <option value="reputation">Reputation</option>
+            <option value="created">Created</option>
+          </select>
+        </label>
+      </div>
+
+      {npcs.length === 0 && !loading && <p className="muted">No NPCs match the current filters.</p>}
+
+      <div className="admin-npc-grid">
+        {npcs.map((npc) => (
+          <article key={npc.id} className={`admin-npc-card ${npc.is_dead ? 'dead' : ''}`}>
+            <div className="admin-npc-portrait-wrap">
+              <img src={npc.portrait.thumbnail_url} alt="" />
+              {npc.is_dead && <span className="dead-watermark">DEAD</span>}
+            </div>
+            <div className="admin-npc-body">
+              <div className="card-heading small-heading">
+                <div>
+                  <h3>{npc.display_name}</h3>
+                  <p className="muted">{npc.full_name} · age {npc.age} · {npc.life_stage.label}</p>
+                </div>
+                <span className={`status-badge ${npc.is_dead ? 'danger' : ''}`}>{npc.status}</span>
+              </div>
+              <p className="muted">{npc.role} · {npc.affiliation || 'no affiliation'} · {npc.territory_name || 'unknown district'}</p>
+              <p>{npc.current_activity || npc.notes || 'No current activity recorded.'}</p>
+              {npc.is_dead && (
+                <p className="dead-note">Dead: {npc.death_game_date || 'date unknown'} · {npc.death_category || 'unknown cause'}</p>
+              )}
+              <button className="btn" onClick={() => openDetail(npc.id)}>View details</button>
+            </div>
+          </article>
+        ))}
+      </div>
+
+      {detail && (
+        <section className={`admin-npc-detail ${detail.is_dead ? 'dead' : ''}`}>
+          <div className="card-heading">
+            <div>
+              <p className="eyebrow">NPC detail</p>
+              <h2>{detail.display_name}</h2>
+              <p className="muted">{detail.role} · {detail.affiliation || 'unknown'} · {detail.territory_name || 'unknown district'}</p>
+            </div>
+            <button className="btn" onClick={() => setDetail(null)}>Close</button>
+          </div>
+
+          <div className="content-grid two-columns">
+            <div className="admin-npc-detail-card">
+              <img src={detail.portrait.url} alt="" />
+              {detail.is_dead && <span className="dead-watermark detail-watermark">DEAD</span>}
+              <p>{detail.biography || detail.notes || 'No biography recorded.'}</p>
+              {detail.is_dead && <p className="dead-note">{detail.death_notes || 'Dead NPC retained for historical inspection.'}</p>}
+            </div>
+
+            <div>
+              <h3>Stats and flags</h3>
+              <dl className="details-grid">
+                {Object.entries(detail.stats).map(([key, value]) => (
+                  <div key={key}><dt>{key.replace('_', ' ')}</dt><dd>{value}</dd></div>
+                ))}
+              </dl>
+              <p className="muted">Flags: {Object.entries(detail.flags).filter(([, value]) => value).map(([key]) => key).join(', ') || 'none'}</p>
+            </div>
+          </div>
+
+          <div className="content-grid two-columns">
+            <section>
+              <h3>Timeline</h3>
+              <div className="timeline compact-timeline">
+                {detail.timeline.map((entry, index) => (
+                  <article key={index}>
+                    <span>{String(entry.event_type || 'event')}</span>
+                    <strong>{String(entry.title || 'Timeline entry')}</strong>
+                    <p className="muted">{String(entry.description || '')}</p>
+                  </article>
+                ))}
+              </div>
+            </section>
+
+            <section>
+              <h3>Relationships</h3>
+              <div className="timeline compact-timeline">
+                {detail.relationships.map((entry, index) => (
+                  <article key={index}>
+                    <span>{String(entry.relationship_type || 'relationship')}</span>
+                    <strong>Trust {String(entry.trust ?? 0)} · suspicion {String(entry.suspicion ?? 0)}</strong>
+                    <p className="muted">{String(entry.notes || '')}</p>
+                  </article>
+                ))}
+              </div>
+            </section>
+          </div>
+        </section>
+      )}
     </section>
   );
 }

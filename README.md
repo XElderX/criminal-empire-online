@@ -1,6 +1,6 @@
-# Criminal Empire Online v0.3.6.4 — Territory, Job & Crime Art Refresh
+# Criminal Empire Online v0.4 — Crimes Expansion
 
-Criminal Empire Online is a browser-based, primarily single-player criminal empire simulation. The player begins with $500, performs small NPC-provided jobs, recruits a crew, equips members, plans structured Dirty Jobs, manages heat and consequences, and works toward owning a warehouse.
+Criminal Empire Online is a browser-based, primarily single-player criminal empire simulation. The player begins with $500, performs small NPC-provided jobs, recruits a crew, equips members, plans structured Dirty Jobs, manages heat and consequences, and now discovers more complex crime opportunities through NPCs and city locations.
 
 ## Technology
 
@@ -12,39 +12,18 @@ Criminal Empire Online is a browser-based, primarily single-player criminal empi
 
 This project is **not Laravel**. Business logic is organized into readable controllers and services under `backend/app`.
 
-## v0.3.6.4 highlights
+## v0.4 highlights
 
-- Replaced territory background art with the new supplied district cards.
-- Replaced dirty job and crime image cards with the new supplied visuals.
-- Updated local `.svg` wrappers so both `.webp` and `.svg` paths render the refreshed art.
-
-- Focused weapon-only art refresh: old weapon assets removed and replaced with the supplied noir card-style weapon visuals.
-- Weapon asset filenames and aliases updated so live inventory and shop views use the new v0.3.6.1 weapon cards.
-
-
-
-- Dark noir crime-management UI with reusable dashboard, card, badge, progress, item, crime, crew, and territory components
-- Local asset system under `frontend/public/assets`; no remote CDN image dependency
-- Production-style local WebP assets for item icons, crime/job thumbnails, businesses, territories, role icons, and richer WebP fallbacks; SVG fallbacks remain as emergency backups
-- Centralized frontend asset mappings in `frontend/src/data/assetManifest.ts`
-- Gender-safe `getCrewPortrait(gender, portraitKey, age)` helper using male-only and female-only portrait paths
-- Dashboard, Crimes, Dirty Jobs, Crew, Recruitment, Inventory/Equipment, Territories, and navigation refreshed for the new visual direction
-- Fifty persistent crew portrait identities extracted from the supplied concept sheets
-- Strict gender-compatible assignment: male NPCs receive male portrait sets and female NPCs receive female portrait sets
-- Five centralized life stages: Very Young, Young, Adult, Mature, and Elder
-- Stable portrait identity across hiring, dismissal, arrest, rehiring, and aging
-- Backend-derived portrait metadata in crew and recruitment API responses
-- Automatic portrait-stage updates through idempotent game-world year processing
-- Safe portrait fallback when a stage asset is not yet available
-- Redesigned cinematic Crew and Recruitment pages with responsive cards, filters, sorting, status, traits, equipment, biography, and history
-- Dedicated crew profile presentation with finances, condition, loadout, statistics, and timeline
-- Developer portrait validation and existing-NPC backfill commands
-- Existing v0.3 tutorial, Dirty Jobs, equipment, heat, crew history, and warehouse systems remain intact
-- New players still begin with exactly $500; existing balances and crew data are never reset
-
-### Current artwork status
-
-The supplied sheets contain 50 distinct character portraits, so the project currently includes 50 optimized adult-stage WebP assets and 50 thumbnails. The code supports five life-stage files for every identity, but the supplied images do not depict the same 50 people at five different ages. Therefore, no unrelated faces were falsely presented as age progressions. Missing stages safely use the matching identity's adult portrait until final life-stage artwork is added.
+- New multi-step Crimes loop: explore, discover, investigate, prepare, assign crew/equipment, execute, resolve event choices, and review outcomes.
+- Crime opportunities are discovered through locations and NPC information instead of all appearing as static buttons.
+- Persistent NPC contacts, informants, witnesses, rivals, and historical dead NPC records now exist in the crime world.
+- Crime preparation actions affect success, police pressure, witness risk, disaster chance, and loot quality through structured effects.
+- Crew stats, roles, loyalty/morale, and selected equipment influence crime risk.
+- Random crime events can pause for player decisions such as patrols, witnesses, rival interference, equipment problems, buyer hesitation, or extra loot.
+- Outcomes can resolve as critical success, success, partial success, failed escape, injury, arrest, police trap, or abandoned opportunity.
+- NPC relationships and timeline memory update after crime interactions.
+- New Admin NPC browser shows persistent NPC world state with filters/search/sorting, stats, affiliations, relationships, timelines, and dead NPC watermark treatment.
+- v0.3.6.5 asset primer applied refreshed supplied crime/job/territory art plus new v0.4 item cards for Screwdriver Set, First-Aid Kit, Surveillance Kit, Dark Clothing, Work Uniform, Vehicle Tools, and Duffel Bag.
 
 
 ## v0.3.6 asset placement

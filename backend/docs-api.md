@@ -220,3 +220,26 @@ POST /api/admin/users/{id}/cash/set
 ```
 
 Portrait stage is derived from the NPC's age. No portrait identity or stage mutation endpoint is exposed to clients. Existing records without a portrait are assigned lazily and can be backfilled in bulk with `php commands/crew-portraits.php backfill`.
+
+## v0.4 Crimes Expansion API
+
+Authenticated player routes:
+
+- `GET /api/crimes` returns legacy quick crimes plus v0.4 discovery locations, active opportunities, active crime runs, recent outcomes, known NPC contacts, available crew, available equipment, and preparation options.
+- `POST /api/crime-locations/{code}/explore` spends the configured location cost and creates a player-specific rumor, lead, confirmed opportunity, or suspicious/trap lead.
+- `GET /api/crime-opportunities/{id}` returns one owned opportunity with preparation, crew, and equipment state.
+- `POST /api/crime-opportunities/{id}/investigate` improves a rumor/lead toward a confirmed or suspicious opportunity.
+- `POST /api/crime-opportunities/{id}/prepare` applies a backend-defined preparation option by code.
+- `POST /api/crime-opportunities/{id}/assign-crew` stores owned active crew assignments for the opportunity.
+- `POST /api/crime-opportunities/{id}/assign-equipment` stores owned item/weapon selections for the opportunity.
+- `POST /api/crime-opportunities/{id}/start` starts the run, locks the user/opportunity, calculates risk from crew/equipment/preparation/heat/contact quality, and either resolves immediately or returns a pending event.
+- `POST /api/crime-runs/{id}/decision` validates a backend-owned event choice and resolves the run.
+- `POST /api/crime-opportunities/{id}/abandon` closes an owned opportunity without reward.
+- `GET /api/npc-contacts` lists persistent NPCs the player has met through the crime loop.
+
+Authenticated admin routes:
+
+- `GET /api/admin/npcs` lists NPCs with filters/search/sort using the existing admin role check.
+- `GET /api/admin/npcs/{id}` returns an NPC detail payload with portrait, life stage, stats, flags, relationships, timeline events, crime involvement, and status logs.
+
+All crime outcomes remain backend-authoritative. The frontend can submit only selected opportunity IDs, owned crew/equipment IDs, preparation codes, and backend-defined decision codes; it cannot submit a result or random outcome.
