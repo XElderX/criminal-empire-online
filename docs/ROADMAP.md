@@ -1,5 +1,13 @@
 # Roadmap
 
+## v0.3.5 — Crew Portraits & Design Update — implemented
+
+- Persistent matching-gender portrait identities
+- Five-stage age architecture and world aging
+- Crew and recruitment redesign
+- Existing-NPC portrait backfill and validation
+- Current final-art gap: four additional matching life-stage images per identity
+
 ## v0.3 — Dirty Jobs Expansion
 
 Implemented:

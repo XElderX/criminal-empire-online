@@ -82,13 +82,54 @@ export interface CrewHistoryEntry {
   created_at: string;
 }
 
+export interface CrewLifeStage {
+  key: 'very_young' | 'young' | 'adult' | 'mature' | 'elder';
+  label: string;
+  minimum_age: number;
+  maximum_age: number;
+  age_range: string;
+  age: number;
+  recruitable: boolean;
+  outside_standard_range: boolean;
+}
+
+export interface CrewPortraitData {
+  identity_key: string | null;
+  gender: 'male' | 'female' | null;
+  stage: CrewLifeStage['key'];
+  stage_label: string;
+  age_range: string;
+  resolved_asset_stage: CrewLifeStage['key'] | null;
+  url: string;
+  thumbnail_url: string;
+  fallback_url: string;
+  focal_x: number;
+  focal_y: number;
+  uses_fallback: boolean;
+  uses_stage_fallback: boolean;
+}
+
+export interface CrewRolePresentation {
+  key: string;
+  name: string;
+  description: string;
+  stats: string[];
+  accent: string;
+  icon: string;
+}
+
 export interface CrewMember {
   id: number;
   npc_id: number;
   first_name: string;
   last_name: string;
   nickname: string | null;
+  gender: 'male' | 'female' | string | null;
   age: number;
+  portrait: CrewPortraitData;
+  life_stage: CrewLifeStage;
+  role_code: string;
+  role: CrewRolePresentation;
   biography: string;
   background: string;
   occupation: string;
@@ -103,6 +144,10 @@ export interface CrewMember {
   status: string;
   level: number;
   experience: number;
+  experience_for_next_level: number;
+  experience_into_level: number;
+  experience_progress_percent: number;
+  reputation_label: string;
   strength: number;
   shooting: number;
   driving: number;
@@ -186,7 +231,12 @@ export interface RecruitmentCandidate {
   first_name: string;
   last_name: string;
   nickname: string | null;
+  gender: 'male' | 'female' | string | null;
   age: number;
+  portrait: CrewPortraitData;
+  life_stage: CrewLifeStage;
+  role_code: string;
+  role: CrewRolePresentation;
   occupation: string;
   territory_name: string;
   biography: string;
@@ -207,7 +257,14 @@ export interface RecruitmentCandidate {
   discipline: number;
   street_knowledge: number;
   endurance: number;
+  level: number;
+  experience: number;
+  experience_for_next_level: number;
+  experience_into_level: number;
+  experience_progress_percent: number;
+  reputation_label: string;
   can_hire: boolean;
+  hire_block_reasons: string[];
   traits: CrewTrait[];
 }
 
@@ -290,6 +347,7 @@ export interface DirtyJobRun {
   accepted_at?: string;
   execution_started_at?: string | null;
   completes_at?: string | null;
+  seconds_remaining?: number;
   outcome?: string | null;
   cash_reward?: number;
   dirty_cash_reward?: number;

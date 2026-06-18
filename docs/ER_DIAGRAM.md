@@ -1,4 +1,4 @@
-# v0.3 entity relationship overview
+# v0.3.5 entity relationship overview
 
 This is a logical overview. The executable source of truth is the ordered SQL in `backend/database/migrations`.
 
@@ -49,3 +49,20 @@ dirty_job_templates
 - Warehouse transfers lock source and destination rows before changing quantities.
 - Vehicle storage uses a unique vehicle row and one `warehouse_id` at a time.
 - Property purchase changes a listing from available to sold inside the same transaction that creates the building and deducts cash.
+
+## v0.3.5 portrait and aging fields
+
+`npcs` now owns the permanent visual identity:
+
+```text
+npcs
+├── portrait_set_key
+├── portrait_stage_cache
+├── portrait_focal_x
+├── portrait_focal_y
+├── birth_game_year
+├── birth_game_day
+└── last_age_processed_game_year
+```
+
+`world_state` stores the current game year/day used by idempotent aging. Portrait assets themselves remain static files and are not stored as database blobs.

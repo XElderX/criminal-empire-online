@@ -33,3 +33,22 @@
 - Added heat reduction, crew recovery, Dirty Job refresh/expiry, warehouse-cost processing, and related CLI commands.
 - Split the React frontend into readable pages and shared components for tutorial, Dirty Jobs, crew, equipment, warehouse, jobs, recruitment, market, territories, and admin.
 - Added v0.3 unit, source-contract, and guarded MySQL integration tests.
+
+## 2026-06-18 — Criminal Empire Online v0.3.5 — Crew Portraits & Design Update
+
+- Added 50 persistent portrait identities from the supplied concept sheets, each with an optimized adult WebP asset and thumbnail.
+- Added a neutral fallback portrait and manifest validation.
+- Added exact life stages: Very Young 16–24, Young 25–31, Adult 32–40, Mature 41–55, and Elder 56–70.
+- Enforced gender-compatible portrait assignment: male NPCs receive male sets and female NPCs receive female sets.
+- Added stable portrait identity fields, focal points, birth game metadata, stage cache, and last processed world year.
+- Added idempotent existing-NPC portrait backfill and stage synchronization commands.
+- Added game-world year processing that ages persistent NPCs without resetting any character state.
+- Added portrait-stage history records when an active or former crew member crosses an age boundary.
+- Added backend-resolved portrait, life-stage, role, experience, and reputation presentation data to crew and recruitment responses.
+- Redesigned My Crew with cinematic portrait cards, summary statistics, filtering, sorting, grid/list views, clear status, skills, traits, equipment, and condition.
+- Added a dedicated crew profile with biography, finances, full stats, traits, equipment, history, and actions.
+- Redesigned recruitment cards with portraits, life stages, biographies, strengths, negative traits, fees, salaries, and clear hire restrictions.
+- Split crew presentation into focused reusable React components rather than one large component.
+- Added responsive desktop, tablet, and mobile styling with lazy image loading and stable portrait dimensions.
+- Added v0.3.5 unit and contract tests.
+- Recorded the art limitation honestly: 50 identity sets exist, but 0 complete matching five-stage sets; 200 age-stage files remain to be supplied.

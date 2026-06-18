@@ -1,4 +1,4 @@
-# Criminal Empire Online v0.3 native installation
+# Criminal Empire Online v0.3.5 native installation
 
 This guide installs the project on Ubuntu with MySQL and normal terminal commands. Docker is not required.
 
@@ -41,7 +41,7 @@ Example location:
 sudo mkdir -p /var/www
 sudo chown -R "$USER":"$USER" /var/www
 cd /var/www
-unzip criminal-empire-online-v0.3-dirty-jobs-expansion.zip
+unzip criminal-empire-online-v0.3.5-crew-portraits-design.zip
 cd criminal-empire-online
 ```
 
@@ -110,6 +110,8 @@ From the `backend` directory:
 
 ```bash
 php database/migrate.php
+php commands/crew-portraits.php backfill
+php commands/crew-portraits.php validate
 ```
 
 A successful fresh installation applies:
@@ -118,12 +120,14 @@ A successful fresh installation applies:
 001_schema.sql
 002_single_player_foundation.sql
 003_dirty_jobs_expansion.sql
+004_crew_portraits_design.sql
 001_seed.sql
 002_single_player_seed.sql
 003_dirty_jobs_seed.sql
+004_crew_portraits_seed.sql
 ```
 
-The v0.3 migration does not reset existing player cash, inventory, crew, or tutorial progress. Existing players are placed in a completed tutorial state so they are not forced through new-player onboarding. Newly registered players receive the active tutorial and exactly $500.
+The v0.3 migration does not reset existing player cash, inventory, crew, or tutorial progress. Existing players are placed in a completed tutorial state so they are not forced through new-player onboarding. Newly registered players receive the active tutorial and exactly $500. The v0.3.5 migration preserves every NPC and crew record; the portrait backfill only assigns identities where `portrait_set_key` is empty.
 
 ## 6. Start the PHP API
 
@@ -177,6 +181,7 @@ php commands/world.php status
 php commands/world.php process-hour
 php commands/world.php process-day
 php commands/world.php process-week
+php commands/world.php process-year
 ```
 
 Dirty Job opportunity tools:
@@ -198,6 +203,15 @@ Economy report:
 
 ```bash
 php commands/economy.php
+```
+
+Crew portrait tools:
+
+```bash
+php commands/crew-portraits.php status
+php commands/crew-portraits.php backfill
+php commands/crew-portraits.php validate
+php commands/crew-portraits.php sync-stages
 ```
 
 Development-only tutorial reset, requiring `APP_ENV=local`:
@@ -232,6 +246,8 @@ Static and service-level tests do not modify the normal game database:
 cd /var/www/criminal-empire-online/backend
 php tests/v03_unit.php
 php tests/v03_contract.php
+php tests/v035_unit.php
+php tests/v035_contract.php
 ```
 
 For the real MySQL integration test, create a dedicated database whose name ends in `_test`:

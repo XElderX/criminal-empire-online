@@ -1,5 +1,34 @@
 # Changelog
 
+## 0.3.5 — 2026-06-18
+
+### Criminal Empire Online v0.3.5 — Crew Portraits & Design Update
+
+Added:
+
+- Fifty stable crew portrait identities with optimized card and thumbnail assets
+- Centralized five-stage age resolver for ages 16–70, with safe out-of-range behavior
+- Strict male-to-male and female-to-female portrait assignment
+- Portrait manifest, resolver, assignment, validation, fallback, and existing-NPC backfill services
+- Game-world crew aging with stage-boundary history entries
+- Redesigned crew overview, detailed profile, recruitment cards, status badges, skill grids, equipment displays, condition meters, and history timeline
+- Responsive desktop, tablet, and mobile crew layouts
+- Portrait validation, backfill, stage synchronization, and year-processing commands
+- v0.3.5 unit and source-contract tests
+
+Changed:
+
+- Crew and recruitment API payloads now include backend-resolved portrait, life-stage, role, reputation, and experience presentation metadata
+- Existing NPCs retain all identity, stats, traits, finances, equipment, history, and gang relationships during portrait backfill and aging
+- Missing life-stage art uses the same identity's adult portrait rather than a random replacement face
+
+Artwork status:
+
+- 50 portrait identities are present
+- 50 adult-stage WebP assets and 50 thumbnails are present
+- 0 sets currently contain all five matching age-stage portraits
+- 200 final life-stage assets remain to be supplied
+
 ## 0.3.0 — 2026-06-17
 
 ### Criminal Empire Online v0.3 — Dirty Jobs Expansion
