@@ -18,6 +18,13 @@ final class CrewService
                     npc.last_name,
                     npc.nickname,
                     npc.age,
+                    npc.gender,
+                    npc.portrait_set_key,
+                    npc.portrait_stage_cache,
+                    npc.portrait_focal_x,
+                    npc.portrait_focal_y,
+                    npc.reputation AS npc_reputation,
+                    npc.criminal_reputation,
                     npc.biography,
                     npc.background,
                     npc.occupation,
@@ -38,9 +45,11 @@ final class CrewService
         $members = $statement->fetchAll();
 
         foreach ($members as &$member) {
+            $member = $this->ensurePortrait($member);
             $member['traits'] = $this->traits((int) $member['npc_id']);
             $member['equipment'] = $this->equipment((int) $member['id']);
             $member['recent_history'] = $this->history((int) $member['id'], 5);
+            $member = (new CrewPresentationService())->present($member);
         }
 
         return $members;
@@ -56,6 +65,13 @@ final class CrewService
                     npc.last_name,
                     npc.nickname,
                     npc.age,
+                    npc.gender,
+                    npc.portrait_set_key,
+                    npc.portrait_stage_cache,
+                    npc.portrait_focal_x,
+                    npc.portrait_focal_y,
+                    npc.reputation AS npc_reputation,
+                    npc.criminal_reputation,
                     npc.biography,
                     npc.background,
                     npc.occupation,
@@ -78,11 +94,12 @@ final class CrewService
             throw new RuntimeException('Crew member not found.');
         }
 
+        $member = $this->ensurePortrait($member);
         $member['traits'] = $this->traits((int) $member['npc_id']);
         $member['equipment'] = $this->equipment((int) $member['id']);
         $member['history'] = $this->history((int) $member['id'], 100);
 
-        return $member;
+        return (new CrewPresentationService())->present($member);
     }
 
     public function equip(
@@ -555,6 +572,33 @@ final class CrewService
         }
 
         return $history;
+    }
+
+    /**
+     * @param array<string, mixed> $person
+     * @return array<string, mixed>
+     */
+    private function ensurePortrait(array $person): array
+    {
+        if (!empty($person['portrait_set_key'])) {
+            return $person;
+        }
+
+        $npc = (new PortraitAssignmentService())->assignToNpc(
+            (int) $person['npc_id']
+        );
+
+        foreach ([
+            'gender',
+            'portrait_set_key',
+            'portrait_stage_cache',
+            'portrait_focal_x',
+            'portrait_focal_y',
+        ] as $field) {
+            $person[$field] = $npc[$field] ?? null;
+        }
+
+        return $person;
     }
 
     private function traits(int $npcId): array

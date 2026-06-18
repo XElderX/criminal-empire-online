@@ -28,12 +28,12 @@ $baseDistrict = [
     'police_presence' => 45,
 ];
 
-$runner->test('Version is v0.3.0', function () use ($runner): void {
-    $runner->assertSame('0.3.0', GameConfig::VERSION);
+$runner->test('Version is v0.3.5', function () use ($runner): void {
+    $runner->assertSame('0.3.5', GameConfig::VERSION);
 });
 
-$runner->test('Release title identifies Dirty Jobs Expansion', function () use ($runner): void {
-    $runner->assertContains('Dirty Jobs Expansion', GameConfig::RELEASE_TITLE);
+$runner->test('Release title identifies Crew Portraits update', function () use ($runner): void {
+    $runner->assertContains('Crew Portraits & Design Update', GameConfig::RELEASE_TITLE);
 });
 
 $runner->test('New-player starting cash is exactly 500', function () use ($runner): void {

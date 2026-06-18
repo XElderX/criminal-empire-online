@@ -19,6 +19,13 @@ final class RecruitmentService
                     npc.last_name,
                     npc.nickname,
                     npc.age,
+                    npc.gender,
+                    npc.portrait_set_key,
+                    npc.portrait_stage_cache,
+                    npc.portrait_focal_x,
+                    npc.portrait_focal_y,
+                    npc.reputation AS npc_reputation,
+                    npc.criminal_reputation,
                     npc.biography,
                     npc.background,
                     npc.occupation,
@@ -42,11 +49,44 @@ final class RecruitmentService
         );
         $statement->execute();
         $candidates = $statement->fetchAll();
+        $crewCountStatement = Database::pdo()->prepare(
+            <<<'SQL'
+                SELECT COUNT(*)
+                FROM player_gang_members
+                WHERE user_id = ?
+                  AND status <> 'dismissed'
+            SQL
+        );
+        $crewCountStatement->execute([$user['id']]);
+        $crewCapacityReached = (int) $crewCountStatement->fetchColumn()
+            >= GameConfig::MAX_GANG_MEMBERS;
+
+        $usedPortraitKeys = [];
 
         foreach ($candidates as &$candidate) {
+            $candidate = $this->ensurePortrait(
+                $candidate,
+                $usedPortraitKeys
+            );
+            $usedPortraitKeys[] = (string) $candidate['portrait_set_key'];
             $candidate['traits'] = $this->traits((int) $candidate['npc_id']);
-            $candidate['can_hire'] = (int) $user['cash'] >= (int) $candidate['recruitment_fee']
-                && (int) ($user['reputation'] ?? 0) >= (int) $candidate['reputation_required'];
+            $candidate = (new CrewPresentationService())->present($candidate);
+
+            $hasEnoughCash = (int) $user['cash']
+                >= (int) $candidate['recruitment_fee'];
+            $hasEnoughReputation = (int) ($user['reputation'] ?? 0)
+                >= (int) $candidate['reputation_required'];
+            $isRecruitableAge = (bool) $candidate['life_stage']['recruitable'];
+
+            $candidate['can_hire'] = $hasEnoughCash
+                && $hasEnoughReputation
+                && $isRecruitableAge
+                && !$crewCapacityReached;
+            $candidate['hire_block_reasons'] = $this->hireBlockReasons(
+                $user,
+                $candidate,
+                $crewCapacityReached
+            );
         }
 
         return $candidates;
@@ -69,7 +109,9 @@ final class RecruitmentService
                         npc.max_health,
                         npc.first_name,
                         npc.last_name,
-                        npc.nickname
+                        npc.nickname,
+                        npc.age,
+                        npc.gender
                     FROM recruitment_candidates candidate
                     JOIN npcs npc ON npc.id = candidate.npc_id
                     WHERE candidate.id = ?
@@ -89,6 +131,20 @@ final class RecruitmentService
             ) {
                 throw new RuntimeException('Candidate is no longer available.');
             }
+
+            $lifeStage = (new CrewAgeStageResolver())->resolve(
+                (int) $candidate['age']
+            );
+
+            if (!(bool) $lifeStage['recruitable']) {
+                throw new RuntimeException(
+                    'Candidate is outside the recruitable age range.'
+                );
+            }
+
+            (new PortraitAssignmentService())->assignToNpc(
+                (int) $candidate['npc_id']
+            );
 
             $userStatement = $pdo->prepare(
                 'SELECT * FROM users WHERE id = ? FOR UPDATE'
@@ -479,6 +535,69 @@ final class RecruitmentService
 
             throw $exception;
         }
+    }
+
+    /**
+     * @param array<string, mixed> $candidate
+     * @param array<int, string> $excludedKeys
+     * @return array<string, mixed>
+     */
+    private function ensurePortrait(
+        array $candidate,
+        array $excludedKeys
+    ): array {
+        if (empty($candidate['portrait_set_key'])) {
+            $npc = (new PortraitAssignmentService())->assignToNpc(
+                (int) $candidate['npc_id'],
+                $excludedKeys
+            );
+
+            foreach ([
+                'gender',
+                'portrait_set_key',
+                'portrait_stage_cache',
+                'portrait_focal_x',
+                'portrait_focal_y',
+            ] as $field) {
+                $candidate[$field] = $npc[$field] ?? null;
+            }
+        }
+
+        return $candidate;
+    }
+
+    /**
+     * @param array<string, mixed> $user
+     * @param array<string, mixed> $candidate
+     * @return array<int, string>
+     */
+    private function hireBlockReasons(
+        array $user,
+        array $candidate,
+        bool $crewCapacityReached
+    ): array {
+        $reasons = [];
+
+        if ((int) $user['cash'] < (int) $candidate['recruitment_fee']) {
+            $reasons[] = 'Insufficient cash.';
+        }
+
+        if (
+            (int) ($user['reputation'] ?? 0)
+            < (int) $candidate['reputation_required']
+        ) {
+            $reasons[] = 'Insufficient reputation.';
+        }
+
+        if (!(bool) ($candidate['life_stage']['recruitable'] ?? true)) {
+            $reasons[] = 'Candidate is outside the recruitable age range.';
+        }
+
+        if ($crewCapacityReached) {
+            $reasons[] = 'Crew capacity reached.';
+        }
+
+        return $reasons;
     }
 
     private function traits(int $npcId): array

@@ -1,0 +1,3 @@
+-- Portrait identities are assigned through the safe CLI backfill command after
+-- this migration. Keeping assignment in PHP allows strict gender matching,
+-- duplicate avoidance, and idempotent handling of existing custom data.
