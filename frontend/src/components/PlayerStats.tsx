@@ -1,47 +1,51 @@
 import type { User } from '../types';
+import { StatCard } from './game/StatCard';
 
 export function PlayerStats({ user }: { user: User }) {
+  const experienceForNextLevel = Math.max(user.level * 350, 100);
+  const experienceIntoLevel = user.experience % experienceForNextLevel;
+
   return (
-    <section className="stats-grid">
-      <article className="card stat-card">
-        <span className="muted">Cash</span>
-        <strong>${Number(user.cash).toLocaleString()}</strong>
-        <small>Bank: ${Number(user.bank_cash).toLocaleString()}</small>
-      </article>
-
-      <article className="card stat-card">
-        <span className="muted">Dirty money</span>
-        <strong>${Number(user.dirty_money).toLocaleString()}</strong>
-        <small>Needs laundering later</small>
-      </article>
-
-      <article className="card stat-card">
-        <span className="muted">Energy</span>
-        <strong>
-          {user.energy}/{user.max_energy}
-        </strong>
-        <small>Limits actions and preparation</small>
-      </article>
-
-      <article className="card stat-card">
-        <span className="muted">Heat</span>
-        <strong className={user.heat > 15 ? 'danger' : ''}>{user.heat}</strong>
-        <small>Higher heat increases police pressure</small>
-      </article>
-
-      <article className="card stat-card">
-        <span className="muted">Level / XP</span>
-        <strong>
-          {user.level} / {user.experience}
-        </strong>
-        <small>Unlocks harder operations</small>
-      </article>
-
-      <article className="card stat-card">
-        <span className="muted">Reputation</span>
-        <strong>{user.reputation}</strong>
-        <small>Builds trust with criminal contacts</small>
-      </article>
+    <section className="stats-grid noir-stats-grid">
+      <StatCard
+        label="Cash"
+        value={`$${Number(user.cash).toLocaleString()}`}
+        detail={`Bank: $${Number(user.bank_cash).toLocaleString()}`}
+        tone="money"
+      />
+      <StatCard
+        label="Dirty money"
+        value={`$${Number(user.dirty_money).toLocaleString()}`}
+        detail="Needs laundering later"
+        tone="purple"
+      />
+      <StatCard
+        label="Energy"
+        value={`${user.energy}/${user.max_energy}`}
+        detail="Limits actions and preparation"
+        tone="energy"
+        progress={{ value: user.energy, max: user.max_energy }}
+      />
+      <StatCard
+        label="Heat"
+        value={user.heat}
+        detail="Police pressure"
+        tone="heat"
+        progress={{ value: user.heat, max: 100 }}
+      />
+      <StatCard
+        label="Level / XP"
+        value={`Level ${user.level}`}
+        detail={`${user.experience.toLocaleString()} total XP`}
+        tone="xp"
+        progress={{ value: experienceIntoLevel, max: experienceForNextLevel }}
+      />
+      <StatCard
+        label="Reputation"
+        value={user.reputation}
+        detail="Criminal contacts trust"
+        tone="blue"
+      />
     </section>
   );
 }

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api } from '../api/client';
 import { Notice } from '../components/Notice';
+import { GameHeader } from '../components/game/GameHeader';
 import { RecruitmentCard } from '../features/crew/components/RecruitmentCard';
 import { displayCrewName } from '../features/crew/utils/crewPresentation';
 import type { RecruitmentCandidate } from '../types';
@@ -104,17 +105,11 @@ export function RecruitmentPage({ onChanged }: RecruitmentPageProps) {
 
   return (
     <section className="page-section recruitment-page">
-      <header className="page-header">
-        <div>
-          <p className="eyebrow">NPC recruitment market</p>
-          <h1>Recruitment</h1>
-          <p className="muted">
-            Candidates are persistent people. Their name, gender-compatible
-            portrait identity, age, traits, history, and finances remain stable
-            after hiring, dismissal, and return to the NPC world.
-          </p>
-        </div>
-      </header>
+      <GameHeader
+        eyebrow="NPC recruitment market"
+        title="Recruitment"
+        description="Candidates are persistent people with gender-compatible portrait paths, age stages, traits, histories, and salaries."
+      />
 
       {message && <Notice message={message} kind="success" />}
       {error && <Notice message={error} kind="error" />}

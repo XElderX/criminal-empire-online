@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api/client';
 import { Notice } from '../components/Notice';
+import { GameHeader } from '../components/game/GameHeader';
 
 interface DrugMarketRow {
   region: string;
@@ -23,16 +24,11 @@ export function MarketPage() {
 
   return (
     <section className="page-section">
-      <header className="page-header">
-        <div>
-          <p className="eyebrow">NPC-controlled economy</p>
-          <h1>Market</h1>
-          <p className="muted">
-            Regional supply, demand, and police pressure are simulated without
-            requiring another human player.
-          </p>
-        </div>
-      </header>
+      <GameHeader
+        eyebrow="Simulated economy"
+        title="Drug Market"
+        description="NPC demand, supply, and police pressure shape regional prices."
+      />
 
       {error && <Notice message={error} kind="error" />}
 

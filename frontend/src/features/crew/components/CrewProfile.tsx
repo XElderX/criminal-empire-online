@@ -41,6 +41,8 @@ export function CrewProfile({ member, history, onClose }: CrewProfileProps) {
         <header className="crew-profile-hero">
           <CrewPortrait
             portrait={member.portrait}
+            gender={member.gender}
+            age={member.age}
             alt={`Portrait of ${name}, age ${member.age}`}
             size="profile"
             status={member.status}

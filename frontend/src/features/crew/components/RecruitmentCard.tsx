@@ -27,6 +27,8 @@ export function RecruitmentCard({
     <article className={`recruit-card crew-accent-${candidate.role.accent}`}>
       <CrewPortrait
         portrait={candidate.portrait}
+        gender={candidate.gender}
+        age={candidate.age}
         alt={`Portrait of ${name}, age ${candidate.age}`}
         size="card"
       />

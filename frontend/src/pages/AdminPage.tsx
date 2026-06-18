@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api/client';
 import { Notice } from '../components/Notice';
+import { GameHeader } from '../components/game/GameHeader';
 import type { User } from '../types';
 
 interface AdminPageProps {

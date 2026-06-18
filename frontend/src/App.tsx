@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api, clearToken, getToken } from './api/client';
-import { Navigation } from './components/Navigation';
+import { GameLayout } from './components/game/GameLayout';
 import { PlayerStats } from './components/PlayerStats';
 import { TutorialPanel } from './components/TutorialPanel';
 import { AdminPage } from './pages/AdminPage';
@@ -104,7 +104,7 @@ export function App() {
     return (
       <main className="auth-shell">
         <section className="card auth-card">
-          <p className="eyebrow">Criminal Empire Online v0.3.5</p>
+          <p className="eyebrow">Criminal Empire Online v0.3.6</p>
           <h1>Loading city state…</h1>
         </section>
       </main>
@@ -116,23 +116,21 @@ export function App() {
   }
 
   return (
-    <div className="app-shell">
-      <Navigation
+    <>
+      <GameLayout
         user={user}
         page={page}
         onNavigate={navigate}
         onLogout={logout}
         onOpenTutorial={() => setTutorialOpen(true)}
-      />
-
-      <main className="container">
+      >
         <PlayerStats user={user} />
         <PageContent
           page={page}
           user={user}
           onChanged={refreshUser}
         />
-      </main>
+      </GameLayout>
 
       <TutorialPanel
         isOpen={tutorialOpen}
@@ -143,7 +141,7 @@ export function App() {
           setTutorialOpen(false);
         }}
       />
-    </div>
+    </>
   );
 }
 

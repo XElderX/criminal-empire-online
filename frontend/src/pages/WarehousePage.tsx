@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api } from '../api/client';
 import { Notice } from '../components/Notice';
+import { GameHeader } from '../components/game/GameHeader';
 import type {
   InventoryAsset,
   InventoryResponse,
@@ -172,16 +173,11 @@ export function WarehousePage({ onChanged }: WarehousePageProps) {
 
   return (
     <section className="page-section">
-      <header className="page-header">
-        <div>
-          <p className="eyebrow">First player-owned building</p>
-          <h1>Warehouse</h1>
-          <p className="muted">
-            Store equipment, weapons, drugs, stolen goods, vehicle parts, and
-            full vehicles. Transfers are transactional and capacity-limited.
-          </p>
-        </div>
-      </header>
+      <GameHeader
+        eyebrow="Storage properties"
+        title="Warehouse"
+        description="Manage stash storage, vehicle slots, upgrades, and transfers with the same noir interface."
+      />
 
       {message && <Notice message={message} kind="success" />}
       {error && <Notice message={error} kind="error" />}

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api } from '../api/client';
 import { Notice } from '../components/Notice';
+import { GameHeader } from '../components/game/GameHeader';
 import type {
   CrewMember,
   StarterJob,
@@ -134,15 +135,11 @@ export function JobsPage({ onChanged }: JobsPageProps) {
 
   return (
     <section className="page-section">
-      <header className="page-header">
-        <div>
-          <p className="eyebrow">Street-level work</p>
-          <h1>Starter Jobs</h1>
-          <p className="muted">
-            Earn your first money, learn risk, and build toward a proper crew.
-          </p>
-        </div>
-      </header>
+      <GameHeader
+        eyebrow="Street-level work"
+        title="Street Jobs"
+        description="Early jobs teach money, heat, and crew basics before larger Dirty Jobs."
+      />
 
       {tutorial?.status === 'active' && tutorial.current_step && (
         <section className="card section-card">

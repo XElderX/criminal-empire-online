@@ -1,3 +1,4 @@
+import { getRoleIcon } from '../../../data/assetManifest';
 import type { CrewRolePresentation } from '../../../types';
 
 export function CrewRoleBadge({ role }: { role: CrewRolePresentation }) {
@@ -6,7 +7,7 @@ export function CrewRoleBadge({ role }: { role: CrewRolePresentation }) {
       className={`crew-role crew-role-${role.accent}`}
       title={role.description}
     >
-      <span aria-hidden="true">{role.icon}</span>
+      <img className="crew-role-icon" src={getRoleIcon(role.key)} alt="" />
       {role.name}
     </span>
   );

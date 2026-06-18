@@ -38,6 +38,8 @@ export function CrewCard({
       <div className="crew-card-portrait-column">
         <CrewPortrait
           portrait={member.portrait}
+          gender={member.gender}
+          age={member.age}
           alt={`Portrait of ${name}, age ${member.age}`}
           status={member.status}
           size={viewMode === 'list' ? 'compact' : 'card'}

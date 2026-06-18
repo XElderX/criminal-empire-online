@@ -1,6 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api } from '../api/client';
 import { Notice } from '../components/Notice';
+import { CrimePictureCard } from '../components/game/CrimePictureCard';
+import { GameHeader } from '../components/game/GameHeader';
+import { HeatBadge } from '../components/game/HeatBadge';
+import { RiskBadge } from '../components/game/RiskBadge';
+import { getJobImage } from '../data/assetManifest';
 import type {
   CrewMember,
   DirtyJobDetail,
@@ -253,16 +258,13 @@ export function DirtyJobsPage({ onChanged }: DirtyJobsPageProps) {
 
   return (
     <section className="page-section dirty-jobs-layout">
-      <header className="page-header full-span">
-        <div>
-          <p className="eyebrow">Story operations</p>
-          <h1>Dirty Jobs</h1>
-          <p className="muted">
-            Accept limited NPC opportunities, prepare the target, assign crew
-            roles, use member loadouts, and manage consequences.
-          </p>
-        </div>
-      </header>
+      <div className="full-span">
+        <GameHeader
+          eyebrow="Planning board"
+          title="Dirty Jobs"
+          description="Cinematic NPC opportunities with preparation, crew roles, risk, heat, and aftermath."
+        />
+      </div>
 
       <div className="full-span">
         {message && <Notice message={message} kind="success" />}
@@ -277,17 +279,22 @@ export function DirtyJobsPage({ onChanged }: DirtyJobsPageProps) {
               <button
                 className={
                   detail?.opportunity.id === opportunity.id
-                    ? 'operation-list-item active'
-                    : 'operation-list-item'
+                    ? 'operation-list-item operation-list-picture active'
+                    : 'operation-list-item operation-list-picture'
                 }
                 key={opportunity.id}
                 onClick={() => openOpportunity(opportunity.id)}
               >
+                <img src={getJobImage(opportunity.title || opportunity.code)} alt="" />
                 <span>Tier {opportunity.tier} · {humanize(opportunity.category)}</span>
                 <strong>{opportunity.title}</strong>
                 <small>
                   ${opportunity.estimated_reward_min}–${opportunity.estimated_reward_max}
                 </small>
+                <span className="operation-badge-row">
+                  <RiskBadge value={opportunity.police_presence} />
+                  <HeatBadge value={opportunity.heat_min} max={opportunity.heat_max} />
+                </span>
               </button>
             ))}
             {opportunities.length === 0 && (
@@ -326,26 +333,23 @@ export function DirtyJobsPage({ onChanged }: DirtyJobsPageProps) {
 
         {detail && (
           <>
-            <section className="card operation-hero">
-              <div className="card-heading">
-                <div>
-                  <p className="eyebrow">
-                    Tier {detail.opportunity.tier} · {humanize(detail.opportunity.category)}
-                  </p>
-                  <h2>{detail.opportunity.title}</h2>
-                </div>
-                <span className="risk-badge">
-                  Police {detail.opportunity.police_presence}
-                </span>
-              </div>
-
-              <p className="lead">{detail.opportunity.introduction}</p>
+            <CrimePictureCard
+              image={getJobImage(detail.opportunity.title || detail.opportunity.code)}
+              title={detail.opportunity.title}
+              eyebrow={`Tier ${detail.opportunity.tier} · ${humanize(detail.opportunity.category)}`}
+              description={detail.opportunity.introduction}
+            >
               <p>{detail.opportunity.briefing || detail.opportunity.short_description}</p>
               <p className="muted">
                 Contact: {detail.opportunity.contact_name} · District:{' '}
                 {detail.opportunity.territory_name} · Expires:{' '}
                 {new Date(detail.opportunity.expires_at).toLocaleString()}
               </p>
+
+              <div className="operation-badge-row">
+                <RiskBadge value={detail.opportunity.police_presence} />
+                <HeatBadge value={detail.opportunity.heat_min} max={detail.opportunity.heat_max} />
+              </div>
 
               <dl className="details-grid">
                 <div>
@@ -355,18 +359,9 @@ export function DirtyJobsPage({ onChanged }: DirtyJobsPageProps) {
                     {detail.opportunity.estimated_reward_max}
                   </dd>
                 </div>
-                <div>
-                  <dt>Energy</dt>
-                  <dd>{detail.opportunity.energy_cost}</dd>
-                </div>
-                <div>
-                  <dt>Heat range</dt>
-                  <dd>{detail.opportunity.heat_min}–{detail.opportunity.heat_max}</dd>
-                </div>
-                <div>
-                  <dt>Minimum crew</dt>
-                  <dd>{detail.opportunity.min_crew_size}</dd>
-                </div>
+                <div><dt>Energy</dt><dd>{detail.opportunity.energy_cost}</dd></div>
+                <div><dt>Minimum crew</dt><dd>{detail.opportunity.min_crew_size}</dd></div>
+                <div><dt>Stage</dt><dd>{detail.run ? humanize(detail.run.status) : 'Available'}</dd></div>
               </dl>
 
               {detail.run && (
@@ -408,7 +403,7 @@ export function DirtyJobsPage({ onChanged }: DirtyJobsPageProps) {
                   Accept Dirty Job
                 </button>
               )}
-            </section>
+            </CrimePictureCard>
 
             {detail.run && (
               <OperationWorkspace

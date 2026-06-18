@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api } from '../api/client';
 import { Notice } from '../components/Notice';
-import { CrewCard } from '../features/crew/components/CrewCard';
+import { GameHeader } from '../components/game/GameHeader';
+import { CrewMemberCard } from '../components/game/CrewMemberCard';
+import { EmptyState } from '../components/game/EmptyState';
+import { LoadingState } from '../components/game/LoadingState';
 import { CrewProfile } from '../features/crew/components/CrewProfile';
 import { formatMoney } from '../features/crew/utils/crewPresentation';
 import type { CrewHistoryEntry, CrewMember } from '../types';
@@ -197,16 +200,11 @@ export function CrewPage({ onChanged }: CrewPageProps) {
 
   return (
     <section className="page-section crew-page">
-      <header className="page-header crew-page-header">
-        <div>
-          <p className="eyebrow">Persistent NPC characters</p>
-          <h1>My Crew</h1>
-          <p className="muted">
-            Every member keeps the same identity, portrait set, biography,
-            equipment, and history while moving through the criminal world.
-          </p>
-        </div>
-      </header>
+      <GameHeader
+        eyebrow="Persistent NPC dossiers"
+        title="Crew"
+        description="Every member keeps the same identity, gender-safe portrait path, biography, equipment, and history while moving through the criminal world."
+      />
 
       {message && <Notice message={message} kind="success" />}
       {error && <Notice message={error} kind="error" />}
@@ -283,13 +281,7 @@ export function CrewPage({ onChanged }: CrewPageProps) {
         </div>
       </section>
 
-      {loading && (
-        <div className="crew-card-skeleton-grid" aria-label="Loading crew">
-          {Array.from({ length: 3 }).map((_, index) => (
-            <div className="crew-card-skeleton" key={index} />
-          ))}
-        </div>
-      )}
+      {loading && <LoadingState label="Loading crew dossiers…" />}
 
       {!loading && members.length === 0 && (
         <div className="card crew-empty-state">
@@ -309,17 +301,17 @@ export function CrewPage({ onChanged }: CrewPageProps) {
       )}
 
       {!loading && members.length > 0 && filteredMembers.length === 0 && (
-        <div className="card empty-state">
-          No crew members match the selected filters.
-        </div>
+        <EmptyState
+          title="No crew members match the selected filters"
+          message="Change role, age, status, or sort filters to find another dossier."
+        />
       )}
 
       {!loading && filteredMembers.length > 0 && (
         <div className={`crew-card-collection crew-card-collection-${viewMode}`}>
           {filteredMembers.map((member) => (
-            <CrewCard
+            <CrewMemberCard
               member={member}
-              viewMode={viewMode}
               busy={loadingId === member.id}
               onOpen={openProfile}
               onPayOverdue={payOverdue}

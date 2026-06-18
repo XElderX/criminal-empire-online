@@ -10,15 +10,15 @@ interface NavigationProps {
 
 const PLAYER_PAGES: Array<{ page: PageName; label: string }> = [
   { page: 'dashboard', label: 'Dashboard' },
-  { page: 'jobs', label: 'Starter Jobs' },
-  { page: 'dirty jobs', label: 'Dirty Jobs' },
-  { page: 'recruitment', label: 'Recruitment' },
-  { page: 'crew', label: 'Crew' },
-  { page: 'equipment', label: 'Equipment' },
-  { page: 'warehouse', label: 'Warehouse' },
   { page: 'crimes', label: 'Crimes' },
-  { page: 'market', label: 'Market' },
-  { page: 'territories', label: 'Districts' },
+  { page: 'dirty jobs', label: 'Dirty Jobs' },
+  { page: 'crew', label: 'Crew' },
+  { page: 'recruitment', label: 'Recruitment' },
+  { page: 'equipment', label: 'Inventory' },
+  { page: 'warehouse', label: 'Warehouse' },
+  { page: 'jobs', label: 'Street Jobs' },
+  { page: 'market', label: 'Drug Market' },
+  { page: 'territories', label: 'Territories' },
 ];
 
 export function Navigation({
@@ -32,7 +32,7 @@ export function Navigation({
     <nav className="nav">
       <div className="brand">
         Criminal Empire
-        <span className="version-badge">v0.3.5</span>
+        <span className="version-badge">v0.3.6</span>
       </div>
 
       <div className="nav-links">

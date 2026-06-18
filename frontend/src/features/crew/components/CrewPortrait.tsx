@@ -1,4 +1,5 @@
-import { useEffect, useState, type CSSProperties } from 'react';
+import { useEffect, useMemo, useState, type CSSProperties } from 'react';
+import { getCrewPortrait } from '../../../data/assetManifest';
 import type { CrewPortraitData } from '../../../types';
 
 interface CrewPortraitProps {
@@ -7,6 +8,8 @@ interface CrewPortraitProps {
   size?: 'compact' | 'card' | 'profile';
   status?: string;
   className?: string;
+  gender?: string | null;
+  age?: number | string | null;
 }
 
 export function CrewPortrait({
@@ -15,21 +18,38 @@ export function CrewPortrait({
   size = 'card',
   status,
   className = '',
+  gender,
+  age,
 }: CrewPortraitProps) {
-  const [source, setSource] = useState(
-    size === 'profile' ? portrait.url : portrait.thumbnail_url,
-  );
+  const sourceList = useMemo(() => {
+    const v036Portrait = getCrewPortrait(
+      gender || portrait.gender,
+      portrait.identity_key,
+      age,
+    );
+
+    const backendSource = size === 'profile' ? portrait.url : portrait.thumbnail_url;
+
+    return [
+      v036Portrait.primary,
+      v036Portrait.adultFallback,
+      backendSource,
+      portrait.fallback_url,
+      v036Portrait.genderFallback,
+      v036Portrait.globalFallback,
+    ].filter((source, index, sources) => Boolean(source) && sources.indexOf(source) === index);
+  }, [age, gender, portrait, size]);
+
+  const [sourceIndex, setSourceIndex] = useState(0);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    setSource(size === 'profile' ? portrait.url : portrait.thumbnail_url);
+    setSourceIndex(0);
     setLoaded(false);
-  }, [portrait.url, portrait.thumbnail_url, size]);
+  }, [sourceList]);
 
   function useFallback(): void {
-    if (source !== portrait.fallback_url) {
-      setSource(portrait.fallback_url);
-    }
+    setSourceIndex((current) => Math.min(current + 1, sourceList.length - 1));
   }
 
   return (
@@ -42,7 +62,7 @@ export function CrewPortrait({
     >
       {!loaded && <span className="crew-portrait-skeleton" aria-hidden="true" />}
       <img
-        src={source}
+        src={sourceList[sourceIndex]}
         alt={alt}
         loading="lazy"
         decoding="async"

@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api } from '../api/client';
 import { Notice } from '../components/Notice';
+import { GameHeader } from '../components/game/GameHeader';
+import { ItemIconCard } from '../components/game/ItemIconCard';
+import { SectionCard } from '../components/game/SectionCard';
 import type { CrewMember, InventoryAsset, InventoryResponse } from '../types';
 
 interface EquipmentPageProps {
@@ -133,21 +136,16 @@ export function EquipmentPage({ onChanged }: EquipmentPageProps) {
 
   return (
     <section className="page-section">
-      <header className="page-header">
-        <div>
-          <p className="eyebrow">Tools and loadouts</p>
-          <h1>Equipment</h1>
-          <p className="muted">
-            Equipment uses structured effects: entry tools, evidence reduction,
-            carrying capacity, concealment, protection, intimidation, and heat.
-          </p>
-        </div>
-      </header>
+      <GameHeader
+        eyebrow="Storage locker"
+        title="Inventory / Equipment"
+        description="Local item icons, crew loadouts, and category cards for tools, protection, vehicles, valuables, and contraband."
+      />
 
       {message && <Notice message={message} kind="success" />}
       {error && <Notice message={error} kind="error" />}
 
-      <section className="card section-card">
+      <SectionCard className="equipment-loadout-card">
         <div className="section-heading-row">
           <div>
             <h2>Crew loadout</h2>
@@ -187,37 +185,33 @@ export function EquipmentPage({ onChanged }: EquipmentPageProps) {
             ))}
           </div>
         )}
-      </section>
+      </SectionCard>
 
       <section className="page-subsection">
         <h2>Owned equipment</h2>
-        <div className="card-grid">
+        <div className="inventory-icon-grid">
           {[...inventory.items, ...inventory.weapons].map((asset) => {
             const assetType = asset.class ? 'weapon' : 'item';
             const available = asset.available_quantity ?? asset.quantity;
 
             return (
-              <article className="card" key={`${assetType}-${asset.id}`}>
-                <div className="card-heading">
-                  <div>
-                    <p className="eyebrow">{asset.equipment_slot || asset.category}</p>
-                    <h3>{asset.name}</h3>
-                  </div>
-                  <span className="status-badge">Owned {asset.quantity}</span>
-                </div>
-
-                <p className="muted">{asset.description || asset.class}</p>
-                <EffectList effects={asset.effects || {}} />
-                <p>Available to equip: {available}</p>
-
-                <button
-                  className="btn primary full-width"
-                  disabled={loading || !selectedMember || available < 1}
-                  onClick={() => equip(assetType, asset.id)}
-                >
-                  Equip to selected member
-                </button>
-              </article>
+              <ItemIconCard
+                item={asset}
+                key={`${assetType}-${asset.id}`}
+                footer={(
+                  <>
+                    <EffectList effects={asset.effects || {}} />
+                    <p className="muted">Available to equip: {available}</p>
+                    <button
+                      className="btn primary full-width"
+                      disabled={loading || !selectedMember || available < 1}
+                      onClick={() => equip(assetType, asset.id)}
+                    >
+                      Equip to selected member
+                    </button>
+                  </>
+                )}
+              />
             );
           })}
         </div>
@@ -225,29 +219,28 @@ export function EquipmentPage({ onChanged }: EquipmentPageProps) {
 
       <section className="page-subsection">
         <h2>Equipment shop</h2>
-        <div className="card-grid">
+        <div className="inventory-icon-grid">
           {shop.map((item) => (
-            <article className="card" key={item.id}>
-              <div className="card-heading">
-                <div>
-                  <p className="eyebrow">{item.category} · {item.equipment_slot}</p>
-                  <h3>{item.name}</h3>
-                </div>
-                <strong>${item.price}</strong>
-              </div>
-              <p>{item.description}</p>
-              <EffectList effects={item.effects || {}} />
-              <p className="muted">
-                Owned {item.quantity || 0} · durability {item.base_durability || 100}%
-              </p>
-              <button
-                className="btn primary full-width"
-                disabled={loading || item.can_buy === false}
-                onClick={() => buy(item.id)}
-              >
-                Buy one
-              </button>
-            </article>
+            <ItemIconCard
+              item={item}
+              key={item.id}
+              footer={(
+                <>
+                  <strong className="money-text">${item.price}</strong>
+                  <EffectList effects={item.effects || {}} />
+                  <p className="muted">
+                    Owned {item.quantity || 0} · durability {item.base_durability || 100}%
+                  </p>
+                  <button
+                    className="btn primary full-width"
+                    disabled={loading || item.can_buy === false}
+                    onClick={() => buy(item.id)}
+                  >
+                    Buy one
+                  </button>
+                </>
+              )}
+            />
           ))}
         </div>
       </section>

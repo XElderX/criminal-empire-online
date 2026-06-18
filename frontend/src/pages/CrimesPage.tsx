@@ -1,6 +1,11 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api/client';
 import { Notice } from '../components/Notice';
+import { CrimePictureCard } from '../components/game/CrimePictureCard';
+import { GameHeader } from '../components/game/GameHeader';
+import { HeatBadge } from '../components/game/HeatBadge';
+import { EmptyState } from '../components/game/EmptyState';
+import { getCrimeImage } from '../data/assetManifest';
 import type { Crime } from '../types';
 
 interface CrimesPageProps {
@@ -33,8 +38,8 @@ export function CrimesPage({ onChanged }: CrimesPageProps) {
 
       setMessage(
         response.success
-          ? `Crime succeeded. You earned $${response.reward}.`
-          : `Crime failed. Heat increased by ${response.heat_gained}.`,
+          ? `Action succeeded. You earned $${response.reward}.`
+          : `Action failed. Heat increased by ${response.heat_gained}.`,
       );
       onChanged();
     } catch (requestError) {
@@ -45,40 +50,45 @@ export function CrimesPage({ onChanged }: CrimesPageProps) {
   }
 
   return (
-    <section className="page-section">
-      <header className="page-header">
-        <div>
-          <p className="eyebrow">Immediate street actions</p>
-          <h1>Crimes</h1>
-          <p className="muted">
-            These remain simple actions. Dirty Jobs provide the deeper
-            preparation, crew, equipment, and story loop.
-          </p>
-        </div>
-      </header>
+    <section className="page-section crimes-page-v036">
+      <GameHeader
+        eyebrow="Immediate street actions"
+        title="Crimes"
+        description="Fast street-level actions with picture cards. Dirty Jobs remain the deeper crew and preparation loop."
+      />
 
       {message && <Notice message={message} kind="success" />}
       {error && <Notice message={error} kind="error" />}
 
-      <div className="card-grid">
+      {crimes.length === 0 && !error && (
+        <EmptyState title="No street actions available" message="Seed crimes or check the API connection." />
+      )}
+
+      <div className="card-grid picture-card-grid">
         {crimes.map((crime) => (
-          <article className="card" key={crime.id}>
-            <h2>{crime.name}</h2>
-            <p>{crime.description}</p>
+          <CrimePictureCard
+            key={crime.id}
+            image={getCrimeImage(crime.name)}
+            title={crime.name}
+            eyebrow={`Difficulty ${crime.success_rate}% base chance`}
+            description={crime.description}
+            actions={(
+              <button
+                className="btn primary full-width"
+                disabled={loadingId === crime.id}
+                onClick={() => commit(crime)}
+              >
+                {loadingId === crime.id ? 'Working…' : 'Commit'}
+              </button>
+            )}
+          >
             <dl className="details-grid">
               <div><dt>Energy</dt><dd>{crime.energy_cost}</dd></div>
-              <div><dt>Base chance</dt><dd>{crime.success_rate}%</dd></div>
-              <div><dt>Heat</dt><dd>+{crime.heat_gain}</dd></div>
+              <div><dt>Chance</dt><dd>{crime.success_rate}%</dd></div>
               <div><dt>Reward</dt><dd>${crime.reward_min}–${crime.reward_max}</dd></div>
+              <div><dt>Heat</dt><dd><HeatBadge value={crime.heat_gain} /></dd></div>
             </dl>
-            <button
-              className="btn primary full-width"
-              disabled={loadingId === crime.id}
-              onClick={() => commit(crime)}
-            >
-              Commit crime
-            </button>
-          </article>
+          </CrimePictureCard>
         ))}
       </div>
     </section>

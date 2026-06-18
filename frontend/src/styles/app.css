@@ -1989,3 +1989,532 @@ label {
     grid-template-columns: 1fr;
   }
 }
+
+/* v0.3.6 — Visual Redesign & Asset Integration */
+:root {
+  --bg-main: #07090b;
+  --bg-panel: #0e1217;
+  --bg-card: #15130f;
+  --border-soft: rgba(116, 103, 82, 0.38);
+  --border-strong: rgba(190, 139, 65, 0.58);
+  --text-main: #f4efe5;
+  --text-muted: #9f9a8f;
+  --accent-money: #74d36f;
+  --accent-heat: #f0644f;
+  --accent-energy: #f0b43f;
+  --accent-xp: #4b93de;
+  --accent-risk: #d9973f;
+  --accent-blue: #60a5fa;
+  --accent-purple: #b37afb;
+}
+
+body {
+  background:
+    radial-gradient(circle at 12% 0%, rgba(190, 139, 65, 0.14), transparent 30rem),
+    radial-gradient(circle at 100% 0%, rgba(46, 87, 137, 0.14), transparent 26rem),
+    linear-gradient(180deg, #090b0e 0%, var(--bg-main) 100%);
+  color: var(--text-main);
+}
+
+.game-shell::before {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  content: '';
+  background-image:
+    linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
+  background-size: 42px 42px;
+  mask-image: linear-gradient(to bottom, rgba(0,0,0,0.6), transparent 70%);
+}
+
+.container.game-container {
+  padding-bottom: 6rem;
+}
+
+.nav {
+  border-bottom-color: var(--border-soft);
+  background: rgba(7, 9, 11, 0.92);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+}
+
+.brand {
+  color: #f2c66d;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.nav button,
+.btn,
+.choice-button,
+.operation-list-item,
+.icon-button {
+  border-color: var(--border-soft);
+  background: linear-gradient(180deg, rgba(36, 33, 27, 0.92), rgba(14, 17, 21, 0.96));
+}
+
+.nav button.active,
+.btn.primary,
+.operation-list-item.active {
+  border-color: rgba(73, 151, 227, 0.82);
+  background: linear-gradient(135deg, rgba(35, 88, 148, 0.92), rgba(17, 39, 72, 0.94));
+  box-shadow: 0 0 22px rgba(73, 151, 227, 0.18);
+}
+
+.card,
+.sub-card,
+.crew-member-card,
+.item-icon-card,
+.crime-picture-card,
+.territory-card {
+  border-color: var(--border-soft);
+  background:
+    linear-gradient(145deg, rgba(26, 23, 18, 0.98), rgba(10, 13, 16, 0.98)),
+    var(--bg-card);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 18px 48px rgba(0, 0, 0, 0.28);
+}
+
+.card:hover,
+.crew-member-card:hover,
+.item-icon-card:hover,
+.crime-picture-card:hover,
+.territory-card:hover {
+  border-color: var(--border-strong);
+}
+
+.eyebrow {
+  color: #c3a36c;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.muted,
+small {
+  color: var(--text-muted);
+}
+
+.money-text,
+.stat-money strong {
+  color: var(--accent-money);
+}
+
+.danger,
+.stat-heat strong {
+  color: var(--accent-heat);
+}
+
+.game-header {
+  margin-bottom: 1rem;
+  padding-bottom: 0.8rem;
+  border-bottom: 1px solid rgba(116, 103, 82, 0.26);
+}
+
+.page-header-actions,
+.section-actions {
+  display: flex;
+  gap: 0.65rem;
+  align-items: center;
+}
+
+.noir-stats-grid {
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  margin-bottom: 1.25rem;
+}
+
+.noir-stat {
+  position: relative;
+  overflow: hidden;
+  min-height: 8.3rem;
+}
+
+.noir-stat::after {
+  position: absolute;
+  inset: auto 0 0;
+  height: 3px;
+  content: '';
+  opacity: 0.9;
+}
+
+.stat-money::after { background: var(--accent-money); }
+.stat-heat::after { background: var(--accent-heat); }
+.stat-energy::after { background: var(--accent-energy); }
+.stat-xp::after { background: var(--accent-xp); }
+.stat-blue::after { background: var(--accent-blue); }
+.stat-purple::after { background: var(--accent-purple); }
+
+.game-progress {
+  display: grid;
+  gap: 0.35rem;
+  width: 100%;
+}
+
+.game-progress-label {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
+.game-progress-track {
+  overflow: hidden;
+  height: 0.45rem;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.game-progress-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #8e8e8e;
+}
+
+.game-progress-money .game-progress-track span { background: var(--accent-money); }
+.game-progress-heat .game-progress-track span { background: var(--accent-heat); }
+.game-progress-energy .game-progress-track span { background: var(--accent-energy); }
+.game-progress-xp .game-progress-track span { background: var(--accent-xp); }
+.game-progress-risk .game-progress-track span { background: var(--accent-risk); }
+.game-progress-blue .game-progress-track span { background: var(--accent-blue); }
+.game-progress-purple .game-progress-track span { background: var(--accent-purple); }
+
+.risk-badge,
+.heat-badge {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 0.28rem 0.58rem;
+  border: 1px solid rgba(217, 151, 63, 0.45);
+  border-radius: 999px;
+  background: rgba(217, 151, 63, 0.12);
+  color: #f2bf69;
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.heat-badge {
+  border-color: rgba(240, 100, 79, 0.45);
+  background: rgba(240, 100, 79, 0.12);
+  color: #ff9a8d;
+}
+
+.risk-very-high,
+.risk-high {
+  border-color: rgba(240, 100, 79, 0.55);
+  color: #ff9a8d;
+}
+
+.dashboard-hero-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 1rem;
+  align-items: center;
+  padding: 1rem;
+}
+
+.player-avatar-frame,
+.item-icon-frame,
+.crime-picture-frame,
+.territory-image-frame {
+  overflow: hidden;
+  border: 1px solid var(--border-soft);
+  border-radius: 0.85rem;
+  background: rgba(0, 0, 0, 0.34);
+}
+
+.player-avatar-frame {
+  width: 6.25rem;
+  height: 6.25rem;
+}
+
+.player-avatar-frame img,
+.item-icon-frame img,
+.crime-picture-frame img,
+.territory-image-frame img,
+.dashboard-picture-panel img,
+.operation-list-picture img,
+.role-icon,
+.crew-role-icon {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.dashboard-hero-body h2 {
+  margin-bottom: 0.75rem;
+}
+
+.dashboard-hero-meters {
+  display: grid;
+  gap: 0.6rem;
+  max-width: 620px;
+}
+
+.dashboard-hero-summary {
+  display: grid;
+  gap: 0.45rem;
+  justify-items: end;
+  color: var(--text-muted);
+}
+
+.dashboard-overview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.dashboard-picture-panel {
+  display: grid;
+  grid-template-columns: 5.5rem minmax(0, 1fr);
+  gap: 0.85rem;
+  align-items: center;
+}
+
+.dashboard-picture-panel img {
+  height: 5.5rem;
+  border: 1px solid var(--border-soft);
+  border-radius: 0.7rem;
+}
+
+.inventory-icon-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.85rem;
+}
+
+.item-icon-card {
+  display: grid;
+  grid-template-columns: 4.7rem minmax(0, 1fr);
+  gap: 0.8rem;
+  align-items: start;
+  padding: 0.8rem;
+  border: 1px solid var(--border-soft);
+  border-radius: 0.9rem;
+}
+
+.item-icon-frame {
+  width: 4.7rem;
+  height: 4.7rem;
+}
+
+.item-icon-content h3,
+.crime-picture-body h2,
+.territory-card-body h2,
+.crew-member-header h2 {
+  margin-bottom: 0.35rem;
+}
+
+.item-icon-footer {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.picture-card-grid {
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+}
+
+.crime-picture-card {
+  overflow: hidden;
+  padding: 0;
+}
+
+.crime-picture-frame {
+  height: 9.5rem;
+  border: 0;
+  border-bottom: 1px solid var(--border-soft);
+  border-radius: 0;
+}
+
+.crime-picture-body {
+  display: grid;
+  gap: 0.7rem;
+  padding: 1rem;
+}
+
+.crime-picture-actions {
+  margin-top: 0.25rem;
+}
+
+.operation-list-picture {
+  display: grid;
+  grid-template-columns: 4.4rem minmax(0, 1fr);
+  text-align: left;
+}
+
+.operation-list-picture img {
+  grid-row: span 4;
+  height: 4.4rem;
+  border: 1px solid var(--border-soft);
+  border-radius: 0.6rem;
+}
+
+.operation-badge-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.4rem;
+}
+
+.territory-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.territory-card {
+  overflow: hidden;
+  padding: 0;
+}
+
+.territory-image-frame {
+  position: relative;
+  height: 11rem;
+  border: 0;
+  border-radius: 0;
+}
+
+.territory-control-badge {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+}
+
+.territory-card-body {
+  padding: 1rem;
+}
+
+.crew-member-card {
+  display: grid;
+  grid-template-columns: minmax(120px, 150px) minmax(0, 1fr);
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.crew-member-body {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.crew-member-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.role-icon,
+.crew-role-icon {
+  flex: 0 0 auto;
+  width: 2.35rem;
+  height: 2.35rem;
+  border: 1px solid var(--border-soft);
+  border-radius: 0.55rem;
+  background: rgba(0, 0, 0, 0.26);
+}
+
+.crew-role-icon {
+  width: 1.2rem;
+  height: 1.2rem;
+  border-radius: 0.3rem;
+}
+
+.crew-meter-stack {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.crew-mini-skills {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.crew-member-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.game-empty-state {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.empty-state-mark {
+  display: grid;
+  width: 3rem;
+  height: 3rem;
+  place-items: center;
+  border: 1px solid var(--border-soft);
+  border-radius: 0.75rem;
+  color: #c3a36c;
+}
+
+.game-loading {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+}
+
+.bottom-nav {
+  position: fixed;
+  right: 0.75rem;
+  bottom: 0.75rem;
+  left: 0.75rem;
+  z-index: 40;
+  display: none;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.35rem;
+  padding: 0.45rem;
+  border: 1px solid var(--border-soft);
+  border-radius: 1rem;
+  background: rgba(7, 9, 11, 0.94);
+  backdrop-filter: blur(14px);
+}
+
+.bottom-nav button {
+  border: 0;
+  border-radius: 0.7rem;
+  background: transparent;
+  color: var(--text-muted);
+  padding: 0.55rem 0.35rem;
+  font-size: 0.76rem;
+}
+
+.bottom-nav button.active {
+  background: rgba(73, 151, 227, 0.18);
+  color: #84beff;
+}
+
+@media (max-width: 860px) {
+  .nav-links {
+    display: none;
+  }
+
+  .bottom-nav {
+    display: grid;
+  }
+
+  .dashboard-hero-card,
+  .crew-member-card {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-hero-summary {
+    justify-items: start;
+  }
+
+  .player-avatar-frame {
+    width: 5.2rem;
+    height: 5.2rem;
+  }
+
+  .crew-mini-skills {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
