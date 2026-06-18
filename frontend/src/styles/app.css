@@ -933,3 +933,1059 @@ label {
     width: 100%;
   }
 }
+
+/* Criminal Empire Online v0.3.5 crew portrait system */
+.crew-page,
+.recruitment-page {
+  --crew-accent: #a9272f;
+  --crew-panel: #0e1217;
+  --crew-panel-soft: #151a20;
+  --crew-border: rgba(160, 171, 184, 0.2);
+}
+
+.crew-accent-red,
+.crew-role-red {
+  --crew-accent: #c42f39;
+}
+
+.crew-accent-amber,
+.crew-role-amber {
+  --crew-accent: #c9912e;
+}
+
+.crew-accent-orange,
+.crew-role-orange {
+  --crew-accent: #d56325;
+}
+
+.crew-accent-violet,
+.crew-role-violet,
+.crew-accent-purple,
+.crew-role-purple {
+  --crew-accent: #8750b5;
+}
+
+.crew-accent-blue,
+.crew-role-blue {
+  --crew-accent: #347db3;
+}
+
+.crew-accent-green,
+.crew-role-green {
+  --crew-accent: #5b9849;
+}
+
+.crew-accent-neutral,
+.crew-role-neutral {
+  --crew-accent: #8a939d;
+}
+
+.crew-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.crew-summary-card {
+  display: flex;
+  min-height: 92px;
+  padding: 1rem;
+  border: 1px solid rgba(111, 122, 136, 0.3);
+  border-radius: 0.8rem;
+  background:
+    linear-gradient(155deg, rgba(29, 34, 40, 0.98), rgba(11, 14, 18, 0.98));
+  flex-direction: column;
+  justify-content: center;
+}
+
+.crew-summary-card span {
+  color: #8f98a3;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.crew-summary-card strong {
+  margin-top: 0.3rem;
+  color: #f2f0eb;
+  font-size: 1.4rem;
+}
+
+.crew-toolbar {
+  display: flex;
+  gap: 1rem;
+  align-items: end;
+  justify-content: space-between;
+  padding: 1rem;
+}
+
+.crew-filter-grid {
+  display: grid;
+  width: min(840px, 100%);
+  grid-template-columns: repeat(4, minmax(140px, 1fr));
+  gap: 0.75rem;
+}
+
+.recruitment-filter-grid {
+  grid-template-columns: repeat(3, minmax(150px, 1fr));
+}
+
+.crew-filter-grid label {
+  margin: 0;
+  color: #a8b0bb;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.crew-filter-grid select {
+  margin-top: 0.4rem;
+  text-transform: none;
+}
+
+.crew-view-toggle {
+  display: flex;
+  gap: 0.45rem;
+  flex-shrink: 0;
+}
+
+.crew-card-collection,
+.recruitment-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.crew-card-collection-grid,
+.recruitment-grid {
+  grid-template-columns: repeat(auto-fit, minmax(390px, 1fr));
+}
+
+.crew-card-collection-list {
+  grid-template-columns: 1fr;
+}
+
+.crew-card {
+  position: relative;
+  display: grid;
+  overflow: hidden;
+  border: 1px solid var(--crew-border);
+  border-radius: 0.8rem;
+  background:
+    linear-gradient(145deg, rgba(20, 24, 29, 0.99), rgba(7, 9, 12, 0.99));
+  box-shadow: 0 22px 50px rgba(0, 0, 0, 0.28);
+}
+
+.crew-card::before,
+.recruit-card::before,
+.crew-profile-modal::before {
+  position: absolute;
+  z-index: 3;
+  top: 0;
+  right: 0;
+  width: 54px;
+  height: 2px;
+  background: var(--crew-accent);
+  content: '';
+  box-shadow: 0 0 18px color-mix(in srgb, var(--crew-accent), transparent 30%);
+}
+
+.crew-card-grid {
+  grid-template-columns: minmax(155px, 38%) minmax(0, 1fr);
+  min-height: 520px;
+}
+
+.crew-card-list {
+  grid-template-columns: 150px minmax(0, 1fr);
+  min-height: 225px;
+}
+
+.crew-card-portrait-column {
+  min-width: 0;
+  background: #07090c;
+}
+
+.crew-card-content {
+  display: flex;
+  min-width: 0;
+  padding: 1rem;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.crew-card-header {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.crew-card-header h2,
+.recruit-card h2,
+.crew-profile-identity h1 {
+  margin: 0.25rem 0 0;
+  color: #eeeae3;
+  font-family: "Arial Narrow", "Roboto Condensed", Impact, sans-serif;
+  font-size: clamp(1.25rem, 2.2vw, 1.8rem);
+  font-stretch: condensed;
+  font-weight: 700;
+  letter-spacing: 0.025em;
+  line-height: 1.06;
+  text-transform: uppercase;
+}
+
+.crew-nickname {
+  color: #cf3139;
+}
+
+.crew-card-kicker,
+.crew-profile-badges {
+  display: flex;
+  gap: 0.55rem;
+  align-items: center;
+  flex-wrap: wrap;
+  color: #9aa2ac;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+}
+
+.crew-card-origin {
+  margin: 0.4rem 0 0;
+  color: #7f8994;
+  font-size: 0.84rem;
+}
+
+.crew-portrait {
+  --portrait-x: 50%;
+  --portrait-y: 45%;
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+  min-height: 210px;
+  background: #0b0e12;
+  isolation: isolate;
+}
+
+.crew-portrait::after {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  background:
+    linear-gradient(180deg, transparent 58%, rgba(2, 3, 4, 0.83) 100%),
+    linear-gradient(90deg, transparent 75%, rgba(2, 3, 4, 0.34) 100%);
+  content: '';
+  pointer-events: none;
+}
+
+.crew-portrait img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: var(--portrait-x) var(--portrait-y);
+}
+
+.crew-portrait-card {
+  aspect-ratio: 4 / 5;
+  min-height: 100%;
+}
+
+.crew-portrait-compact {
+  min-height: 225px;
+}
+
+.crew-portrait-profile {
+  min-height: 540px;
+  aspect-ratio: 4 / 5;
+}
+
+.crew-portrait-skeleton {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  background:
+    linear-gradient(90deg, #11161c 20%, #1d242c 48%, #11161c 76%);
+  background-size: 220% 100%;
+  animation: crew-shimmer 1.4s infinite linear;
+}
+
+.crew-portrait-status {
+  position: absolute;
+  z-index: 4;
+  right: 0.65rem;
+  bottom: 0.65rem;
+  padding: 0.28rem 0.55rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0.25rem;
+  background: rgba(4, 6, 8, 0.82);
+  color: #8bdc72;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.crew-status,
+.crew-role,
+.crew-age-badge {
+  display: inline-flex;
+  gap: 0.35rem;
+  align-items: center;
+  width: fit-content;
+  padding: 0.28rem 0.5rem;
+  border: 1px solid color-mix(in srgb, var(--crew-accent), #3c424a 65%);
+  border-radius: 0.25rem;
+  background: color-mix(in srgb, var(--crew-accent), transparent 87%);
+  color: #d9dde2;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.045em;
+  text-transform: uppercase;
+}
+
+.crew-status-dot {
+  width: 0.42rem;
+  height: 0.42rem;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+.crew-status-active,
+.crew-status-available {
+  color: #7bcf75;
+}
+
+.crew-status-busy {
+  color: #e5ad45;
+}
+
+.crew-status-injured,
+.crew-status-recovering {
+  color: #e88342;
+}
+
+.crew-status-arrested,
+.crew-status-dead {
+  color: #dd555d;
+}
+
+.crew-status-dismissed,
+.crew-status-retired,
+.crew-status-missing {
+  color: #8d949c;
+}
+
+.crew-progress-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.crew-progress-heading {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: space-between;
+  color: #d7d9dc;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.crew-progress-heading small {
+  color: #737d88;
+  font-size: 0.68rem;
+}
+
+.crew-progress-track,
+.crew-condition-track {
+  overflow: hidden;
+  height: 0.35rem;
+  border-radius: 999px;
+  background: #252a30;
+}
+
+.crew-progress-track span,
+.crew-condition-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--crew-accent);
+}
+
+.crew-card-reputation,
+.crew-profile-reputation {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  color: #8f98a3;
+  font-size: 0.74rem;
+  text-transform: uppercase;
+}
+
+.crew-card-reputation strong,
+.crew-profile-reputation strong {
+  color: #d9dce0;
+}
+
+.crew-condition-grid {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.crew-condition-grid.is-compact {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.crew-condition-meter > div:first-child {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: space-between;
+  margin-bottom: 0.3rem;
+  color: #7f8994;
+  font-size: 0.7rem;
+}
+
+.crew-condition-meter strong {
+  color: #d8dce1;
+  font-size: 0.68rem;
+}
+
+.crew-condition-track {
+  height: 0.25rem;
+}
+
+.crew-condition-track span {
+  background: color-mix(in srgb, var(--crew-accent), #77bc68 45%);
+}
+
+.crew-card-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.crew-card-section h3,
+.crew-profile-panel h2 {
+  margin: 0;
+  color: #9ba3ad;
+  font-size: 0.72rem;
+  letter-spacing: 0.075em;
+  text-transform: uppercase;
+}
+
+.crew-skill-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.crew-skill-grid-compact {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.crew-skill {
+  display: grid;
+  min-width: 0;
+  padding: 0.5rem 0.3rem;
+  border: 1px solid color-mix(in srgb, var(--crew-accent), #30363d 75%);
+  border-radius: 0.35rem;
+  background: rgba(4, 6, 8, 0.48);
+  place-items: center;
+  text-align: center;
+}
+
+.crew-skill-icon {
+  color: var(--crew-accent);
+  font-size: 1rem;
+}
+
+.crew-skill-label {
+  max-width: 100%;
+  color: #747e89;
+  font-size: 0.56rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.crew-skill strong {
+  color: #e4e6e8;
+  font-size: 0.82rem;
+}
+
+.crew-trait-list {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.crew-trait {
+  padding: 0.28rem 0.46rem;
+  border: 1px solid rgba(102, 156, 109, 0.35);
+  border-radius: 0.25rem;
+  background: rgba(52, 96, 56, 0.16);
+  color: #9dca9d;
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.crew-trait-negative {
+  border-color: rgba(181, 74, 80, 0.4);
+  background: rgba(111, 36, 41, 0.2);
+  color: #d8868a;
+}
+
+.crew-trait-mixed {
+  border-color: rgba(181, 132, 66, 0.4);
+  background: rgba(103, 76, 31, 0.2);
+  color: #d3aa6d;
+}
+
+.crew-equipment-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(115px, 1fr));
+  gap: 0.45rem;
+}
+
+.crew-equipment-slot {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  min-width: 0;
+  padding: 0.48rem;
+  border: 1px solid #32383f;
+  border-radius: 0.35rem;
+  background: #0a0d11;
+}
+
+.crew-equipment-slot.is-broken {
+  opacity: 0.5;
+}
+
+.crew-equipment-symbol {
+  display: grid;
+  width: 1.8rem;
+  height: 1.8rem;
+  flex: 0 0 auto;
+  border: 1px solid color-mix(in srgb, var(--crew-accent), #3b424a 60%);
+  border-radius: 0.25rem;
+  color: var(--crew-accent);
+  place-items: center;
+}
+
+.crew-equipment-slot div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.crew-equipment-slot strong,
+.crew-equipment-slot small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.crew-equipment-slot strong {
+  color: #d4d7db;
+  font-size: 0.72rem;
+}
+
+.crew-equipment-slot small {
+  color: #727c87;
+  font-size: 0.62rem;
+}
+
+.crew-empty-line {
+  margin: 0;
+  font-size: 0.75rem;
+}
+
+.crew-card-biography,
+.recruit-biography {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 0;
+  color: #9aa1aa;
+  font-size: 0.8rem;
+  font-style: normal;
+  line-height: 1.45;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.crew-card-biography {
+  padding-left: 0.7rem;
+  border-left: 2px solid var(--crew-accent);
+}
+
+.crew-card-footer {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+  margin-top: auto;
+  padding-top: 0.8rem;
+  border-top: 1px solid rgba(126, 136, 147, 0.18);
+}
+
+.crew-card-footer > div:not(.crew-card-actions) {
+  display: flex;
+  flex-direction: column;
+}
+
+.crew-card-footer span,
+.recruit-price-grid span {
+  color: #747d87;
+  font-size: 0.64rem;
+  letter-spacing: 0.045em;
+  text-transform: uppercase;
+}
+
+.crew-card-footer strong,
+.recruit-price-grid strong {
+  color: #d7dade;
+  font-size: 0.78rem;
+}
+
+.crew-card-actions {
+  display: flex;
+  grid-column: 1 / -1;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.crew-card-actions .btn {
+  padding: 0.5rem 0.65rem;
+  font-size: 0.72rem;
+}
+
+.crew-card-list .crew-card-content {
+  display: grid;
+  grid-template-columns: minmax(240px, 1.3fr) minmax(180px, 1fr) minmax(220px, 1fr);
+  align-content: center;
+}
+
+.crew-card-list .crew-card-header,
+.crew-card-list .crew-card-footer {
+  grid-column: auto;
+}
+
+.crew-card-list .crew-card-reputation,
+.crew-card-list .crew-condition-grid,
+.crew-card-list .crew-card-section {
+  align-self: center;
+}
+
+.recruit-card {
+  position: relative;
+  display: grid;
+  overflow: hidden;
+  min-height: 620px;
+  grid-template-columns: minmax(150px, 40%) minmax(0, 1fr);
+  border: 1px solid rgba(160, 171, 184, 0.2);
+  border-radius: 0.8rem;
+  background: linear-gradient(145deg, #15191e, #07090c);
+  box-shadow: 0 22px 50px rgba(0, 0, 0, 0.28);
+}
+
+.recruit-card-content {
+  display: flex;
+  min-width: 0;
+  padding: 1rem;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.recruit-price-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.recruit-price-grid div {
+  display: flex;
+  min-width: 0;
+  padding: 0.5rem;
+  border: 1px solid #30363d;
+  border-radius: 0.35rem;
+  background: #0a0d11;
+  flex-direction: column;
+}
+
+.recruit-block-reasons {
+  margin: 0;
+  padding: 0.6rem 0.75rem 0.6rem 1.8rem;
+  border: 1px solid rgba(196, 68, 75, 0.35);
+  border-radius: 0.35rem;
+  background: rgba(93, 29, 34, 0.18);
+  color: #d98a8e;
+  font-size: 0.72rem;
+}
+
+.crew-empty-state {
+  display: flex;
+  gap: 1.2rem;
+  align-items: center;
+  padding: 1.5rem;
+}
+
+.crew-empty-portrait {
+  display: grid;
+  width: 88px;
+  height: 110px;
+  flex: 0 0 auto;
+  border: 1px solid #3b424a;
+  border-radius: 0.5rem;
+  background: linear-gradient(145deg, #20252b, #0d1014);
+  color: #5f6872;
+  font-size: 2rem;
+  place-items: center;
+}
+
+.crew-profile-modal {
+  --crew-accent: #b12d35;
+  position: relative;
+  width: min(1180px, calc(100% - 2rem));
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+  border: 1px solid rgba(151, 162, 174, 0.25);
+  border-radius: 0.75rem;
+  background: #090c10;
+  box-shadow: 0 32px 90px rgba(0, 0, 0, 0.72);
+}
+
+.crew-profile-close {
+  position: absolute;
+  z-index: 8;
+  top: 0.75rem;
+  right: 0.75rem;
+  display: grid;
+  width: 2.4rem;
+  height: 2.4rem;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+  background: rgba(6, 8, 10, 0.78);
+  color: #e2e4e7;
+  cursor: pointer;
+  font-size: 1.4rem;
+  place-items: center;
+}
+
+.crew-profile-hero {
+  display: grid;
+  grid-template-columns: minmax(300px, 38%) minmax(0, 1fr);
+  min-height: 540px;
+  border-bottom: 1px solid rgba(143, 153, 164, 0.2);
+}
+
+.crew-profile-identity {
+  display: flex;
+  padding: clamp(1.5rem, 4vw, 3rem);
+  background:
+    radial-gradient(circle at top right, color-mix(in srgb, var(--crew-accent), transparent 84%), transparent 45%),
+    linear-gradient(145deg, #171b20, #090c10);
+  flex-direction: column;
+  justify-content: center;
+}
+
+.crew-profile-identity h1 {
+  margin: 0.5rem 0 0.8rem;
+  font-size: clamp(2rem, 5vw, 4rem);
+}
+
+.crew-profile-body {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  background: #292e35;
+}
+
+.crew-profile-panel {
+  min-width: 0;
+  padding: 1.25rem;
+  background: #0e1217;
+}
+
+.crew-profile-wide {
+  grid-column: 1 / -1;
+}
+
+.crew-profile-panel h2 {
+  margin-bottom: 0.9rem;
+  color: #b8bec5;
+}
+
+.crew-profile-biography p {
+  color: #b0b6bd;
+  line-height: 1.65;
+}
+
+.crew-profile-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+  gap: 0.6rem;
+  margin: 0;
+}
+
+.crew-profile-facts div {
+  min-width: 0;
+  padding: 0.65rem;
+  border: 1px solid #30363d;
+  border-radius: 0.35rem;
+  background: #090c10;
+}
+
+.crew-profile-facts dt {
+  color: #727c87;
+  font-size: 0.65rem;
+  letter-spacing: 0.045em;
+  text-transform: uppercase;
+}
+
+.crew-profile-facts dd {
+  overflow-wrap: anywhere;
+  margin: 0.25rem 0 0;
+  color: #d7dade;
+  font-size: 0.82rem;
+}
+
+.crew-history-timeline {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.crew-history-timeline::before {
+  position: absolute;
+  top: 0.5rem;
+  bottom: 0.5rem;
+  left: 0.36rem;
+  width: 1px;
+  background: #39414a;
+  content: '';
+}
+
+.crew-history-timeline article {
+  position: relative;
+  display: grid;
+  grid-template-columns: 0.75rem minmax(0, 1fr);
+  gap: 0.75rem;
+  padding-bottom: 1rem;
+}
+
+.crew-history-marker {
+  position: relative;
+  z-index: 1;
+  width: 0.75rem;
+  height: 0.75rem;
+  margin-top: 0.25rem;
+  border: 2px solid #0e1217;
+  border-radius: 999px;
+  background: var(--crew-accent);
+}
+
+.crew-history-timeline time {
+  display: block;
+  color: #6f7984;
+  font-size: 0.66rem;
+}
+
+.crew-history-timeline strong {
+  display: block;
+  margin-top: 0.15rem;
+  color: #d9dce0;
+  font-size: 0.82rem;
+}
+
+.crew-history-timeline p {
+  margin: 0.25rem 0 0;
+  color: #919aa4;
+  font-size: 0.78rem;
+}
+
+.crew-card-skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 1rem;
+}
+
+.crew-card-skeleton {
+  min-height: 470px;
+  border: 1px solid #252b32;
+  border-radius: 0.8rem;
+  background: linear-gradient(90deg, #11161c 20%, #1c232b 48%, #11161c 76%);
+  background-size: 220% 100%;
+  animation: crew-shimmer 1.4s infinite linear;
+}
+
+@keyframes crew-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -20% 0;
+  }
+}
+
+@media (max-width: 1180px) {
+  .crew-summary-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .crew-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .crew-filter-grid {
+    width: 100%;
+  }
+
+  .crew-card-list .crew-card-content {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 880px) {
+  .crew-card-collection-grid,
+  .recruitment-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .crew-filter-grid,
+  .recruitment-filter-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .crew-card-list {
+    grid-template-columns: 130px minmax(0, 1fr);
+  }
+
+  .crew-card-list .crew-card-content {
+    display: flex;
+  }
+
+  .crew-profile-hero {
+    grid-template-columns: minmax(240px, 40%) minmax(0, 1fr);
+  }
+
+  .crew-profile-identity {
+    padding: 1.4rem;
+  }
+}
+
+@media (max-width: 650px) {
+  .crew-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .crew-filter-grid,
+  .recruitment-filter-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .crew-view-toggle {
+    width: 100%;
+  }
+
+  .crew-view-toggle .btn {
+    flex: 1;
+  }
+
+  .crew-card-grid,
+  .crew-card-list,
+  .recruit-card {
+    grid-template-columns: 1fr;
+  }
+
+  .crew-card-portrait-column,
+  .recruit-card > .crew-portrait {
+    height: min(520px, 105vw);
+  }
+
+  .crew-card-list .crew-portrait {
+    min-height: 320px;
+  }
+
+  .crew-card-header {
+    flex-direction: column;
+  }
+
+  .crew-condition-grid.is-compact {
+    grid-template-columns: 1fr;
+  }
+
+  .crew-skill-grid-compact {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .crew-card-footer,
+  .recruit-price-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .crew-card-actions {
+    flex-direction: column;
+  }
+
+  .crew-card-actions .btn {
+    width: 100%;
+  }
+
+  .crew-empty-state {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .crew-profile-modal {
+    width: 100%;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+
+  .crew-profile-hero,
+  .crew-profile-body {
+    grid-template-columns: 1fr;
+  }
+
+  .crew-profile-hero {
+    min-height: 0;
+  }
+
+  .crew-portrait-profile {
+    min-height: 480px;
+  }
+
+  .crew-profile-wide {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 420px) {
+  .crew-summary-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .crew-card-content,
+  .recruit-card-content,
+  .crew-profile-panel {
+    padding: 0.85rem;
+  }
+
+  .crew-skill-grid,
+  .crew-skill-grid-compact {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .crew-equipment-grid {
+    grid-template-columns: 1fr;
+  }
+}

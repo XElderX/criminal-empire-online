@@ -1,6 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { api } from '../api/client';
 import { Notice } from '../components/Notice';
+import { RecruitmentCard } from '../features/crew/components/RecruitmentCard';
+import { displayCrewName } from '../features/crew/utils/crewPresentation';
 import type { RecruitmentCandidate } from '../types';
 
 interface RecruitmentPageProps {
@@ -9,16 +11,27 @@ interface RecruitmentPageProps {
 
 export function RecruitmentPage({ onChanged }: RecruitmentPageProps) {
   const [candidates, setCandidates] = useState<RecruitmentCandidate[]>([]);
+  const [roleFilter, setRoleFilter] = useState('all');
+  const [ageFilter, setAgeFilter] = useState('all');
+  const [sortMode, setSortMode] = useState('fee');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [loadingId, setLoadingId] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
 
   async function load(): Promise<void> {
+    setLoading(true);
+    setError('');
+
     try {
-      const response = await api<{ data: RecruitmentCandidate[] }>('/recruitment');
+      const response = await api<{ data: RecruitmentCandidate[] }>(
+        '/recruitment',
+      );
       setCandidates(response.data);
     } catch (requestError) {
       setError((requestError as Error).message);
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -26,9 +39,43 @@ export function RecruitmentPage({ onChanged }: RecruitmentPageProps) {
     void load();
   }, []);
 
+  const visibleCandidates = useMemo(() => {
+    const filtered = candidates.filter((candidate) => {
+      const roleMatches = roleFilter === 'all'
+        || candidate.role_code === roleFilter;
+      const ageMatches = ageFilter === 'all'
+        || candidate.life_stage.key === ageFilter;
+
+      return roleMatches && ageMatches;
+    });
+
+    return filtered.sort((left, right) => {
+      if (sortMode === 'salary') {
+        return left.salary_weekly - right.salary_weekly;
+      }
+
+      if (sortMode === 'level') {
+        return right.level - left.level;
+      }
+
+      if (sortMode === 'age') {
+        return left.age - right.age;
+      }
+
+      return left.recruitment_fee - right.recruitment_fee;
+    });
+  }, [candidates, roleFilter, ageFilter, sortMode]);
+
+  const roleOptions = useMemo(() => (
+    Array.from(new Map(
+      candidates.map((candidate) => [candidate.role_code, candidate.role.name]),
+    ).entries())
+  ), [candidates]);
+
   async function hire(candidate: RecruitmentCandidate): Promise<void> {
     const confirmed = window.confirm(
-      `Hire ${displayName(candidate)} for $${candidate.recruitment_fee}? Recruitment fees are not refundable.`,
+      `Hire ${displayCrewName(candidate)} for $${candidate.recruitment_fee}? `
+        + 'Recruitment fees are not refundable.',
     );
 
     if (!confirmed) {
@@ -56,14 +103,15 @@ export function RecruitmentPage({ onChanged }: RecruitmentPageProps) {
   }
 
   return (
-    <section className="page-section">
+    <section className="page-section recruitment-page">
       <header className="page-header">
         <div>
           <p className="eyebrow">NPC recruitment market</p>
           <h1>Recruitment</h1>
           <p className="muted">
-            Street recruits are persistent characters with their own history,
-            money, traits, wages, and ambitions.
+            Candidates are persistent people. Their name, gender-compatible
+            portrait identity, age, traits, history, and finances remain stable
+            after hiring, dismissal, and return to the NPC world.
           </p>
         </div>
       </header>
@@ -71,104 +119,81 @@ export function RecruitmentPage({ onChanged }: RecruitmentPageProps) {
       {message && <Notice message={message} kind="success" />}
       {error && <Notice message={error} kind="error" />}
 
-      <div className="card-grid">
-        {candidates.map((candidate) => (
-          <article className="card profile-card" key={candidate.id}>
-            <div className="card-heading">
-              <div>
-                <p className="eyebrow">
-                  {candidate.occupation} · age {candidate.age}
-                </p>
-                <h2>{displayName(candidate)}</h2>
-              </div>
-              <span className="status-badge">{candidate.territory_name}</span>
-            </div>
-
-            <p>{candidate.biography}</p>
-            {candidate.background && (
-              <p className="muted">Background: {candidate.background}</p>
-            )}
-
-            <dl className="details-grid">
-              <div>
-                <dt>Recruitment fee</dt>
-                <dd>${candidate.recruitment_fee}</dd>
-              </div>
-              <div>
-                <dt>Weekly salary</dt>
-                <dd>${candidate.salary_weekly}</dd>
-              </div>
-              <div>
-                <dt>Personal cash</dt>
-                <dd>${candidate.personal_cash}</dd>
-              </div>
-              <div>
-                <dt>Morale / loyalty</dt>
-                <dd>{candidate.morale} / {candidate.loyalty}</dd>
-              </div>
-            </dl>
-
-            <StatTable candidate={candidate} />
-
-            <div className="tag-row">
-              {candidate.traits.map((trait) => (
-                <span
-                  className={`tag ${trait.polarity === 'negative' ? 'tag-negative' : ''}`}
-                  title={trait.description}
-                  key={trait.code}
-                >
-                  {trait.name}
-                </span>
+      <section className="crew-toolbar card">
+        <div className="crew-filter-grid recruitment-filter-grid">
+          <label>
+            Role tendency
+            <select value={roleFilter} onChange={(event) => setRoleFilter(event.target.value)}>
+              <option value="all">All roles</option>
+              {roleOptions.map(([key, label]) => (
+                <option value={key} key={key}>{label}</option>
               ))}
-            </div>
+            </select>
+          </label>
 
-            <button
-              className="btn primary full-width"
-              disabled={!candidate.can_hire || loadingId === candidate.id}
-              onClick={() => hire(candidate)}
-            >
-              {loadingId === candidate.id ? 'Hiring…' : 'Hire recruit'}
-            </button>
-          </article>
-        ))}
-      </div>
+          <label>
+            Age stage
+            <select value={ageFilter} onChange={(event) => setAgeFilter(event.target.value)}>
+              <option value="all">All life stages</option>
+              <option value="very_young">Very Young</option>
+              <option value="young">Young</option>
+              <option value="adult">Adult</option>
+              <option value="mature">Mature</option>
+              <option value="elder">Elder</option>
+            </select>
+          </label>
 
-      {candidates.length === 0 && (
+          <label>
+            Sort by
+            <select value={sortMode} onChange={(event) => setSortMode(event.target.value)}>
+              <option value="fee">Lowest recruitment fee</option>
+              <option value="salary">Lowest weekly salary</option>
+              <option value="level">Highest level</option>
+              <option value="age">Youngest</option>
+            </select>
+          </label>
+        </div>
+      </section>
+
+      {loading && (
+        <div className="recruitment-grid" aria-label="Loading recruitment candidates">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <div className="crew-card-skeleton" key={index} />
+          ))}
+        </div>
+      )}
+
+      {!loading && visibleCandidates.length > 0 && (
+        <div className="recruitment-grid">
+          {visibleCandidates.map((candidate) => (
+            <RecruitmentCard
+              candidate={candidate}
+              busy={loadingId === candidate.id}
+              onHire={hire}
+              key={candidate.id}
+            />
+          ))}
+        </div>
+      )}
+
+      {!loading && candidates.length === 0 && (
+        <div className="card crew-empty-state">
+          <div className="crew-empty-portrait" aria-hidden="true">?</div>
+          <div>
+            <h2>No candidates are available</h2>
+            <p>
+              The NPC recruitment pool refreshes through world processing.
+              Existing characters keep their portraits when they return.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {!loading && candidates.length > 0 && visibleCandidates.length === 0 && (
         <div className="card empty-state">
-          No candidates are available. The NPC recruitment pool refreshes
-          through world processing.
+          No recruitment candidates match the selected filters.
         </div>
       )}
     </section>
   );
-}
-
-function StatTable({ candidate }: { candidate: RecruitmentCandidate }) {
-  const stats = [
-    ['Strength', candidate.strength],
-    ['Shooting', candidate.shooting],
-    ['Driving', candidate.driving],
-    ['Intelligence', candidate.intelligence],
-    ['Stealth', candidate.stealth],
-    ['Intimidation', candidate.intimidation],
-    ['Discipline', candidate.discipline],
-    ['Street knowledge', candidate.street_knowledge],
-    ['Endurance', candidate.endurance],
-  ];
-
-  return (
-    <div className="compact-stats">
-      {stats.map(([name, value]) => (
-        <div key={name}>
-          <span>{name}</span>
-          <strong>{value}</strong>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function displayName(candidate: RecruitmentCandidate): string {
-  const nickname = candidate.nickname ? ` “${candidate.nickname}”` : '';
-  return `${candidate.first_name}${nickname} ${candidate.last_name}`;
 }

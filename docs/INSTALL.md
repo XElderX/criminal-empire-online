@@ -1,6 +1,6 @@
 # Installation
 
-The supported local installation for Criminal Empire Online v0.3 uses native PHP, MySQL, Node.js, and npm. Docker is not required.
+The supported local installation for Criminal Empire Online v0.3.5 uses native PHP, MySQL, Node.js, and npm. Docker is not required.
 
 Follow the complete guide:
 

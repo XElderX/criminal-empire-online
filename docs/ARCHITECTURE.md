@@ -2,7 +2,7 @@
 
 ## Application shape
 
-Criminal Empire Online v0.3 uses a lightweight custom PHP REST API and a React/TypeScript frontend.
+Criminal Empire Online v0.3.5 uses a lightweight custom PHP REST API and a React/TypeScript frontend.
 
 ```text
 criminal-empire-online/
@@ -110,7 +110,7 @@ The command files are designed for manual development use or cron scheduling.
 
 ## Frontend conventions
 
-The v0.3 frontend is split into feature pages instead of one large component. API state remains server-authoritative. Components show backend validation errors, disabled states, empty states, confirmation prompts, and operation timers without exposing hidden random rolls.
+The v0.3.5 frontend is split into feature pages instead of one large component. API state remains server-authoritative. Components show backend validation errors, disabled states, empty states, confirmation prompts, and operation timers without exposing hidden random rolls.
 
 ## Security and future hardening
 
@@ -133,3 +133,26 @@ Recommended before a public production launch:
 - Backup and migration deployment policy
 - Broader MySQL concurrency tests
 - More granular administrator permissions
+
+
+## Crew portrait architecture
+
+The v0.3.5 portrait layer is deliberately separate from crew ownership. `npcs` stores a permanent `portrait_set_key`, while `player_gang_members` continues to store the relationship between a player and that NPC. Dismissal, world return, or rehiring therefore does not regenerate the visual identity.
+
+Backend responsibilities:
+
+- `CrewAgeStageResolver` owns age boundaries.
+- `PortraitManifestService` loads and validates static asset metadata.
+- `PortraitAssignmentService` assigns matching-gender identities and performs idempotent backfill.
+- `CrewPortraitResolver` resolves the backend-authoritative stage and safe asset URL.
+- `CrewAgingService` advances persistent NPC ages through world time.
+- `CrewPresentationService` shapes crew and recruitment API responses.
+
+Frontend responsibilities:
+
+- Render the portrait URL supplied by the API.
+- Lazy-load only the current thumbnail or profile image.
+- Use the supplied focal point and fallback URL.
+- Never calculate or submit a portrait stage.
+
+Static portrait assets remain in `frontend/public`, so they are browser-cacheable and do not inflate the JavaScript bundle.

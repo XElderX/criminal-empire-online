@@ -4,6 +4,7 @@ require_once __DIR__ . '/../app/Core/Autoload.php';
 
 use App\Core\App;
 use App\Core\Database;
+use App\Services\CrewAgingService;
 use App\Services\CrewRecoveryService;
 use App\Services\DirtyJobGeneratorService;
 use App\Services\EnergyService;
@@ -20,13 +21,14 @@ $result = match ($command) {
     'process-hour' => processHour(),
     'process-day' => processDay(),
     'process-week' => processWeek(),
+    'process-year' => processYear(),
     default => null,
 };
 
 if ($result === null) {
     fwrite(
         STDERR,
-        "Usage: php commands/world.php status|process-hour|process-day|process-week\n"
+        "Usage: php commands/world.php status|process-hour|process-day|process-week|process-year\n"
     );
     exit(1);
 }
@@ -138,5 +140,14 @@ function processWeek(): array
         'warehouse_costs' => (new WarehouseService())->processWeeklyCosts(),
         'dirty_jobs_expired' => $generator->expireOldOpportunities(),
         'dirty_jobs_refreshed' => $generator->refreshForAllUsers(),
+    ];
+}
+
+function processYear(): array
+{
+    return [
+        'command' => 'process-year',
+        'processed_at' => date(DATE_ATOM),
+        'crew_aging' => (new CrewAgingService())->advanceOneYear(),
     ];
 }

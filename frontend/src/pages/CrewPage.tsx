@@ -1,37 +1,116 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { api } from '../api/client';
 import { Notice } from '../components/Notice';
+import { CrewCard } from '../features/crew/components/CrewCard';
+import { CrewProfile } from '../features/crew/components/CrewProfile';
+import { formatMoney } from '../features/crew/utils/crewPresentation';
 import type { CrewHistoryEntry, CrewMember } from '../types';
 
 interface CrewPageProps {
   onChanged: () => void;
 }
 
+interface CrewResponse {
+  data: CrewMember[];
+  meta?: {
+    maximum_capacity: number;
+    weekly_salary_total: number;
+  };
+}
+
+type SortKey = 'name' | 'age' | 'level' | 'loyalty' | 'morale' | 'salary';
+
 export function CrewPage({ onChanged }: CrewPageProps) {
   const [members, setMembers] = useState<CrewMember[]>([]);
+  const [maximumCapacity, setMaximumCapacity] = useState(12);
   const [selectedMember, setSelectedMember] = useState<CrewMember | null>(null);
   const [history, setHistory] = useState<CrewHistoryEntry[]>([]);
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [roleFilter, setRoleFilter] = useState('all');
+  const [ageFilter, setAgeFilter] = useState('all');
+  const [sortKey, setSortKey] = useState<SortKey>('name');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [loadingId, setLoadingId] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
 
   async function load(): Promise<void> {
+    setLoading(true);
+    setError('');
+
     try {
-      const response = await api<{ data: CrewMember[] }>('/my-gang');
+      const response = await api<CrewResponse>('/my-gang');
       setMembers(response.data);
+      setMaximumCapacity(response.meta?.maximum_capacity ?? 12);
 
       if (selectedMember) {
-        const fresh = response.data.find((member) => member.id === selectedMember.id);
-        setSelectedMember(fresh || null);
+        const freshMember = response.data.find(
+          (member) => member.id === selectedMember.id,
+        );
+        setSelectedMember(freshMember ?? null);
       }
     } catch (requestError) {
       setError((requestError as Error).message);
+    } finally {
+      setLoading(false);
     }
   }
 
   useEffect(() => {
     void load();
   }, []);
+
+  const filteredMembers = useMemo(() => {
+    const filtered = members.filter((member) => {
+      const statusMatches = statusFilter === 'all'
+        || member.status === statusFilter;
+      const roleMatches = roleFilter === 'all'
+        || member.role_code === roleFilter;
+      const ageMatches = ageFilter === 'all'
+        || member.life_stage.key === ageFilter;
+
+      return statusMatches && roleMatches && ageMatches;
+    });
+
+    return filtered.sort((left, right) => {
+      switch (sortKey) {
+        case 'age':
+          return left.age - right.age;
+        case 'level':
+          return right.level - left.level;
+        case 'loyalty':
+          return right.loyalty - left.loyalty;
+        case 'morale':
+          return right.morale - left.morale;
+        case 'salary':
+          return right.salary_weekly - left.salary_weekly;
+        case 'name':
+        default:
+          return `${left.first_name} ${left.last_name}`.localeCompare(
+            `${right.first_name} ${right.last_name}`,
+          );
+      }
+    });
+  }, [members, statusFilter, roleFilter, ageFilter, sortKey]);
+
+  const summary = useMemo(() => ({
+    active: members.filter((member) => member.status === 'active').length,
+    busy: members.filter((member) => member.status === 'busy').length,
+    injured: members.filter((member) => member.status === 'injured').length,
+    arrested: members.filter((member) => member.status === 'arrested').length,
+    available: members.filter((member) => member.status === 'active').length,
+    weeklySalary: members.reduce(
+      (total, member) => total + Number(member.salary_weekly),
+      0,
+    ),
+  }), [members]);
+
+  const roleOptions = useMemo(() => (
+    Array.from(new Map(
+      members.map((member) => [member.role_code, member.role.name]),
+    ).entries())
+  ), [members]);
 
   async function openProfile(member: CrewMember): Promise<void> {
     setError('');
@@ -60,7 +139,9 @@ export function CrewPage({ onChanged }: CrewPageProps) {
         { method: 'POST' },
       );
 
-      setMessage(`${response.message} $${response.amount} was transferred.`);
+      setMessage(
+        `${response.message} ${formatMoney(response.amount)} was transferred.`,
+      );
       await load();
       onChanged();
     } catch (requestError) {
@@ -72,7 +153,7 @@ export function CrewPage({ onChanged }: CrewPageProps) {
 
   async function dismiss(member: CrewMember): Promise<void> {
     const reason = window.prompt(
-      `Why are you dismissing ${displayName(member)}?`,
+      `Why are you dismissing ${member.first_name} ${member.last_name}?`,
       'No longer needed in the active crew.',
     );
 
@@ -81,7 +162,8 @@ export function CrewPage({ onChanged }: CrewPageProps) {
     }
 
     const confirmed = window.confirm(
-      'Dismiss this member? Their identity and history will remain in the NPC world, but recruitment fees will not be refunded.',
+      'Dismiss this member? Their portrait identity and history will remain '
+        + 'in the NPC world, but recruitment fees will not be refunded.',
     );
 
     if (!confirmed) {
@@ -114,15 +196,14 @@ export function CrewPage({ onChanged }: CrewPageProps) {
   }
 
   return (
-    <section className="page-section">
-      <header className="page-header">
+    <section className="page-section crew-page">
+      <header className="page-header crew-page-header">
         <div>
           <p className="eyebrow">Persistent NPC characters</p>
           <h1>My Crew</h1>
           <p className="muted">
-            Manage health, morale, loyalty, wages, loadouts, and personal
-            histories. Busy, injured, recovering, and arrested members cannot
-            take every assignment.
+            Every member keeps the same identity, portrait set, biography,
+            equipment, and history while moving through the criminal world.
           </p>
         </div>
       </header>
@@ -130,209 +211,141 @@ export function CrewPage({ onChanged }: CrewPageProps) {
       {message && <Notice message={message} kind="success" />}
       {error && <Notice message={error} kind="error" />}
 
-      {members.length === 0 && (
-        <div className="card empty-state">
-          You are still working alone. Complete starter jobs and visit the
-          recruitment market when you can afford your first street recruit.
+      <div className="crew-summary-grid">
+        <Summary label="Crew capacity" value={`${members.length}/${maximumCapacity}`} />
+        <Summary label="Weekly salaries" value={formatMoney(summary.weeklySalary)} />
+        <Summary label="Active" value={summary.active} />
+        <Summary label="Busy" value={summary.busy} />
+        <Summary label="Injured" value={summary.injured} />
+        <Summary label="Arrested" value={summary.arrested} />
+      </div>
+
+      <section className="crew-toolbar card">
+        <div className="crew-filter-grid">
+          <label>
+            Status
+            <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
+              <option value="all">All statuses</option>
+              {Array.from(new Set(members.map((member) => member.status))).map((status) => (
+                <option value={status} key={status}>{status}</option>
+              ))}
+            </select>
+          </label>
+
+          <label>
+            Role
+            <select value={roleFilter} onChange={(event) => setRoleFilter(event.target.value)}>
+              <option value="all">All roles</option>
+              {roleOptions.map(([key, label]) => (
+                <option value={key} key={key}>{label}</option>
+              ))}
+            </select>
+          </label>
+
+          <label>
+            Age stage
+            <select value={ageFilter} onChange={(event) => setAgeFilter(event.target.value)}>
+              <option value="all">All life stages</option>
+              <option value="very_young">Very Young</option>
+              <option value="young">Young</option>
+              <option value="adult">Adult</option>
+              <option value="mature">Mature</option>
+              <option value="elder">Elder</option>
+            </select>
+          </label>
+
+          <label>
+            Sort by
+            <select value={sortKey} onChange={(event) => setSortKey(event.target.value as SortKey)}>
+              <option value="name">Name</option>
+              <option value="age">Age</option>
+              <option value="level">Level</option>
+              <option value="loyalty">Loyalty</option>
+              <option value="morale">Morale</option>
+              <option value="salary">Salary</option>
+            </select>
+          </label>
+        </div>
+
+        <div className="crew-view-toggle" aria-label="Crew view mode">
+          <button
+            className={`btn ${viewMode === 'grid' ? 'primary' : ''}`}
+            onClick={() => setViewMode('grid')}
+          >
+            Grid
+          </button>
+          <button
+            className={`btn ${viewMode === 'list' ? 'primary' : ''}`}
+            onClick={() => setViewMode('list')}
+          >
+            Compact list
+          </button>
+        </div>
+      </section>
+
+      {loading && (
+        <div className="crew-card-skeleton-grid" aria-label="Loading crew">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <div className="crew-card-skeleton" key={index} />
+          ))}
         </div>
       )}
 
-      <div className="card-grid">
-        {members.map((member) => (
-          <article className="card profile-card" key={member.id}>
-            <div className="card-heading">
-              <div>
-                <p className="eyebrow">
-                  {member.occupation} · age {member.age}
-                </p>
-                <h2>{displayName(member)}</h2>
-              </div>
-              <span className={`status-badge status-${member.status}`}>
-                {member.status}
-              </span>
-            </div>
-
-            <p>{member.biography}</p>
-            <p className="muted">
-              From {member.territory_name} · {member.background}
+      {!loading && members.length === 0 && (
+        <div className="card crew-empty-state">
+          <div className="crew-empty-portrait" aria-hidden="true">?</div>
+          <div>
+            <h2>You are still working alone</h2>
+            <p>
+              Crew members unlock role assignments, specialist skills, and
+              more reliable Dirty Job preparation. Recruits cost money and
+              expect a weekly salary.
             </p>
+            <p className="muted">
+              Complete starter jobs, save cash, then open Recruitment.
+            </p>
+          </div>
+        </div>
+      )}
 
-            <div className="meter-grid">
-              <Meter label="Health" value={member.health} maximum={member.max_health} />
-              <Meter label="Morale" value={member.morale} maximum={100} />
-              <Meter label="Loyalty" value={member.loyalty} maximum={100} />
-            </div>
+      {!loading && members.length > 0 && filteredMembers.length === 0 && (
+        <div className="card empty-state">
+          No crew members match the selected filters.
+        </div>
+      )}
 
-            <dl className="details-grid">
-              <div>
-                <dt>Personal cash</dt>
-                <dd>${member.personal_cash}</dd>
-              </div>
-              <div>
-                <dt>Weekly salary</dt>
-                <dd>${member.salary_weekly}</dd>
-              </div>
-              <div>
-                <dt>Unpaid wages</dt>
-                <dd className={member.unpaid_salary > 0 ? 'danger' : ''}>
-                  ${member.unpaid_salary}
-                </dd>
-              </div>
-              <div>
-                <dt>Level / XP</dt>
-                <dd>{member.level} / {member.experience}</dd>
-              </div>
-            </dl>
-
-            <div className="tag-row">
-              {member.traits.map((trait) => (
-                <span
-                  className={`tag ${trait.polarity === 'negative' ? 'tag-negative' : ''}`}
-                  title={trait.description}
-                  key={trait.code}
-                >
-                  {trait.name}
-                </span>
-              ))}
-            </div>
-
-            <div className="loadout-summary">
-              <strong>Loadout</strong>
-              {member.equipment.length === 0 ? (
-                <span className="muted">No equipment assigned</span>
-              ) : (
-                member.equipment.map((equipment) => (
-                  <span key={equipment.id}>
-                    {equipment.equipment_slot}: {equipment.name} ({equipment.durability}%)
-                  </span>
-                ))
-              )}
-            </div>
-
-            <div className="button-row">
-              <button className="btn" onClick={() => openProfile(member)}>
-                Profile and history
-              </button>
-              {member.unpaid_salary > 0 && (
-                <button
-                  className="btn primary"
-                  disabled={loadingId === member.id}
-                  onClick={() => payOverdue(member)}
-                >
-                  Pay overdue
-                </button>
-              )}
-              <button
-                className="btn danger-button"
-                disabled={loadingId === member.id || member.status === 'busy'}
-                onClick={() => dismiss(member)}
-              >
-                Dismiss
-              </button>
-            </div>
-          </article>
-        ))}
-      </div>
+      {!loading && filteredMembers.length > 0 && (
+        <div className={`crew-card-collection crew-card-collection-${viewMode}`}>
+          {filteredMembers.map((member) => (
+            <CrewCard
+              member={member}
+              viewMode={viewMode}
+              busy={loadingId === member.id}
+              onOpen={openProfile}
+              onPayOverdue={payOverdue}
+              onDismiss={dismiss}
+              key={member.id}
+            />
+          ))}
+        </div>
+      )}
 
       {selectedMember && (
-        <div className="modal-backdrop" role="presentation">
-          <section className="modal card" role="dialog" aria-modal="true">
-            <header className="modal-header">
-              <div>
-                <p className="eyebrow">Crew dossier</p>
-                <h2>{displayName(selectedMember)}</h2>
-              </div>
-              <button
-                className="icon-button"
-                onClick={() => setSelectedMember(null)}
-                aria-label="Close profile"
-              >
-                ×
-              </button>
-            </header>
-
-            <h3>Operational stats</h3>
-            <CrewStats member={selectedMember} />
-
-            <h3>Career record</h3>
-            <dl className="details-grid">
-              <div><dt>Jobs completed</dt><dd>{selectedMember.jobs_completed}</dd></div>
-              <div><dt>Jobs failed</dt><dd>{selectedMember.jobs_failed}</dd></div>
-              <div><dt>Arrests</dt><dd>{selectedMember.arrests}</dd></div>
-              <div><dt>Injuries</dt><dd>{selectedMember.injuries}</dd></div>
-              <div><dt>Total earnings</dt><dd>${selectedMember.total_earnings}</dd></div>
-            </dl>
-
-            <h3>Timeline</h3>
-            <div className="timeline">
-              {history.length === 0 && (
-                <p className="muted">No recorded history yet.</p>
-              )}
-              {history.map((entry) => (
-                <article key={entry.id}>
-                  <span>{new Date(entry.created_at).toLocaleString()}</span>
-                  <strong>{entry.title}</strong>
-                  <p>{entry.description}</p>
-                </article>
-              ))}
-            </div>
-          </section>
-        </div>
+        <CrewProfile
+          member={selectedMember}
+          history={history}
+          onClose={() => setSelectedMember(null)}
+        />
       )}
     </section>
   );
 }
 
-function Meter({
-  label,
-  value,
-  maximum,
-}: {
-  label: string;
-  value: number;
-  maximum: number;
-}) {
-  const percentage = Math.max(0, Math.min(100, (value / maximum) * 100));
-
+function Summary({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="meter">
-      <div>
-        <span>{label}</span>
-        <strong>{value}/{maximum}</strong>
-      </div>
-      <div className="progress-track">
-        <span style={{ width: `${percentage}%` }} />
-      </div>
+    <div className="crew-summary-card">
+      <span>{label}</span>
+      <strong>{value}</strong>
     </div>
   );
-}
-
-function CrewStats({ member }: { member: CrewMember }) {
-  const stats = [
-    ['Strength', member.strength],
-    ['Shooting', member.shooting],
-    ['Driving', member.driving],
-    ['Intelligence', member.intelligence],
-    ['Stealth', member.stealth],
-    ['Intimidation', member.intimidation],
-    ['Discipline', member.discipline],
-    ['Street knowledge', member.street_knowledge],
-    ['Endurance', member.endurance],
-  ];
-
-  return (
-    <div className="compact-stats">
-      {stats.map(([name, value]) => (
-        <div key={name}>
-          <span>{name}</span>
-          <strong>{value}</strong>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function displayName(member: CrewMember): string {
-  const nickname = member.nickname ? ` “${member.nickname}”` : '';
-  return `${member.first_name}${nickname} ${member.last_name}`;
 }

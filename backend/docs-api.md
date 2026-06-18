@@ -1,4 +1,4 @@
-# Criminal Empire Online v0.3 API
+# Criminal Empire Online v0.3.5 API
 
 All protected endpoints require:
 
@@ -185,3 +185,38 @@ GET  /api/admin/economy
 POST /api/admin/users/{id}/energy/refill
 POST /api/admin/users/{id}/cash/set
 ```
+
+
+## Crew portrait response metadata
+
+`GET /api/my-gang`, `GET /api/my-gang/{id}`, and `GET /api/recruitment` include backend-resolved portrait metadata.
+
+```json
+{
+  "portrait": {
+    "identity_key": "portrait-set-017",
+    "gender": "female",
+    "stage": "adult",
+    "stage_label": "Adult",
+    "age_range": "32–40",
+    "resolved_asset_stage": "adult",
+    "url": "/assets/crew/portraits/portrait-set-017/adult.webp",
+    "thumbnail_url": "/assets/crew/portraits/portrait-set-017/thumbs/adult.webp",
+    "fallback_url": "/assets/crew/portraits/fallback.svg",
+    "focal_x": 50,
+    "focal_y": 42,
+    "uses_fallback": false,
+    "uses_stage_fallback": false
+  },
+  "life_stage": {
+    "key": "adult",
+    "label": "Adult",
+    "minimum_age": 32,
+    "maximum_age": 40,
+    "age_range": "32–40",
+    "recruitable": true
+  }
+}
+```
+
+Portrait stage is derived from the NPC's age. No portrait identity or stage mutation endpoint is exposed to clients. Existing records without a portrait are assigned lazily and can be backfilled in bulk with `php commands/crew-portraits.php backfill`.

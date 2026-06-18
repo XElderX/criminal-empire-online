@@ -4,8 +4,8 @@ namespace App\Config;
 
 final class GameConfig
 {
-    public const VERSION = '0.3.0';
-    public const RELEASE_TITLE = 'Criminal Empire Online v0.3 — Dirty Jobs Expansion';
+    public const VERSION = '0.3.5';
+    public const RELEASE_TITLE = 'Criminal Empire Online v0.3.5 — Crew Portraits & Design Update';
 
     public const STARTING_CASH = 500;
     public const STARTING_BANK_CASH = 0;
@@ -114,56 +114,85 @@ final class GameConfig
                 'name' => 'Leader',
                 'description' => 'Keeps the crew coordinated when plans change.',
                 'stats' => ['intelligence', 'discipline', 'loyalty'],
+                'accent' => 'red',
+                'icon' => '◆',
             ],
             'driver' => [
                 'name' => 'Driver',
                 'description' => 'Handles routes, escapes, and vehicle control.',
                 'stats' => ['driving', 'discipline', 'endurance'],
+                'accent' => 'amber',
+                'icon' => '◉',
             ],
             'lookout' => [
                 'name' => 'Lookout',
                 'description' => 'Watches patrols, witnesses, and unexpected movement.',
                 'stats' => ['street_knowledge', 'intelligence', 'discipline'],
+                'accent' => 'violet',
+                'icon' => '◎',
             ],
             'enforcer' => [
                 'name' => 'Enforcer',
                 'description' => 'Applies controlled pressure during collection and robbery work.',
                 'stats' => ['strength', 'intimidation', 'shooting'],
+                'accent' => 'orange',
+                'icon' => '✦',
             ],
             'thief' => [
                 'name' => 'Thief',
                 'description' => 'Handles quick theft and low-profile movement.',
                 'stats' => ['stealth', 'street_knowledge', 'discipline'],
+                'accent' => 'purple',
+                'icon' => '◇',
             ],
             'infiltrator' => [
                 'name' => 'Infiltrator',
                 'description' => 'Deals with quiet entry, locks, and secured interiors.',
                 'stats' => ['stealth', 'intelligence', 'discipline'],
+                'accent' => 'violet',
+                'icon' => '◈',
             ],
             'planner' => [
                 'name' => 'Planner',
                 'description' => 'Turns information and preparation into a safer operation.',
                 'stats' => ['intelligence', 'street_knowledge', 'discipline'],
+                'accent' => 'blue',
+                'icon' => '▣',
             ],
             'weapons_specialist' => [
                 'name' => 'Weapons Specialist',
                 'description' => 'Uses armed equipment without losing control of the operation.',
                 'stats' => ['shooting', 'discipline', 'endurance'],
+                'accent' => 'red',
+                'icon' => '⌖',
             ],
             'courier' => [
                 'name' => 'Courier',
                 'description' => 'Moves goods through the city and protects delivery timing.',
                 'stats' => ['driving', 'street_knowledge', 'endurance'],
+                'accent' => 'amber',
+                'icon' => '➤',
             ],
             'grow_operator' => [
                 'name' => 'Grow Operator',
                 'description' => 'Runs the fictionalized production cycle as an abstract game task.',
                 'stats' => ['intelligence', 'discipline', 'loyalty'],
+                'accent' => 'red',
+                'icon' => '◆',
             ],
             'warehouse_handler' => [
                 'name' => 'Warehouse Handler',
                 'description' => 'Manages storage, loading, and secure movement of goods.',
                 'stats' => ['strength', 'discipline', 'street_knowledge'],
+                'accent' => 'neutral',
+                'icon' => '▦',
+            ],
+            'medic' => [
+                'name' => 'Medic',
+                'description' => 'Keeps injuries manageable and improves recovery planning.',
+                'stats' => ['intelligence', 'discipline', 'endurance'],
+                'accent' => 'green',
+                'icon' => '✚',
             ],
         ];
     }

@@ -12,8 +12,21 @@ final class CrewController
 {
     public function index(array $params, array $context): void
     {
+        $members = (new CrewService())->members($context['user']);
+
         Response::json([
-            'data' => (new CrewService())->members($context['user']),
+            'data' => $members,
+            'meta' => [
+                'maximum_capacity' => \App\Config\GameConfig::MAX_GANG_MEMBERS,
+                'weekly_salary_total' => array_sum(
+                    array_map(
+                        static fn (array $member): int => (int) (
+                            $member['salary_weekly'] ?? 0
+                        ),
+                        $members
+                    )
+                ),
+            ],
         ]);
     }
 
