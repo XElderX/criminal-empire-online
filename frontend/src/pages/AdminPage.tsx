@@ -39,6 +39,11 @@ interface AdminCatalogAsset {
   active: number;
   asset_type: AdminAssetType;
   equipmentable: number;
+  inventory_quantity: number;
+  inventory_owner_count: number;
+  storage_quantity: number;
+  storage_location_count: number;
+  total_quantity: number;
 }
 
 interface AdminCatalogResponse {
@@ -126,10 +131,17 @@ export function AdminPage({ currentUser, onChanged }: AdminPageProps) {
   }, [assets, catalogSearch, catalogTypeFilter]);
 
   const assetCounts = useMemo(() => {
+    const itemAssets = assets.filter((asset) => asset.asset_type === 'item');
+    const weaponAssets = assets.filter((asset) => asset.asset_type === 'weapon');
+    const drugAssets = assets.filter((asset) => asset.asset_type === 'drug');
+
     return {
-      item: assets.filter((asset) => asset.asset_type === 'item').length,
-      weapon: assets.filter((asset) => asset.asset_type === 'weapon').length,
-      drug: assets.filter((asset) => asset.asset_type === 'drug').length,
+      item: itemAssets.length,
+      weapon: weaponAssets.length,
+      drug: drugAssets.length,
+      itemQuantity: itemAssets.reduce((sum, asset) => sum + Number(asset.total_quantity || 0), 0),
+      weaponQuantity: weaponAssets.reduce((sum, asset) => sum + Number(asset.total_quantity || 0), 0),
+      drugQuantity: drugAssets.reduce((sum, asset) => sum + Number(asset.total_quantity || 0), 0),
     };
   }, [assets]);
 
@@ -172,7 +184,7 @@ export function AdminPage({ currentUser, onChanged }: AdminPageProps) {
         },
       );
 
-      return `${response.message} ${response.asset_name} total: ${response.new_quantity}.`;
+      return `${response.message} ${response.asset_name} total in user inventory: ${response.new_quantity}.`;
     });
   }
 
@@ -196,7 +208,7 @@ export function AdminPage({ currentUser, onChanged }: AdminPageProps) {
           <p className="eyebrow">Development administration</p>
           <h1>Admin</h1>
           <p className="muted">
-            Review every obtainable or equipmentable asset, copy ids quickly, and grant items directly to player inventories.
+            Review all obtainable and equipmentable assets with images, IDs, and total counts in the game, then grant inventory assets directly to any player.
           </p>
         </div>
       </header>
@@ -237,6 +249,7 @@ export function AdminPage({ currentUser, onChanged }: AdminPageProps) {
               </strong>
               <span>Role: {selectedUser.role}</span>
               <span>Cash: ${selectedUser.cash.toLocaleString()}</span>
+              <span>Bank: ${selectedUser.bank_cash.toLocaleString()}</span>
               <span>
                 Energy: {selectedUser.energy}/{selectedUser.max_energy}
               </span>
@@ -293,9 +306,14 @@ export function AdminPage({ currentUser, onChanged }: AdminPageProps) {
           </button>
 
           <div className="admin-catalog-summary muted">
-            <span>Items: {assetCounts.item}</span>
-            <span>Weapons: {assetCounts.weapon}</span>
-            <span>Drugs: {assetCounts.drug}</span>
+            <span>Item defs: {assetCounts.item}</span>
+            <span>Weapon defs: {assetCounts.weapon}</span>
+            <span>Drug defs: {assetCounts.drug}</span>
+          </div>
+          <div className="admin-catalog-summary muted">
+            <span>Total item qty in game: {assetCounts.itemQuantity}</span>
+            <span>Total weapon qty in game: {assetCounts.weaponQuantity}</span>
+            <span>Total drug qty in game: {assetCounts.drugQuantity}</span>
           </div>
         </section>
       </div>
@@ -316,7 +334,7 @@ export function AdminPage({ currentUser, onChanged }: AdminPageProps) {
                     #{user.id} · {user.username}
                   </strong>
                   <p className="muted">
-                    {user.role} · cash ${user.cash.toLocaleString()} · energy {user.energy}/{user.max_energy}
+                    {user.role} · cash ${user.cash.toLocaleString()} · bank ${user.bank_cash.toLocaleString()} · energy {user.energy}/{user.max_energy}
                   </p>
                 </div>
               </article>
@@ -330,6 +348,7 @@ export function AdminPage({ currentUser, onChanged }: AdminPageProps) {
           <div>
             <p className="eyebrow">Reference list</p>
             <h2>Obtainable and equipmentable assets</h2>
+            <p className="muted">Each row shows the image, internal id, type, and the current total count present across player inventories and warehouse storage.</p>
           </div>
         </div>
 
@@ -367,6 +386,11 @@ export function AdminPage({ currentUser, onChanged }: AdminPageProps) {
                 <th>Type</th>
                 <th>Category</th>
                 <th>Slot</th>
+                <th>Inv qty</th>
+                <th>Storage qty</th>
+                <th>Total in game</th>
+                <th>Owners</th>
+                <th>Warehouses</th>
                 <th>Price</th>
               </tr>
             </thead>
@@ -388,6 +412,11 @@ export function AdminPage({ currentUser, onChanged }: AdminPageProps) {
                   <td>{asset.asset_type}</td>
                   <td>{asset.category || '—'}</td>
                   <td>{asset.equipment_slot || '—'}</td>
+                  <td>{Number(asset.inventory_quantity || 0).toLocaleString()}</td>
+                  <td>{Number(asset.storage_quantity || 0).toLocaleString()}</td>
+                  <td><strong>{Number(asset.total_quantity || 0).toLocaleString()}</strong></td>
+                  <td>{Number(asset.inventory_owner_count || 0).toLocaleString()}</td>
+                  <td>{Number(asset.storage_location_count || 0).toLocaleString()}</td>
                   <td>${Number(asset.price || 0).toLocaleString()}</td>
                 </tr>
               ))}

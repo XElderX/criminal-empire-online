@@ -1,3 +1,11 @@
+## 2026-06-18 — Criminal Empire Online v0.3.6.3 — Navigation & Status Icons Refresh + Admin Item Counts
+
+- Bumped the application version to v0.3.6.3.
+- Replaced the old main navigation icons with the new supplied noir icon set for dashboard, crimes, dirty jobs, crew, inventory, drug market, businesses, gangs, territories, admin, messages, and settings.
+- Replaced the old risk and heat visuals with the new supplied status icon set, and updated frontend mappings so risk levels and heat badges use the new assets.
+- Updated the admin asset catalog page so every item, weapon, and drug row shows its image, id, and current quantity in the game.
+- Extended the admin backend catalog endpoint to include inventory quantities, warehouse quantities, owner counts, and total quantities in game.
+
 ## 2026-06-18 — Criminal Empire Online v0.3.6.2 — Expanded Item Assets & Admin Inventory Tools
 
 - Bumped the application version to v0.3.6.2.

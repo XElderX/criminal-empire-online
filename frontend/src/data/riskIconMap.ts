@@ -15,9 +15,10 @@ export function getRiskIcon(value: string): string {
 }
 
 export function getHeatIcon(value: number): string {
-  if (value >= 18) return '/assets/icons/risk/heat_very_high.webp';
-  if (value >= 10) return '/assets/icons/risk/heat_high.webp';
-  if (value >= 5) return '/assets/icons/risk/heat_medium.webp';
+  if (value >= 18) return '/assets/icons/risk/burning.webp';
+  if (value >= 10) return '/assets/icons/risk/hot.webp';
+  if (value >= 5) return '/assets/icons/risk/alert.webp';
+  if (value >= 2) return '/assets/icons/risk/watch.webp';
 
-  return '/assets/icons/risk/heat_low.webp';
+  return '/assets/icons/risk/cool.webp';
 }

@@ -2608,7 +2608,7 @@ small {
   }
 }
 
-/* v0.3.6.2 admin inventory tooling */
+/* v0.3.6.3 admin inventory tooling */
 .admin-tools-grid {
   align-items: start;
 }
@@ -2714,4 +2714,13 @@ small {
   display: block;
   color: var(--text-muted);
   margin-top: 0.25rem;
+}
+
+
+.admin-asset-table {
+  min-width: 1120px;
+}
+
+.admin-asset-table td strong {
+  color: var(--accent-money);
 }

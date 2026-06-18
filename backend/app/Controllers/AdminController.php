@@ -56,55 +56,121 @@ final class AdminController
         $items = $pdo->query(
             <<<'SQL'
                 SELECT
-                    id,
-                    code,
-                    name,
-                    category,
-                    equipment_slot,
-                    price,
-                    illegal,
-                    active,
+                    item.id,
+                    item.code,
+                    item.name,
+                    item.category,
+                    item.equipment_slot,
+                    item.price,
+                    item.illegal,
+                    item.active,
                     'item' AS asset_type,
-                    1 AS equipmentable
-                FROM item_definitions
-                WHERE active = 1
-                ORDER BY category, name
+                    1 AS equipmentable,
+                    COALESCE(inv.inventory_quantity, 0) AS inventory_quantity,
+                    COALESCE(inv.inventory_owner_count, 0) AS inventory_owner_count,
+                    COALESCE(store.storage_quantity, 0) AS storage_quantity,
+                    COALESCE(store.storage_location_count, 0) AS storage_location_count,
+                    COALESCE(inv.inventory_quantity, 0) + COALESCE(store.storage_quantity, 0) AS total_quantity
+                FROM item_definitions item
+                LEFT JOIN (
+                    SELECT
+                        item_definition_id,
+                        SUM(quantity) AS inventory_quantity,
+                        COUNT(DISTINCT user_id) AS inventory_owner_count
+                    FROM user_items
+                    GROUP BY item_definition_id
+                ) inv ON inv.item_definition_id = item.id
+                LEFT JOIN (
+                    SELECT
+                        asset_id,
+                        SUM(quantity) AS storage_quantity,
+                        COUNT(DISTINCT warehouse_id) AS storage_location_count
+                    FROM warehouse_storage
+                    WHERE asset_type = 'item'
+                    GROUP BY asset_id
+                ) store ON store.asset_id = item.id
+                WHERE item.active = 1
+                ORDER BY item.category, item.name
             SQL
         )->fetchAll();
 
         $weapons = $pdo->query(
             <<<'SQL'
                 SELECT
-                    id,
+                    weapon.id,
                     NULL AS code,
-                    name,
-                    class AS category,
-                    equipment_slot,
-                    price,
-                    illegal,
+                    weapon.name,
+                    weapon.class AS category,
+                    weapon.equipment_slot,
+                    weapon.price,
+                    weapon.illegal,
                     1 AS active,
                     'weapon' AS asset_type,
-                    1 AS equipmentable
-                FROM weapons
-                ORDER BY price, name
+                    1 AS equipmentable,
+                    COALESCE(inv.inventory_quantity, 0) AS inventory_quantity,
+                    COALESCE(inv.inventory_owner_count, 0) AS inventory_owner_count,
+                    COALESCE(store.storage_quantity, 0) AS storage_quantity,
+                    COALESCE(store.storage_location_count, 0) AS storage_location_count,
+                    COALESCE(inv.inventory_quantity, 0) + COALESCE(store.storage_quantity, 0) AS total_quantity
+                FROM weapons weapon
+                LEFT JOIN (
+                    SELECT
+                        weapon_id,
+                        SUM(quantity) AS inventory_quantity,
+                        COUNT(DISTINCT user_id) AS inventory_owner_count
+                    FROM user_weapons
+                    GROUP BY weapon_id
+                ) inv ON inv.weapon_id = weapon.id
+                LEFT JOIN (
+                    SELECT
+                        asset_id,
+                        SUM(quantity) AS storage_quantity,
+                        COUNT(DISTINCT warehouse_id) AS storage_location_count
+                    FROM warehouse_storage
+                    WHERE asset_type = 'weapon'
+                    GROUP BY asset_id
+                ) store ON store.asset_id = weapon.id
+                ORDER BY weapon.price, weapon.name
             SQL
         )->fetchAll();
 
         $drugs = $pdo->query(
             <<<'SQL'
                 SELECT
-                    id,
+                    drug.id,
                     NULL AS code,
-                    name,
+                    drug.name,
                     'drug' AS category,
                     NULL AS equipment_slot,
-                    base_price AS price,
+                    drug.base_price AS price,
                     1 AS illegal,
                     1 AS active,
                     'drug' AS asset_type,
-                    0 AS equipmentable
-                FROM drugs
-                ORDER BY name
+                    0 AS equipmentable,
+                    COALESCE(inv.inventory_quantity, 0) AS inventory_quantity,
+                    COALESCE(inv.inventory_owner_count, 0) AS inventory_owner_count,
+                    COALESCE(store.storage_quantity, 0) AS storage_quantity,
+                    COALESCE(store.storage_location_count, 0) AS storage_location_count,
+                    COALESCE(inv.inventory_quantity, 0) + COALESCE(store.storage_quantity, 0) AS total_quantity
+                FROM drugs drug
+                LEFT JOIN (
+                    SELECT
+                        drug_id,
+                        SUM(quantity) AS inventory_quantity,
+                        COUNT(DISTINCT user_id) AS inventory_owner_count
+                    FROM user_drugs
+                    GROUP BY drug_id
+                ) inv ON inv.drug_id = drug.id
+                LEFT JOIN (
+                    SELECT
+                        asset_id,
+                        SUM(quantity) AS storage_quantity,
+                        COUNT(DISTINCT warehouse_id) AS storage_location_count
+                    FROM warehouse_storage
+                    WHERE asset_type = 'drug'
+                    GROUP BY asset_id
+                ) store ON store.asset_id = drug.id
+                ORDER BY drug.name
             SQL
         )->fetchAll();
 
