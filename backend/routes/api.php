@@ -242,6 +242,13 @@ $router->get(
     [AdminController::class, 'audit'],
     [AuthMiddleware::class]
 );
+
+$router->get(
+    '/api/admin/item-catalog',
+    [AdminController::class, 'itemCatalog'],
+    [AuthMiddleware::class]
+);
+
 $router->post(
     '/api/admin/users/{id}/energy/refill',
     [AdminController::class, 'refillEnergy'],
@@ -252,6 +259,13 @@ $router->post(
     [AdminController::class, 'setCash'],
     [AuthMiddleware::class]
 );
+
+$router->post(
+    '/api/admin/users/{id}/grant-asset',
+    [AdminController::class, 'grantAsset'],
+    [AuthMiddleware::class]
+);
+
 $router->get(
     '/api/admin/economy',
     [EconomyController::class, 'status'],

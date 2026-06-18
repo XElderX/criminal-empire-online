@@ -1,4 +1,4 @@
-# Criminal Empire Online v0.3.6.1 — Weapon Asset Refresh
+# Criminal Empire Online v0.3.6.2 — Expanded Item Assets & Admin Inventory Tools
 
 Criminal Empire Online is a browser-based, primarily single-player criminal empire simulation. The player begins with $500, performs small NPC-provided jobs, recruits a crew, equips members, plans structured Dirty Jobs, manages heat and consequences, and works toward owning a warehouse.
 
@@ -12,7 +12,7 @@ Criminal Empire Online is a browser-based, primarily single-player criminal empi
 
 This project is **not Laravel**. Business logic is organized into readable controllers and services under `backend/app`.
 
-## v0.3.6.1 highlights
+## v0.3.6.2 highlights
 
 - Focused weapon-only art refresh: old weapon assets removed and replaced with the supplied noir card-style weapon visuals.
 - Weapon asset filenames and aliases updated so live inventory and shop views use the new v0.3.6.1 weapon cards.
