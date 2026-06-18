@@ -34,7 +34,7 @@ INSERT INTO world_state (
 
 UPDATE npcs
 SET
-  birth_game_year = 1 - age,
+  birth_game_year = 1 - CAST(age AS SIGNED),
   birth_game_day = 1,
   last_age_processed_game_year = 1,
   portrait_stage_cache = CASE
