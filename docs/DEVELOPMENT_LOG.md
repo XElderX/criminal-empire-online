@@ -1,3 +1,13 @@
+
+## 2026-06-18 — Criminal Empire Online v0.3.6.1 — Weapons Asset Refresh
+
+- Bumped the application version to v0.3.6.1.
+- Removed the previous weapon art set under `frontend/public/assets/icons/items/weapons/`.
+- Replaced the weapons folder with a new noir card-style local asset pack based on the supplied mockup sheet.
+- Added 15 weapon visuals: Basic Pistol, Heavy Pistol, Revolver, Compact SMG, Black Market Rifle, Shotgun, Knife, Machete, Baseball Bat, Brass Knuckles, Sniper Rifle, Assault Rifle, Carbine Rifle, Battle Rifle, and Tactical SMG.
+- Rebuilt matching `.svg` wrappers for the new weapon `.webp` files so older cached paths still render the updated art where the filename still exists.
+- Updated `itemIconMap.ts` weapon aliases so legacy item keys route to the new v0.3.6.1 weapon assets without falling back to deleted files.
+
 # Development log
 
 ## 2026-06-16 — Single-player foundation, Phase 1 and Phase 2

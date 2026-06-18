@@ -15,7 +15,8 @@ interface ShopResponse {
 }
 
 export function EquipmentPage({ onChanged }: EquipmentPageProps) {
-  const [shop, setShop] = useState<InventoryAsset[]>([]);
+  const [itemShop, setItemShop] = useState<InventoryAsset[]>([]);
+  const [weaponShop, setWeaponShop] = useState<InventoryAsset[]>([]);
   const [inventory, setInventory] = useState<InventoryResponse>({
     items: [],
     weapons: [],
@@ -29,13 +30,15 @@ export function EquipmentPage({ onChanged }: EquipmentPageProps) {
 
   async function load(): Promise<void> {
     try {
-      const [shopResponse, inventoryResponse, crewResponse] = await Promise.all([
+      const [itemShopResponse, weaponShopResponse, inventoryResponse, crewResponse] = await Promise.all([
         api<ShopResponse>('/items'),
+        api<ShopResponse>('/weapons'),
         api<InventoryResponse>('/inventory'),
         api<{ data: CrewMember[] }>('/my-gang'),
       ]);
 
-      setShop(shopResponse.data);
+      setItemShop(itemShopResponse.data);
+      setWeaponShop(weaponShopResponse.data);
       setInventory(inventoryResponse);
       setCrew(crewResponse.data);
 
@@ -56,16 +59,19 @@ export function EquipmentPage({ onChanged }: EquipmentPageProps) {
     [crew, selectedMemberId],
   );
 
-  async function buy(itemId: number): Promise<void> {
+  async function buy(assetType: 'item' | 'weapon', assetId: number): Promise<void> {
     setLoading(true);
     setMessage('');
     setError('');
 
     try {
-      const response = await api<{ message: string }>(`/items/${itemId}/buy`, {
-        method: 'POST',
-        body: JSON.stringify({ quantity: 1 }),
-      });
+      const response = await api<{ message: string }>(
+        assetType === 'weapon' ? `/weapons/${assetId}/buy` : `/items/${assetId}/buy`,
+        {
+          method: 'POST',
+          body: JSON.stringify({ quantity: 1 }),
+        },
+      );
 
       setMessage(response.message);
       await load();
@@ -138,8 +144,8 @@ export function EquipmentPage({ onChanged }: EquipmentPageProps) {
     <section className="page-section">
       <GameHeader
         eyebrow="Storage locker"
-        title="Inventory / Equipment"
-        description="Local item icons, crew loadouts, and category cards for tools, protection, vehicles, valuables, and contraband."
+        title="Inventory / Equipment / Weapons"
+        description="Manage crew loadouts, equip owned gear, and buy both general equipment and weapons from one place."
       />
 
       {message && <Notice message={message} kind="success" />}
@@ -220,10 +226,10 @@ export function EquipmentPage({ onChanged }: EquipmentPageProps) {
       <section className="page-subsection">
         <h2>Equipment shop</h2>
         <div className="inventory-icon-grid">
-          {shop.map((item) => (
+          {itemShop.map((item) => (
             <ItemIconCard
               item={item}
-              key={item.id}
+              key={`item-shop-${item.id}`}
               footer={(
                 <>
                   <strong className="money-text">${item.price}</strong>
@@ -234,9 +240,37 @@ export function EquipmentPage({ onChanged }: EquipmentPageProps) {
                   <button
                     className="btn primary full-width"
                     disabled={loading || item.can_buy === false}
-                    onClick={() => buy(item.id)}
+                    onClick={() => buy('item', item.id)}
                   >
                     Buy one
+                  </button>
+                </>
+              )}
+            />
+          ))}
+        </div>
+      </section>
+
+      <section className="page-subsection">
+        <h2>Weapon shop</h2>
+        <div className="inventory-icon-grid">
+          {weaponShop.map((weapon) => (
+            <ItemIconCard
+              item={weapon}
+              key={`weapon-shop-${weapon.id}`}
+              footer={(
+                <>
+                  <strong className="money-text">${weapon.price}</strong>
+                  <EffectList effects={weapon.effects || {}} />
+                  <p className="muted">
+                    Slot {weapon.equipment_slot || weapon.class || 'weapon'} · durability {weapon.base_durability || 100}%
+                  </p>
+                  <button
+                    className="btn primary full-width"
+                    disabled={loading}
+                    onClick={() => buy('weapon', weapon.id)}
+                  >
+                    Buy weapon
                   </button>
                 </>
               )}

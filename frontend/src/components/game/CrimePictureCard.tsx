@@ -7,7 +7,6 @@ interface CrimePictureCardProps {
   description?: string;
   children?: ReactNode;
   actions?: ReactNode;
-  fallbackImage?: string;
 }
 
 export function CrimePictureCard({
@@ -17,7 +16,6 @@ export function CrimePictureCard({
   description,
   children,
   actions,
-  fallbackImage = '/assets/placeholders/default_crime.svg',
 }: CrimePictureCardProps) {
   const [source, setSource] = useState(image);
 
@@ -28,7 +26,7 @@ export function CrimePictureCard({
           src={source}
           alt=""
           loading="lazy"
-          onError={() => setSource(fallbackImage)}
+          onError={() => setSource('/assets/placeholders/default_crime.webp')}
         />
       </div>
       <div className="crime-picture-body">

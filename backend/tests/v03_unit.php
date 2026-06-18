@@ -28,8 +28,8 @@ $baseDistrict = [
     'police_presence' => 45,
 ];
 
-$runner->test('Version is v0.3.6', function () use ($runner): void {
-    $runner->assertSame('0.3.6', GameConfig::VERSION);
+$runner->test('Version is v0.3.6.1', function () use ($runner): void {
+    $runner->assertSame('0.3.6.1', GameConfig::VERSION);
 });
 
 $runner->test('Release title identifies Visual Redesign update', function () use ($runner): void {
