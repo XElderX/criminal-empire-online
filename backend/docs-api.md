@@ -1,4 +1,4 @@
-# Criminal Empire Online v0.3.5 API
+# Criminal Empire Online v0.3.6 API
 
 All protected endpoints require:
 

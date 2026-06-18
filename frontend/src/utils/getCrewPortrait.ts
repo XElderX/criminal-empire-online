@@ -19,8 +19,8 @@ export function getCrewPortrait(
 
   const primary = `/assets/crew/${normalizedGender}/crew_${normalizedGender}_${identity}_${stage}.webp`;
   const adultFallback = `/assets/crew/${normalizedGender}/crew_${normalizedGender}_${identity}_32_40.webp`;
-  const genderFallback = `/assets/crew/${normalizedGender}/default.svg`;
-  const globalFallback = '/assets/crew/default.svg';
+  const genderFallback = `/assets/crew/${normalizedGender}/default.webp`;
+  const globalFallback = '/assets/crew/default.webp';
 
   return {
     primary,

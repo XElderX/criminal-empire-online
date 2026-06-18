@@ -1,4 +1,4 @@
-# v0.3.5 entity relationship overview
+# v0.3.6 entity relationship overview
 
 This is a logical overview. The executable source of truth is the ordered SQL in `backend/database/migrations`.
 
@@ -50,7 +50,7 @@ dirty_job_templates
 - Vehicle storage uses a unique vehicle row and one `warehouse_id` at a time.
 - Property purchase changes a listing from available to sold inside the same transaction that creates the building and deducts cash.
 
-## v0.3.5 portrait and aging fields
+## v0.3.6 portrait and aging fields
 
 `npcs` now owns the permanent visual identity:
 

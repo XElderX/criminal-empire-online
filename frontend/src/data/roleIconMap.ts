@@ -1,18 +1,18 @@
 import { slugify } from '../utils/stringFormat';
 
 export const roleIconMap: Record<string, string> = {
-  leader: '/assets/icons/roles/leader.svg',
-  enforcer: '/assets/icons/roles/enforcer.svg',
-  driver: '/assets/icons/roles/driver.svg',
-  hacker: '/assets/icons/roles/hacker.svg',
-  scout: '/assets/icons/roles/scout.svg',
-  medic: '/assets/icons/roles/medic.svg',
-  negotiator: '/assets/icons/roles/negotiator.svg',
-  thief: '/assets/icons/roles/thief.svg',
-  smuggler: '/assets/icons/roles/smuggler.svg',
-  cleaner: '/assets/icons/roles/cleaner.svg',
-  fixer: '/assets/icons/roles/fixer.svg',
-  recruit: '/assets/icons/roles/recruit.svg',
+  leader: '/assets/icons/roles/leader.webp',
+  enforcer: '/assets/icons/roles/enforcer.webp',
+  driver: '/assets/icons/roles/driver.webp',
+  hacker: '/assets/icons/roles/hacker.webp',
+  scout: '/assets/icons/roles/scout.webp',
+  medic: '/assets/icons/roles/medic.webp',
+  negotiator: '/assets/icons/roles/negotiator.webp',
+  thief: '/assets/icons/roles/thief.webp',
+  smuggler: '/assets/icons/roles/smuggler.webp',
+  cleaner: '/assets/icons/roles/cleaner.webp',
+  fixer: '/assets/icons/roles/fixer.webp',
+  recruit: '/assets/icons/roles/recruit.webp',
 };
 
 export function getRoleIcon(role: string | null | undefined): string {

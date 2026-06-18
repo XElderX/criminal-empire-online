@@ -1,10 +1,18 @@
+import { getRiskIcon } from '../../data/assetManifest';
+
 interface RiskBadgeProps {
   value: string | number | null | undefined;
 }
 
 export function RiskBadge({ value }: RiskBadgeProps) {
   const label = normalizeRisk(value);
-  return <span className={`risk-badge risk-${label.toLowerCase().replace(/\s+/g, '-')}`}>Risk: {label}</span>;
+
+  return (
+    <span className={`risk-badge risk-${label.toLowerCase().replace(/\s+/g, '-')}`}>
+      <img className="badge-icon" src={getRiskIcon(label)} alt="" />
+      Risk: {label}
+    </span>
+  );
 }
 
 function normalizeRisk(value: string | number | null | undefined): string {

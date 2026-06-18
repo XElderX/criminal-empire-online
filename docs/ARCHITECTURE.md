@@ -2,7 +2,7 @@
 
 ## Application shape
 
-Criminal Empire Online v0.3.5 uses a lightweight custom PHP REST API and a React/TypeScript frontend.
+Criminal Empire Online v0.3.6 uses a lightweight custom PHP REST API and a React/TypeScript frontend.
 
 ```text
 criminal-empire-online/
@@ -110,7 +110,7 @@ The command files are designed for manual development use or cron scheduling.
 
 ## Frontend conventions
 
-The v0.3.5 frontend is split into feature pages instead of one large component. API state remains server-authoritative. Components show backend validation errors, disabled states, empty states, confirmation prompts, and operation timers without exposing hidden random rolls.
+The v0.3.6 frontend is split into feature pages instead of one large component. API state remains server-authoritative. Components show backend validation errors, disabled states, empty states, confirmation prompts, and operation timers without exposing hidden random rolls.
 
 ## Security and future hardening
 
@@ -137,7 +137,7 @@ Recommended before a public production launch:
 
 ## Crew portrait architecture
 
-The v0.3.5 portrait layer is deliberately separate from crew ownership. `npcs` stores a permanent `portrait_set_key`, while `player_gang_members` continues to store the relationship between a player and that NPC. Dismissal, world return, or rehiring therefore does not regenerate the visual identity.
+The v0.3.6 portrait layer is deliberately separate from crew ownership. `npcs` stores a permanent `portrait_set_key`, while `player_gang_members` continues to store the relationship between a player and that NPC. Dismissal, world return, or rehiring therefore does not regenerate the visual identity.
 
 Backend responsibilities:
 

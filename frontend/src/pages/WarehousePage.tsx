@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { api } from '../api/client';
 import { Notice } from '../components/Notice';
 import { GameHeader } from '../components/game/GameHeader';
+import { getItemIcon } from '../data/assetManifest';
 import type {
   InventoryAsset,
   InventoryResponse,
@@ -343,6 +344,7 @@ function WarehouseWorkspace({
                   key={`${assetType}-${asset.id}`}
                   name={asset.name}
                   subtitle={`${humanize(assetType)} · available ${available}`}
+                  icon={getItemIcon(asset.name, asset.category || asset.class || assetType)}
                   disabled={loading || available < 1}
                   buttonLabel="Deposit one"
                   onClick={() => onTransfer('deposit', assetType, asset.id, 1)}
@@ -506,21 +508,26 @@ function CapacityMeter({
 function StorageTransferRow({
   name,
   subtitle,
+  icon,
   buttonLabel,
   disabled,
   onClick,
 }: {
   name: string;
   subtitle: string;
+  icon?: string;
   buttonLabel: string;
   disabled: boolean;
   onClick: () => void;
 }) {
   return (
-    <article className="list-row">
-      <div>
-        <strong>{name}</strong>
-        <p className="muted">{subtitle}</p>
+    <article className="list-row asset-list-row">
+      <div className="asset-cell">
+        {icon && <img src={icon} alt="" />}
+        <span>
+          <strong>{name}</strong>
+          <p className="muted">{subtitle}</p>
+        </span>
       </div>
       <button className="btn" disabled={disabled} onClick={onClick}>
         {buttonLabel}
@@ -544,6 +551,7 @@ function StoredAssetRow({
     <StorageTransferRow
       name={row.name}
       subtitle={`${humanize(row.asset_type)} · stored ${row.quantity} · reserved ${row.reserved_quantity}`}
+      icon={getItemIcon(row.name, row.asset_type)}
       buttonLabel="Withdraw one"
       disabled={loading || available < 1}
       onClick={onWithdraw}

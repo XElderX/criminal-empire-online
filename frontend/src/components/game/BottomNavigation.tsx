@@ -1,3 +1,4 @@
+import { getNavigationIcon } from '../../data/assetManifest';
 import type { PageName, User } from '../../types';
 
 interface BottomNavigationProps {
@@ -27,7 +28,8 @@ export function BottomNavigation({ user, page, onNavigate }: BottomNavigationPro
           className={page === entry.page ? 'active' : ''}
           onClick={() => onNavigate(entry.page)}
         >
-          {entry.label}
+          <img className="bottom-nav-icon" src={getNavigationIcon(entry.page)} alt="" />
+          <span>{entry.label}</span>
         </button>
       ))}
     </nav>

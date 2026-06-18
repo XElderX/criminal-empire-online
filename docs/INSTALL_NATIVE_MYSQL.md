@@ -1,4 +1,4 @@
-# Criminal Empire Online v0.3.5 native installation
+# Criminal Empire Online v0.3.6 native installation
 
 This guide installs the project on Ubuntu with MySQL and normal terminal commands. Docker is not required.
 
@@ -41,7 +41,7 @@ Example location:
 sudo mkdir -p /var/www
 sudo chown -R "$USER":"$USER" /var/www
 cd /var/www
-unzip criminal-empire-online-v0.3.5-crew-portraits-design.zip
+unzip criminal-empire-online-v0.3.6-crew-portraits-design.zip
 cd criminal-empire-online
 ```
 
@@ -127,7 +127,7 @@ A successful fresh installation applies:
 004_crew_portraits_seed.sql
 ```
 
-The v0.3 migration does not reset existing player cash, inventory, crew, or tutorial progress. Existing players are placed in a completed tutorial state so they are not forced through new-player onboarding. Newly registered players receive the active tutorial and exactly $500. The v0.3.5 migration preserves every NPC and crew record; the portrait backfill only assigns identities where `portrait_set_key` is empty.
+The v0.3 migration does not reset existing player cash, inventory, crew, or tutorial progress. Existing players are placed in a completed tutorial state so they are not forced through new-player onboarding. Newly registered players receive the active tutorial and exactly $500. The v0.3.6 migration preserves every NPC and crew record; the portrait backfill only assigns identities where `portrait_set_key` is empty.
 
 ## 6. Start the PHP API
 

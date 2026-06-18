@@ -1,3 +1,4 @@
+import { getNavigationIcon } from '../data/assetManifest';
 import type { PageName, User } from '../types';
 
 interface NavigationProps {
@@ -42,7 +43,10 @@ export function Navigation({
             className={page === entry.page ? 'active' : ''}
             onClick={() => onNavigate(entry.page)}
           >
-            {entry.label}
+            <span className="nav-button-content">
+              <img className="nav-icon" src={getNavigationIcon(entry.page)} alt="" />
+              <span>{entry.label}</span>
+            </span>
           </button>
         ))}
 
@@ -51,14 +55,27 @@ export function Navigation({
             className={page === 'admin' ? 'active' : ''}
             onClick={() => onNavigate('admin')}
           >
-            Admin
+            <span className="nav-button-content">
+              <img className="nav-icon" src={getNavigationIcon('admin')} alt="" />
+              <span>Admin</span>
+            </span>
           </button>
         )}
       </div>
 
       <div className="nav-actions">
-        <button onClick={onOpenTutorial}>Tutorial</button>
-        <button onClick={onLogout}>Logout</button>
+        <button onClick={onOpenTutorial}>
+          <span className="nav-button-content">
+            <img className="nav-icon" src={getNavigationIcon('tutorial')} alt="" />
+            <span>Tutorial</span>
+          </span>
+        </button>
+        <button onClick={onLogout}>
+          <span className="nav-button-content">
+            <img className="nav-icon" src={getNavigationIcon('logout')} alt="" />
+            <span>Logout</span>
+          </span>
+        </button>
       </div>
     </nav>
   );

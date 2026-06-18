@@ -5,3 +5,6 @@ export { getJobImage } from './jobImageMap';
 export { getBusinessImage } from './businessImageMap';
 export { getTerritoryImage } from './territoryImageMap';
 export { getCrewPortrait } from '../utils/getCrewPortrait';
+
+export { getNavigationIcon } from './navigationIconMap';
+export { getRiskIcon, getHeatIcon } from './riskIconMap';

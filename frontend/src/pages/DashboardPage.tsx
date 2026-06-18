@@ -112,7 +112,7 @@ export function DashboardPage({ user, onChanged }: DashboardPageProps) {
 
       <article className="card dashboard-hero-card">
         <div className="player-avatar-frame">
-          <img src="/assets/crew/default.svg" alt="Player avatar placeholder" />
+          <img src="/assets/crew/default.webp" alt="Player avatar placeholder" />
         </div>
         <div className="dashboard-hero-body">
           <p className="eyebrow">The Boss</p>

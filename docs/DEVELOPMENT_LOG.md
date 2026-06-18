@@ -52,3 +52,53 @@
 - Added responsive desktop, tablet, and mobile styling with lazy image loading and stable portrait dimensions.
 - Added v0.3.5 unit and contract tests.
 - Recorded the art limitation honestly: 50 identity sets exist, but 0 complete matching five-stage sets; 200 age-stage files remain to be supplied.
+
+## 2026-06-18 — Criminal Empire Online v0.3.6 — Visual Redesign & Asset Integration
+
+- Updated frontend package/version labels to v0.3.6 while preserving the existing PHP REST backend, MySQL schema style, API routes, and gameplay systems.
+- Added a dark noir visual layer with charcoal panels, bronze/grey borders, green money highlights, red heat warnings, yellow/orange risk indicators, blue planning accents, purple rare/elite accents, and mobile-first responsive grids.
+- Added local asset folders under `frontend/public/assets/` for crew, item icons, role icons, crimes, jobs, businesses, territories, and placeholders.
+- Added local SVG fallback placeholders for items, crimes, dirty jobs, territories, male crew, female crew, and global crew portraits so the UI does not rely on remote CDN images.
+- Added gender-safe v0.3.6 crew portrait helper `getCrewPortrait(gender, portraitKey, age)` with the 16–24, 25–31, 32–40, 41–55, and 56–70 stage naming convention.
+- Copied the available v0.3.5 adult portrait assets into the new gender-safe 32–40 WebP locations; missing age stages fall back to the same identity adult image, then gender default, then global default.
+- Added centralized asset maps for item icons, role icons, crime images, dirty job images, business images, territory images, and the `assetManifest.ts` export surface.
+- Added reusable game UI components: GameLayout, GameHeader, BottomNavigation, SectionCard, StatCard, ProgressBar, RiskBadge, HeatBadge, ItemIconCard, CrimePictureCard, CrewMemberCard, CrewPortrait, EmptyState, and LoadingState.
+- Redesigned the dashboard into a command board with player avatar, level/XP, energy, cash, bank money, active Dirty Job panel, crew status, current territory, heat controls, and recent activity.
+- Redesigned Crimes with picture cards, reward/energy/heat information, and local crime image fallbacks.
+- Updated Dirty Jobs with cinematic job thumbnails, risk and heat badges, visual opportunity list items, and a picture-card briefing panel.
+- Updated Crew and Recruitment to use gender-safe portrait paths and role icon assets while keeping existing crew dossier/profile workflows.
+- Updated Inventory/Equipment with local item icon cards for owned gear and the equipment shop.
+- Updated Territories with local background image cards and control/status details.
+- Improved navigation naming and added a mobile bottom navigation that hides admin access for non-admin users.
+- Added README documentation for where to place final generated assets, crew portrait naming rules, and fallback behavior.
+
+
+## 2026-06-18 — Criminal Empire Online v0.3.6 Asset Pack Applied
+
+- Replaced the first-pass empty SVG-style UI placeholders in the frontend mappings with production-style local WebP crops taken from the supplied noir asset concept sheets.
+- Added real-looking WebP item icons for weapons, protection gear, tools, vehicles, valuables, and contraband.
+- Added real-looking WebP thumbnails for crimes, dirty jobs, businesses, and territory backgrounds.
+- Added WebP crew/default, item/default, crime/default, job/default, and territory/default fallbacks so runtime image errors no longer fall back to the plain placeholder cards first.
+- Updated `itemIconMap.ts`, `roleIconMap.ts`, `crimeImageMap.ts`, `jobImageMap.ts`, `businessImageMap.ts`, and `territoryImageMap.ts` to reference `.webp` game assets.
+- Updated the shared item/crime cards and dashboard player image to use WebP fallbacks.
+- Kept the existing SVG placeholder files as emergency backups and development references.
+
+## 2026-06-18 — Criminal Empire Online v0.3.6 Real Visuals Hotfix
+
+- Rebuilt the asset pack so legacy `.svg` asset paths are no longer empty template graphics: every SVG counterpart now wraps the matching local WebP art, so both old `/assets/.../*.svg` references and new `/assets/.../*.webp` references display the same real visuals.
+- Verified all React source asset mappings point to WebP assets first and that every referenced `/assets/...` path exists in `frontend/public/assets`.
+- Confirmed crime, dirty job, inventory, business, territory, role, and fallback assets now display rendered local game art rather than plain geometric placeholders.
+- This hotfix is intended to prevent stale browser/dev-server code from still showing the old placeholder SVG cards while the frontend is being refreshed.
+
+## 2026-06-18 — Criminal Empire Online v0.3.6 Mockup Asset Application Pass
+
+- Applied the supplied noir UI mockup sheet directly into the project as local game assets.
+- Re-cropped item icons so weapons, protection gear, tools, vehicles, valuables, documents, and contraband show actual object art instead of blank template cards or large baked labels.
+- Added missing local image categories for document/ID assets, navigation icons, and risk/heat indicator icons.
+- Expanded `itemIconMap.ts` with aliases for seeded backend names including Saturday Night Special, 9mm Pistol, Sawed-off Shotgun, Cheap Knife, Lockpick Set, Work Gloves, Dark Clothing, Basic Protective Vest, First-Aid Kit, Basic Surveillance Kit, warehouse supplies, stolen goods, vehicle parts, and seeded drugs.
+- Rebuilt crime and dirty job thumbnails from the supplied visual sheet and added aliases for Protection Collection, Vehicle Theft, Armored Truck Heist, Back Alley Collection, Warehouse Pickup, Evidence Cleanup, Protection Visit, Night Delivery, Stolen Goods Pickup, Debt Pressure, Fake Document Run, and Dockside Drop.
+- Added navigation icon mappings and wired them into desktop navigation and mobile bottom navigation.
+- Added risk/heat image icons to `RiskBadge` and `HeatBadge`.
+- Updated Drug Market rows and Warehouse storage/deposit rows to show local item/contraband icons, so drugs and stored assets are visually represented outside the inventory page too.
+- Rebuilt matching SVG wrappers for generated WebP assets so stale `.svg` paths still display the real local artwork.
+- Verified frontend build with `npm run build` and reran v0.3/v0.3.5 backend unit and contract tests successfully.

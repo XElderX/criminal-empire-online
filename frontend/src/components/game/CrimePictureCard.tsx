@@ -26,7 +26,7 @@ export function CrimePictureCard({
           src={source}
           alt=""
           loading="lazy"
-          onError={() => setSource('/assets/placeholders/default_crime.svg')}
+          onError={() => setSource('/assets/placeholders/default_crime.webp')}
         />
       </div>
       <div className="crime-picture-body">

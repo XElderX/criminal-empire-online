@@ -18,7 +18,7 @@ export function ItemIconCard({ item, footer, compact = false }: ItemIconCardProp
           src={source}
           alt=""
           loading="lazy"
-          onError={() => setSource('/assets/placeholders/default_item.svg')}
+          onError={() => setSource('/assets/placeholders/default_item.webp')}
         />
       </div>
       <div className="item-icon-content">
