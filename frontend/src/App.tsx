@@ -3,6 +3,7 @@ import { api, clearToken, getToken } from './api/client';
 import { GameLayout } from './components/game/GameLayout';
 import { PlayerStats } from './components/PlayerStats';
 import { TutorialPanel } from './components/TutorialPanel';
+import { UpdateNoticeModal } from './components/UpdateNoticeModal';
 import { AdminPage } from './pages/AdminPage';
 import { AuthPage } from './pages/AuthPage';
 import { CrimesPage } from './pages/CrimesPage';
@@ -11,11 +12,12 @@ import { DashboardPage } from './pages/DashboardPage';
 import { DirtyJobsPage } from './pages/DirtyJobsPage';
 import { EquipmentPage } from './pages/EquipmentPage';
 import { JobsPage } from './pages/JobsPage';
+import { HeatPolicePage } from './pages/HeatPolicePage';
 import { MarketPage } from './pages/MarketPage';
 import { RecruitmentPage } from './pages/RecruitmentPage';
 import { TerritoriesPage } from './pages/TerritoriesPage';
 import { WarehousePage } from './pages/WarehousePage';
-import type { PageName, TutorialState, User } from './types';
+import type { PageName, TutorialState, UpdateNotice, User } from './types';
 
 const ACTIVE_PAGE_STORAGE_KEY = 'criminal-empire-online-active-page';
 
@@ -23,6 +25,8 @@ export function App() {
   const [user, setUser] = useState<User | null>(null);
   const [page, setPage] = useState<PageName>(() => loadSavedPage());
   const [tutorialOpen, setTutorialOpen] = useState(false);
+  const [updateNotice, setUpdateNotice] = useState<UpdateNotice | null>(null);
+  const [updateNoticeBusy, setUpdateNoticeBusy] = useState(false);
   const [tutorialRefreshKey, setTutorialRefreshKey] = useState(0);
   const [booting, setBooting] = useState(true);
 
@@ -50,6 +54,7 @@ export function App() {
       const response = await api<{ user: User }>('/me');
       setUser(response.user);
       await openTutorialForNewPlayer();
+      await loadPendingUpdateNotice();
     } catch {
       clearToken();
     } finally {
@@ -66,6 +71,34 @@ export function App() {
       }
     } catch {
       // The application remains usable even when tutorial state cannot load.
+    }
+  }
+
+
+  async function loadPendingUpdateNotice(): Promise<void> {
+    try {
+      const response = await api<{ notice: UpdateNotice | null }>('/update-notices/pending');
+      setUpdateNotice(response.notice);
+    } catch {
+      // Update notice failure should not block gameplay.
+    }
+  }
+
+  async function confirmUpdateNotice(): Promise<void> {
+    if (!updateNotice) {
+      return;
+    }
+
+    setUpdateNoticeBusy(true);
+
+    try {
+      await api('/update-notices/acknowledge', {
+        method: 'POST',
+        body: JSON.stringify({ notice_id: updateNotice.id }),
+      });
+      setUpdateNotice(null);
+    } finally {
+      setUpdateNoticeBusy(false);
     }
   }
 
@@ -86,6 +119,7 @@ export function App() {
     localStorage.setItem(ACTIVE_PAGE_STORAGE_KEY, 'dashboard');
     setTutorialRefreshKey((current) => current + 1);
     void openTutorialForNewPlayer();
+    void loadPendingUpdateNotice();
   }
 
   function logout(): void {
@@ -104,7 +138,7 @@ export function App() {
     return (
       <main className="auth-shell">
         <section className="card auth-card">
-          <p className="eyebrow">Criminal Empire Online v0.4.2</p>
+          <p className="eyebrow">Criminal Empire Online v0.5</p>
           <h1>Loading city state…</h1>
         </section>
       </main>
@@ -132,6 +166,14 @@ export function App() {
         />
       </GameLayout>
 
+      {updateNotice && (
+        <UpdateNoticeModal
+          notice={updateNotice}
+          busy={updateNoticeBusy}
+          onConfirm={() => void confirmUpdateNotice()}
+        />
+      )}
+
       <TutorialPanel
         isOpen={tutorialOpen}
         refreshKey={tutorialRefreshKey}
@@ -157,6 +199,7 @@ function loadSavedPage(): PageName {
     || savedPage === 'equipment'
     || savedPage === 'warehouse'
     || savedPage === 'crimes'
+    || savedPage === 'heat'
     || savedPage === 'market'
     || savedPage === 'territories'
     || savedPage === 'admin'
@@ -193,6 +236,8 @@ function PageContent({
       return <WarehousePage onChanged={onChanged} />;
     case 'crimes':
       return <CrimesPage onChanged={onChanged} />;
+    case 'heat':
+      return <HeatPolicePage onChanged={onChanged} />;
     case 'market':
       return <MarketPage />;
     case 'territories':

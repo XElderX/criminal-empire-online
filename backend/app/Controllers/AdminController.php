@@ -369,6 +369,85 @@ final class AdminController
         }
     }
 
+
+    public function heat(array $params, array $context): void
+    {
+        try {
+            AdminMiddleware::ensure($context['user']);
+            $pdo = Database::pdo();
+            Response::json([
+                'users' => $pdo->query(
+                    <<<'SQL'
+                        SELECT id, username, heat, boss_personal_heat, gang_heat, boss_status, boss_alive, boss_rank
+                        FROM users
+                        ORDER BY GREATEST(heat, boss_personal_heat, gang_heat) DESC, id ASC
+                        LIMIT 100
+                    SQL
+                )->fetchAll(),
+                'crew' => $pdo->query(
+                    <<<'SQL'
+                        SELECT member.id, member.user_id, member.personal_heat, member.under_investigation, member.status, member.revenge_risk, member.revenge_status, npc.first_name, npc.last_name, npc.nickname
+                        FROM player_gang_members member
+                        JOIN npcs npc ON npc.id = member.npc_id
+                        ORDER BY member.personal_heat DESC, member.id DESC
+                        LIMIT 100
+                    SQL
+                )->fetchAll(),
+                'recent_logs' => $pdo->query('SELECT * FROM heat_logs ORDER BY id DESC LIMIT 100')->fetchAll(),
+            ]);
+        } catch (Throwable $exception) {
+            Response::json(['message' => $exception->getMessage()], 422);
+        }
+    }
+
+    public function investigations(array $params, array $context): void
+    {
+        try {
+            AdminMiddleware::ensure($context['user']);
+            Response::json([
+                'data' => Database::pdo()->query(
+                    <<<'SQL'
+                        SELECT *
+                        FROM police_investigations
+                        ORDER BY FIELD(status, 'arrest_pending','raid_pending','escalated','active','monitoring','open','cold','resolved','closed'), suspicion DESC, id DESC
+                        LIMIT 150
+                    SQL
+                )->fetchAll(),
+            ]);
+        } catch (Throwable $exception) {
+            Response::json(['message' => $exception->getMessage()], 422);
+        }
+    }
+
+    public function characterHeat(array $params, array $context): void
+    {
+        try {
+            AdminMiddleware::ensure($context['user']);
+            $type = (string) ($params['type'] ?? '');
+            $id = (int) ($params['id'] ?? 0);
+
+            if ($id <= 0 || !in_array($type, ['boss', 'crew', 'npc', 'gang', 'district'], true)) {
+                throw new RuntimeException('Valid heat target type and id are required.');
+            }
+
+            $statement = Database::pdo()->prepare(
+                <<<'SQL'
+                    SELECT *
+                    FROM heat_logs
+                    WHERE target_type = ?
+                      AND (target_id <=> ?)
+                    ORDER BY id DESC
+                    LIMIT 120
+                SQL
+            );
+            $statement->execute([$type, $id]);
+
+            Response::json(['data' => $statement->fetchAll()]);
+        } catch (Throwable $exception) {
+            Response::json(['message' => $exception->getMessage()], 422);
+        }
+    }
+
     private function countRows(\PDO $pdo, string $table): int
     {
         return (int) $pdo->query("SELECT COUNT(*) FROM {$table}")->fetchColumn();

@@ -1,3 +1,10 @@
+## 2026-06-19 — Criminal Empire Online v0.5 — Heat & Police Pressure Expansion
+
+- Reworked heat into boss, crew, NPC, gang, and district pressure with heat logs and police investigations.
+- Added Heat & Police page, reduction actions, idle daily decay, weekly quiet bonus, investigation pressure, boss profile, succession support, and one-time update notice modal.
+- Added high-heat crew dismissal relief with revenge-risk events for furious dismissed NPCs.
+
+
 ## 2026-06-19 — Criminal Empire Online v0.4.2 — Fallback Street Actions
 
 - Split the Crimes page into three subtabs: `Explore Leads`, `Quick Crimes & Street Actions`, and `Fallback Street Actions`.

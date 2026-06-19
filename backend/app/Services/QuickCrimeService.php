@@ -726,6 +726,17 @@ final class QuickCrimeService
             SQL
         )->execute([$rewardCash, $heatGained, $freshUser['id']]);
 
+        (new HeatPressureService())->recordCrimeHeat(
+            (int) $freshUser['id'],
+            'quick_crime',
+            $runId,
+            $heatGained,
+            'Quick crime heat: ' . $template['title'],
+            array_map(static fn (array $member): int => (int) $member['id'], $crew),
+            null,
+            (string) $template['category']
+        );
+
         $pdo->prepare(
             <<<'SQL'
                 UPDATE quick_crime_runs

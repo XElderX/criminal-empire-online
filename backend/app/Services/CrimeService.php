@@ -42,6 +42,7 @@ final class CrimeService
             ->execute([$reward, $crime['energy_cost'], $crime['heat_gain'], $crime['experience_gain'], $freshUser['id']]);
         $pdo->prepare('INSERT INTO crime_logs (user_id, crime_id, success, reward, heat_gained, created_at) VALUES (?, ?, ?, ?, ?, NOW())')
             ->execute([$freshUser['id'], $crime['id'], $success ? 1 : 0, $reward, $crime['heat_gain']]);
+        (new HeatPressureService())->recordCrimeHeat((int) $freshUser['id'], 'fallback_street_action', (int) $crime['id'], (int) $crime['heat_gain'], 'Fallback street action heat: ' . $crime['name'], [], null, 'fallback_street_action');
         $pdo->prepare(
             <<<'SQL'
                 INSERT INTO player_action_cooldowns (

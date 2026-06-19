@@ -259,3 +259,25 @@ Authenticated player endpoints:
 - `GET /api/player/progression` — player XP and recent progression logs.
 
 Rewards, XP, loot, success rolls, cooldowns, and skill progression are all calculated server-side.
+
+## v0.5 Heat & Police API
+
+Authenticated player endpoints:
+
+- `GET /api/heat` — boss, gang, crew, district, investigation, warning, log, and reduction overview.
+- `GET /api/heat/logs` — recent heat logs.
+- `GET /api/heat/reduction-options` — available reduction actions and lock reasons.
+- `POST /api/heat/reduce` — execute a backend-validated reduction action by `code`.
+- `POST /api/heat/lie-low` — compatibility endpoint for stronger short lie-low.
+- `POST /api/heat/process-day` — idempotent daily heat decay and investigation processing.
+- `GET /api/investigations` and `GET /api/investigations/{id}` — active investigation views.
+- `POST /api/investigations/{id}/respond` — respond with legal/silence/cooperation actions.
+- `GET /api/boss`, `GET /api/boss/history`, `GET /api/boss/succession` — boss character, timeline, and succession candidate.
+- `GET /api/update-notices/pending` and `POST /api/update-notices/acknowledge` — one-time update notice workflow.
+
+Admin endpoints:
+
+- `GET /api/admin/heat`
+- `GET /api/admin/investigations`
+- `GET /api/admin/characters/{type}/{id}/heat`
+

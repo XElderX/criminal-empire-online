@@ -363,6 +363,8 @@ final class CrewService
                 $candidateUpdate->execute([$member['recruitment_candidate_id']]);
             }
 
+            $heatConsequence = (new HeatPressureService())->dismissHeatRelief($user, $member);
+
             (new CrewHistoryService())->record(
                 $memberId,
                 (int) $user['id'],
@@ -372,6 +374,10 @@ final class CrewService
                 [
                     'unpaid_salary' => (int) $member['unpaid_salary'],
                     'loyalty_at_dismissal' => (int) $member['loyalty'],
+                    'personal_heat_at_dismissal' => (int) ($member['personal_heat'] ?? 0),
+                    'heat_relief' => $heatConsequence['heat_relief'],
+                    'revenge_risk' => $heatConsequence['revenge_risk'],
+                    'revenge_event_created' => $heatConsequence['revenge_event_created'],
                     'time_served_from' => $member['recruited_at'],
                 ]
             );
@@ -392,6 +398,7 @@ final class CrewService
                 'member_id' => $memberId,
                 'equipment_returned' => true,
                 'world_return_delay_days' => 14,
+                'heat_consequence' => $heatConsequence,
             ];
         } catch (Throwable $exception) {
             if ($pdo->inTransaction()) {

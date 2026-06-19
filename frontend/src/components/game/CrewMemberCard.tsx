@@ -42,6 +42,8 @@ export function CrewMemberCard({
         <div className="tag-row">
           <span className="status-badge">{member.role.name}</span>
           <span className={`status-badge status-${member.status}`}>{member.status}</span>
+          <span className={`status-badge ${Number(member.personal_heat || 0) >= 50 ? 'heat-hot' : ''}`}>Personal heat {member.personal_heat || 0}</span>
+          {member.under_investigation && <span className="status-badge heat-hot">Under investigation</span>}
         </div>
 
         <div className="crew-meter-stack">

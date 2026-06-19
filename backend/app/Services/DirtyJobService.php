@@ -871,6 +871,17 @@ final class DirtyJobService
             'Dirty Job outcome: ' . $outcome
         );
 
+        (new HeatPressureService())->recordCrimeHeat(
+            (int) $user['id'],
+            'dirty_job',
+            (int) $run['id'],
+            (int) $calculation['heat'],
+            'Dirty Job heat: ' . $run['title'],
+            array_map(static fn (array $assignment): int => (int) $assignment['gang_member_id'], $assignments ?? []),
+            null,
+            (string) $run['category']
+        );
+
         $physicalRewards = $this->grantPhysicalRewards(
             $user,
             $run,

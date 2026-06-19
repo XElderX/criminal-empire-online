@@ -1038,6 +1038,21 @@ final class CrimeOpportunityService
             'Crime opportunity outcome: ' . $outcome
         );
 
+        $heatAssignments = Database::pdo()->prepare('SELECT gang_member_id FROM crime_run_assignments WHERE run_id = ?');
+        $heatAssignments->execute([$runId]);
+        $assignments = $heatAssignments->fetchAll();
+
+        (new HeatPressureService())->recordCrimeHeat(
+            (int) $run['user_id'],
+            'crime_v04',
+            $runId,
+            $heat,
+            'Major crime heat: ' . $opportunity['title'],
+            array_map(static fn (array $assignment): int => (int) $assignment['gang_member_id'], $assignments ?? []),
+            isset($opportunity['territory_id']) ? (int) $opportunity['territory_id'] : null,
+            (string) $template['category']
+        );
+
         $pdo->prepare(
             <<<'SQL'
                 UPDATE crime_runs

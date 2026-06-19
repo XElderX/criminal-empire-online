@@ -1,3 +1,17 @@
+## 2026-06-19 — Criminal Empire Online v0.5 — Heat & Police Pressure Expansion
+
+- Preserved v0.4 Crimes Expansion, v0.4.1 Quick Crimes, and v0.4.2 crime subtabs while expanding heat into a strategic police-pressure system.
+- Added boss personal heat, gang heat, crew personal heat, NPC heat, district heat, heat logs, police investigations, police events, boss history, update notices, and acknowledgement tracking.
+- Added services: `HeatPressureService`, `InvestigationService`, `BossCharacterService`, `SuccessionService`, and `UpdateNoticeService`.
+- Added routes for heat overview/logs/reduction actions, investigations, boss profile/history/succession, admin heat/investigation views, and update notice acknowledgement.
+- Added daily idle heat decay (-5) and weekly quiet bonus (-15), with idempotent per-day processing state.
+- Added heat reduction actions for lie low, bribe contact, pay lawyer, destroy evidence, and send high-heat crew away.
+- Integrated heat logging into fallback street actions, quick crimes, dirty jobs, and v0.4 major crimes.
+- Added high-heat crew dismissal consequences: Dismissed high-heat crew can reduce pressure while risking revenge. dismissing a hot crew member can reduce boss/gang heat but creates revenge risk and possible sabotage/retaliation events.
+- Added Heat & Police frontend page, crew personal heat badges, and a one-time update notice modal that appears after login until confirmed.
+- Added v0.5 contract/unit coverage and updated verification notes.
+
+
 ## 2026-06-19 — Criminal Empire Online v0.4.2 — Fallback Street Actions
 
 - Split the Crimes page into separate subtabs for `Explore Leads`, `Quick Crimes & Street Actions`, and `Fallback Street Actions`.
