@@ -350,6 +350,7 @@ final class WorldMapService
             'linked_feature_key' => $location['linked_feature_key'] ?? null,
             'available_actions' => $available,
             'actions' => $actions,
+            'shopSummary' => $this->shopSummaryForLocation((int) $location['id']),
             'territory' => $territory ? $this->formatTerritory($territory) : null,
             'is_active' => (bool) $location['is_active'],
             'riskSummary' => $this->risk->summarize($location, $territory),
@@ -468,6 +469,31 @@ final class WorldMapService
         }
 
         return $warnings;
+    }
+
+
+    private function shopSummaryForLocation(int $locationId): array
+    {
+        $statement = Database::pdo()->prepare(
+            <<<'SQL'
+                SELECT slug, name, shop_type, is_black_market, is_legal
+                FROM shops
+                WHERE world_location_id = ?
+                  AND is_active = 1
+                  AND is_known = 1
+                ORDER BY is_black_market, name
+            SQL
+        );
+        $statement->execute([$locationId]);
+        $shops = $statement->fetchAll();
+
+        return [
+            'count' => count($shops),
+            'has_black_market' => (bool) array_filter($shops, static fn (array $shop): bool => (int) $shop['is_black_market'] === 1),
+            'shop_types' => array_values(array_unique(array_map(static fn (array $shop): string => (string) $shop['shop_type'], $shops))),
+            'primary_shop_slug' => $shops[0]['slug'] ?? null,
+            'primary_shop_name' => $shops[0]['name'] ?? null,
+        ];
     }
 
     private function territorySummary(int $regionId): array

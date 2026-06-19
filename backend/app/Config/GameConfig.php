@@ -4,8 +4,8 @@ namespace App\Config;
 
 final class GameConfig
 {
-    public const VERSION = '0.6.5';
-    public const RELEASE_TITLE = 'Criminal Empire Online v0.6.5 — Map Shops & Item Availability Expansion';
+    public const VERSION = '0.6.5.1';
+    public const RELEASE_TITLE = 'Criminal Empire Online v0.6.5.1 — Map Shop UX & Navigation Hotfix';
 
     public const STARTING_CASH = 500;
     public const STARTING_BANK_CASH = 0;
@@ -19,6 +19,7 @@ final class GameConfig
     public const SALARY_INTERVAL_DAYS = 7;
     public const TUTORIAL_COMPLETION_REWARD = 60;
     public const TUTORIAL_VERSION = '0.6.5';
+    public const TUTORIAL_UPDATE_TRIGGER_VERSION = '0.6.4';
     public const TUTORIAL_KEY_FULL = 'new_player_world_guide';
     public const TUTORIAL_KEY_UPDATE = 'world_systems_update';
     public const DIRTY_JOB_OPPORTUNITY_TARGET = 6;

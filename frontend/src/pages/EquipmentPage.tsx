@@ -169,8 +169,8 @@ export function EquipmentPage({ onChanged, onNavigate }: EquipmentPageProps) {
             <p className="muted">Inventory no longer sells global equipment. Travel to local shops, pawn fences, garages, medical counters, or future dealers.</p>
           </div>
           <div className="map-action-grid">
-            <button className="btn primary" onClick={() => onNavigate('shops')}>Find Shops</button>
-            <button className="btn" onClick={() => onNavigate('world map')}>Open World Map</button>
+            <button className="btn primary" onClick={() => onNavigate('world map')}>Open World Map</button>
+            <button className="btn" onClick={() => onNavigate('shops')}>Known shop shortcuts</button>
           </div>
         </div>
         <div className="location-effect-summary">

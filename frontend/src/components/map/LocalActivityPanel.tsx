@@ -104,8 +104,15 @@ function LocalActivityGroupCard({
 
             return (
               <li key={index}>
-                <strong>{String(entry.title || entry.name || entry.opportunity_type || 'Local activity')}</strong>
-                {entry.description ? <span>{String(entry.description)}</span> : null}
+                <span className="local-preview-row">
+                  <span>
+                    <strong>{String(entry.title || entry.name || entry.opportunity_type || 'Local activity')}</strong>
+                    {entry.description ? <span>{String(entry.description)}</span> : null}
+                  </span>
+                  {String(entry.route_hint || '').startsWith('shops') ? (
+                    <button className="btn compact-btn" onClick={() => onOpenRoute(String(entry.route_hint))}>Open shop</button>
+                  ) : null}
+                </span>
                 {status === 'travel_required' ? <small>Requires local presence. {String(entry.travelHint || '')}</small> : null}
                 {lockedReasons.length > 0 ? (
                   <small>Locked: {lockedReasons.map((reason) => String(reason)).join(', ')}</small>

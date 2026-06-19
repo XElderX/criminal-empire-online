@@ -1,4 +1,4 @@
-# Criminal Empire Online v0.6.5 — Map Shops & Item Availability Expansion
+# Criminal Empire Online v0.6.5.1 — Map Shop UX & Navigation Hotfix
 
 - Added map-based shops and dealers tied to world-map hotspots.
 - Inventory now focuses on owned-item management instead of acting as the global equipment shop.

@@ -92,14 +92,14 @@ $runner->test('Inventory page no longer exposes global buy shop', function () us
     $runner->assertFalse(str_contains($equipmentPage, "api<WeaponShopResponse>('/weapons'"));
 });
 
-$runner->test('Frontend includes shops page, API client, and navigation entry', function () use ($runner, $shopsPage, $shopsApi, $navigation): void {
+$runner->test('Frontend includes shops page and API client while primary navigation stays map-first', function () use ($runner, $shopsPage, $shopsApi, $navigation): void {
     foreach (['ShopsPage', 'ShopItemCard', 'ShopTransactionPanel'] as $needle) {
         $runner->assertContains($needle, $shopsPage);
     }
     foreach (['/shops', '/buy', '/sell'] as $needle) {
         $runner->assertContains($needle, $shopsApi);
     }
-    $runner->assertContains("page: 'shops'", $navigation);
+    $runner->assertFalse(str_contains($navigation, "{ page: 'shops', label: 'Shops' }"));
 });
 
 $runner->test('Documentation records v0.6.5 shops update', function () use ($runner, $docs, $apiDocs): void {

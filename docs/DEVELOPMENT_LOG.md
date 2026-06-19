@@ -1,3 +1,15 @@
+## 2026-06-19 — Criminal Empire Online v0.6.5.1 — Map Shop UX & Navigation Hotfix
+
+- Bumped backend and frontend version metadata to `0.6.5.1` with release title `Criminal Empire Online v0.6.5.1 — Map Shop UX & Navigation Hotfix`.
+- Changed shop UX to be map-first: normal players use World Map hotspot shop icons to open a local shop catalog instead of browsing a messy all-shops navigation tab.
+- Removed Shops from the primary navigation while keeping the Shops page available for map links and Inventory shortcuts.
+- Added visible, styled shop markers on location-map hotspots with direct shop-opening behavior.
+- Reworked shop catalog card layout so item images are contained in compact thumbnails, descriptions are readable, and buy buttons no longer overlap artwork.
+- Improved shop detail layout, map-first helper copy, optional known-shop shortcuts, and travel/local-presence notices.
+- Added Admin page subtabs for Players & tools, Asset catalog, NPC browser, and Audit log.
+- Fixed tutorial update behavior so patch releases do not reopen the World Systems tutorial for players who already completed the v0.6.4 tutorial/update path.
+- Added `017_v0651_shop_map_ux_hotfix.sql`, v0.6.5.1 tests, and documentation updates.
+
 ## 2026-06-19 — Criminal Empire Online v0.6.5 — Map Shops & Item Availability Expansion
 
 - Bumped backend and frontend version metadata to `0.6.5` with release title `Criminal Empire Online v0.6.5 — Map Shops & Item Availability Expansion`.

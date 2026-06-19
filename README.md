@@ -1,20 +1,18 @@
-# Criminal Empire Online v0.6.5 — Map Shops & Item Availability Expansion
+# Criminal Empire Online v0.6.5.1 — Map Shop UX & Navigation Hotfix
 
-This patch builds on **v0.6.4 — World Tutorial & Player Guidance Update** and preserves the v0.6.3.1 Street Job NPC assignment hotfix. It moves gear buying/selling into the world map so Inventory is mainly for owned-item management.
+This patch builds on **v0.6.5 — Map Shops & Item Availability Expansion** and preserves the v0.6.4 tutorial/help update plus the v0.6.3.1 Street Job NPC assignment hotfix.
 
-## v0.6.5 highlights
+## v0.6.5.1 highlights
 
-- Added map-based shops and dealers linked to real world-map hotspots.
-- Inventory is now focused on owned items, crew loadouts, equipment effects, contraband awareness, and links to shops/map.
-- Added config-driven shop catalogs and item availability in `backend/app/Config/ShopConfig.php`.
-- Added legal, restricted, black-market-only, and future-only item availability states.
-- Added shop buy/sell endpoints with backend validation for local presence, stock, cash, level, reputation, item enablement, and shop category rules.
-- Added stock/restock support and transaction logging through `shop_transactions`.
-- Added shop previews to local hotspot activity panels.
-- Added missing-item source hints so Quick Crimes and Dirty Jobs can point players toward useful shops.
-- Added Shops page and reusable shop components in the frontend.
-- Added tutorial/help guidance explaining that shops are found on the map and Inventory is no longer a global store.
-- Added v0.6.5 migration, seeder, tests, and documentation.
+- Shops are now presented as map-first gameplay: open the World Map, click a shop icon on a hotspot, then open that local shop catalog.
+- Removed the normal player-facing Shops entry from the main navigation so shops feel connected to location/map travel instead of another global tab.
+- Kept a Shops page for map links and optional known-shop shortcuts, but the default view now explains the map-first flow instead of dumping every shop in a long list.
+- Fixed oversized item images and overlapping cards in shop catalogs.
+- Reworked shop item cards with compact thumbnails, readable descriptions, stock/price badges, and safer disabled/locked messages.
+- Added styling for clickable shop markers on location maps.
+- Improved the selected-hotspot shop callout and map shop marker presentation.
+- Added admin page subtabs for Players & tools, Asset catalog, NPC browser, and Audit log.
+- Fixed tutorial update behavior so patch releases do not reopen the World Systems tutorial for players who already completed the v0.6.4 guide/update path.
 
 ## Install/update
 

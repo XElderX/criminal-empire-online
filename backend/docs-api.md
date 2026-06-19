@@ -1,6 +1,11 @@
-# Criminal Empire Online v0.6.5 API
+# Criminal Empire Online v0.6.5.1 API
 
 
+## v0.6.5.1 Map Shop UX & Navigation Hotfix
+
+Shops are intended to be opened from the World Map/location maps. Hotspots with shops expose clickable shop markers and shop callouts. The standalone Shops page remains available for map deep links such as `/?shop=market-tool-shop`, but normal navigation no longer treats it as a global market tab.
+
+Tutorial update handling now avoids reopening the World Systems tutorial for players who already completed the v0.6.4 guide/update path.
 
 ## v0.6.5 Map Shops & Item Availability Expansion
 
