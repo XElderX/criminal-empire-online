@@ -1,3 +1,16 @@
+## 2026-06-19 — Criminal Empire Online v0.6.1 — Map Gameplay Integration
+
+- Map hotspots now provide real local activity previews instead of static fake counts.
+- Quick Crimes can be filtered by region and hotspot using `quick_crime_location_rules`.
+- Dirty Jobs can be filtered by region and hotspot using `dirty_job_location_rules`.
+- Current map location can affect quick-crime availability, reward, heat, police pressure, danger, and result payloads.
+- Added hotspot exploration with energy cost, cooldown, local opportunity logs, and generated local rumors/leads.
+- Added `MapContextService`, `LocalActivityService`, `LocationRiskModifierService`, and `HotspotExplorationService`.
+- Location map panel now shows Quick Crimes Nearby, Dirty Jobs Nearby, leads/rumors, recruitment hints, businesses, territory control, and heat/police warnings.
+- Map buttons now pass region/location query context into Crimes, Dirty Jobs, Recruitment, Territories, and Heat pages where supported.
+- Added v0.6.1 migration, seeder, tests, docs, and API documentation.
+
+
 ## 2026-06-19 — Criminal Empire Online v0.6 — Game Map & Territories
 
 - Added interactive **Grimwater County** world map.

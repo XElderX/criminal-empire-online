@@ -87,7 +87,7 @@ SET
   END
 WHERE link.is_active = 1;
 
-INSERT INTO update_notices (version, title, body, is_active, created_at, updated_at)
+INSERT INTO update_notices (version, title, body, active, created_at, updated_at)
 SELECT '0.6.1', 'v0.6.1 — Map Gameplay Integration', 'Map hotspots now show real local activity previews, Quick Crimes and Dirty Jobs can filter by region/hotspot, and exploring a hotspot can reveal local opportunities.', 1, NOW(), NOW()
 WHERE EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'update_notices')
   AND NOT EXISTS (SELECT 1 FROM update_notices WHERE version = '0.6.1');

@@ -154,3 +154,41 @@ export interface TravelResponse {
   };
   possibleActions: MapHotspotAction[];
 }
+
+export interface LocalActivityGroup {
+  key: string;
+  title: string;
+  availableCount: number;
+  lockedCount: number;
+  preview: Array<Record<string, unknown>>;
+  route_hint?: string | null;
+}
+
+export interface LocationActivitiesResponse {
+  location: WorldLocation;
+  region: WorldRegion;
+  currentLocation: UserLocationState;
+  playerIsHere: boolean;
+  activityGroups: LocalActivityGroup[];
+  quickCrimesPreview: Array<Record<string, unknown>>;
+  dirtyJobsPreview: Array<Record<string, unknown>>;
+  crimeLeadsPreview: Array<Record<string, unknown>>;
+  recruitmentPreview: Array<Record<string, unknown>>;
+  businessesPreview: Array<Record<string, unknown>>;
+  territorySummary?: TerritoryMapSummary | null;
+  heatSummary: MapRiskSummary;
+  actions: Array<{ label: string; route_hint: string }>;
+  localModifiers: Record<string, unknown>;
+}
+
+export interface ExploreHotspotResponse {
+  message: string;
+  energy_cost: number;
+  opportunity: {
+    id: number;
+    type: string;
+    title: string;
+    description: string;
+  };
+  activities: LocationActivitiesResponse;
+}

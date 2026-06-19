@@ -1,5 +1,7 @@
 import { api } from './client';
 import type {
+  ExploreHotspotResponse,
+  LocationActivitiesResponse,
   LocationMapResponse,
   RegionMapResponse,
   TravelRequest,
@@ -29,5 +31,16 @@ export function travelToLocation(payload: TravelRequest): Promise<TravelResponse
   return api<TravelResponse>('/world-map/travel', {
     method: 'POST',
     body: JSON.stringify(payload),
+  });
+}
+
+
+export function getLocationActivities(locationSlug: string): Promise<LocationActivitiesResponse> {
+  return api<LocationActivitiesResponse>(`/world-map/locations/${locationSlug}/activities`);
+}
+
+export function exploreHotspot(locationSlug: string): Promise<ExploreHotspotResponse> {
+  return api<ExploreHotspotResponse>(`/world-map/locations/${locationSlug}/explore`, {
+    method: 'POST',
   });
 }

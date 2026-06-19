@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
-import { getLocationMap, getRegionMap, travelToLocation } from '../api/worldMap';
+import { exploreHotspot, getLocationActivities, getLocationMap, getRegionMap, travelToLocation } from '../api/worldMap';
 import { LocationMap } from '../components/map/LocationMap';
+import { LocalActivityPanel } from '../components/map/LocalActivityPanel';
 import { MapLegend } from '../components/map/MapLegend';
 import { MapTooltip } from '../components/map/MapTooltip';
 import { TravelPanel } from '../components/map/TravelPanel';
@@ -8,7 +9,7 @@ import { Notice } from '../components/Notice';
 import { EmptyState } from '../components/game/EmptyState';
 import { GameHeader } from '../components/game/GameHeader';
 import type { PageName } from '../types';
-import type { LocationMapResponse, MapHotspotAction, RegionMapResponse, WorldLocation } from '../types/worldMap';
+import type { LocationActivitiesResponse, LocationMapResponse, MapHotspotAction, RegionMapResponse, WorldLocation } from '../types/worldMap';
 
 export function LocationMapPage({
   regionSlug,
@@ -24,6 +25,7 @@ export function LocationMapPage({
   const [region, setRegion] = useState<RegionMapResponse | null>(null);
   const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
   const [locationDetail, setLocationDetail] = useState<LocationMapResponse | null>(null);
+  const [activities, setActivities] = useState<LocationActivitiesResponse | null>(null);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -56,8 +58,12 @@ export function LocationMapPage({
 
   async function loadLocation(locationSlug: string): Promise<void> {
     try {
-      const response = await getLocationMap(locationSlug);
+      const [response, activityResponse] = await Promise.all([
+        getLocationMap(locationSlug),
+        getLocationActivities(locationSlug),
+      ]);
       setLocationDetail(response);
+      setActivities(activityResponse);
     } catch (requestError) {
       setError((requestError as Error).message);
     }
@@ -80,10 +86,35 @@ export function LocationMapPage({
     }
   }
 
-  function navigateAction(action: MapHotspotAction): void {
-    const page = action.route_hint as PageName | undefined;
-    if (!page || page === 'world map') return;
+  async function exploreSelectedHotspot(): Promise<void> {
+    if (!selectedLocation) return;
+    setBusy(true);
+    setMessage('');
+    setError('');
+    try {
+      const response = await exploreHotspot(selectedLocation.slug);
+      setMessage(`${response.message} ${response.opportunity.title}`);
+      setActivities(response.activities);
+      onChanged();
+    } catch (requestError) {
+      setError((requestError as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function openRouteHint(routeHint: string): void {
+    const [pagePart, queryPart] = routeHint.split('?');
+    const page = pagePart as PageName;
     onNavigate(page);
+    if (queryPart) {
+      window.history.pushState({}, '', `/?${queryPart}`);
+    }
+  }
+
+  function navigateAction(action: MapHotspotAction): void {
+    if (!action.route_hint || action.route_hint === 'world map') return;
+    openRouteHint(String(action.route_hint));
   }
 
   if (!region) {
@@ -133,6 +164,12 @@ export function LocationMapPage({
             busy={busy}
             onTravel={travel}
             onNavigateAction={navigateAction}
+          />
+          <LocalActivityPanel
+            activities={activities}
+            busy={busy}
+            onExplore={exploreSelectedHotspot}
+            onOpenRoute={openRouteHint}
           />
           <MapLegend entries={[
             { type: 'district', label: 'District' },

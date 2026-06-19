@@ -1,3 +1,10 @@
+## 2026-06-19 — Criminal Empire Online v0.6.1 — Map Gameplay Integration
+
+- Added location-aware Quick Crime rules, Dirty Job rules, local activity endpoints, and hotspot exploration.
+- Updated map hotspot panels to show real activity groups, previews, territory/risk effects, and contextual action buttons.
+- Updated Crimes and Dirty Jobs pages to read region/location query context from map buttons.
+
+
 ## 2026-06-19 — Criminal Empire Online v0.6 — Game Map & Territories
 
 - Added Grimwater County as the fictional world-map setting name.
