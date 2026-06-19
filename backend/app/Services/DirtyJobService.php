@@ -12,11 +12,13 @@ use Throwable;
 final class DirtyJobService
 {
     private DirtyJobCalculator $calculator;
+    private ExperienceService $experience;
 
     public function __construct(
         private readonly RandomSource $random = new SecureRandomSource()
     ) {
         $this->calculator = new DirtyJobCalculator($this->random);
+        $this->experience = new ExperienceService();
     }
 
     public function opportunities(array $user): array
@@ -849,7 +851,6 @@ final class DirtyJobService
                     cash = cash + ?,
                     dirty_money = dirty_money + ?,
                     heat = heat + ?,
-                    experience = experience + ?,
                     reputation = GREATEST(0, reputation + ?),
                     updated_at = NOW()
                 WHERE id = ?
@@ -858,10 +859,17 @@ final class DirtyJobService
             $cashReward,
             $dirtyCashReward,
             $calculation['heat'],
-            $experience,
             $reputation,
             $user['id'],
         ]);
+
+        $this->experience->grantPlayer(
+            (int) $user['id'],
+            $experience,
+            'dirty_job',
+            (int) $run['id'],
+            'Dirty Job outcome: ' . $outcome
+        );
 
         $physicalRewards = $this->grantPhysicalRewards(
             $user,
@@ -1193,11 +1201,19 @@ final class DirtyJobService
                         current_assignment_type = NULL,
                         current_assignment_id = NULL,
                         jobs_failed = jobs_failed + 1,
-                        experience = experience + ?,
                         updated_at = NOW()
                     WHERE id = ?
                 SQL
-            )->execute([$releaseAt, $experience, $targetMemberId]);
+            )->execute([$releaseAt, $targetMemberId]);
+
+            $this->experience->grantCrew(
+                (int) $user['id'],
+                $targetMemberId,
+                $experience,
+                'dirty_job',
+                (int) $run['id'],
+                'Dirty Job outcome while arrested: ' . $run['title']
+            );
 
             (new CrewHistoryService())->record(
                 $targetMemberId,
@@ -1233,16 +1249,23 @@ final class DirtyJobService
                         current_assignment_type = NULL,
                         current_assignment_id = NULL,
                         jobs_failed = jobs_failed + 1,
-                        experience = experience + ?,
                         updated_at = NOW()
                     WHERE id = ?
                 SQL
             )->execute([
                 $healthLoss,
                 $recoverAt,
-                $experience,
                 $targetMemberId,
             ]);
+
+            $this->experience->grantCrew(
+                (int) $user['id'],
+                $targetMemberId,
+                $experience,
+                'dirty_job',
+                (int) $run['id'],
+                'Dirty Job outcome while injured: ' . $run['title']
+            );
 
             (new CrewHistoryService())->record(
                 $targetMemberId,
@@ -1290,7 +1313,6 @@ final class DirtyJobService
                         current_assignment_id = NULL,
                         jobs_completed = jobs_completed + ?,
                         jobs_failed = jobs_failed + ?,
-                        experience = experience + ?,
                         total_earnings = total_earnings + ?,
                         morale = GREATEST(0, LEAST(100, morale + ?)),
                         updated_at = NOW()
@@ -1299,11 +1321,19 @@ final class DirtyJobService
             )->execute([
                 $completed ? 1 : 0,
                 $completed ? 0 : 1,
-                $experience,
                 $earningsShare,
                 $completed ? 2 : -2,
                 $memberId,
             ]);
+
+            $this->experience->grantCrew(
+                (int) $user['id'],
+                $memberId,
+                $experience,
+                'dirty_job',
+                (int) $run['id'],
+                'Participated in Dirty Job: ' . $run['title']
+            );
 
             (new CrewHistoryService())->record(
                 $memberId,
