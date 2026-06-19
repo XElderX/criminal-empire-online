@@ -466,10 +466,6 @@ final class DirtyJobService
 
             $normalized = $this->normalizeAssignments($assignments);
 
-            if (count($normalized) < $this->requiredCrewMinimum((int) $run['min_crew_size'])) {
-                throw new RuntimeException('At least one crew member must be assigned to every Dirty Job.');
-            }
-
             $seenMembers = [];
             $seenRoles = [];
 

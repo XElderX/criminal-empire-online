@@ -9,6 +9,60 @@ use Throwable;
 
 final class RecruitmentService
 {
+    public function refreshCandidatePool(): array
+    {
+        $pdo = Database::pdo();
+
+        $expired = $pdo->exec(
+            <<<'SQL'
+                UPDATE recruitment_candidates
+                SET status = 'expired'
+                WHERE status = 'available'
+                  AND expires_at IS NOT NULL
+                  AND expires_at <= NOW()
+            SQL
+        );
+
+        $refreshed = $pdo->exec(
+            <<<'SQL'
+                UPDATE recruitment_candidates candidate
+                LEFT JOIN player_gang_members member
+                    ON member.recruitment_candidate_id = candidate.id
+                    AND member.status <> 'dismissed'
+                SET
+                    candidate.status = 'available',
+                    candidate.available_from = NOW(),
+                    candidate.expires_at = DATE_ADD(NOW(), INTERVAL 30 DAY),
+                    candidate.hired_by_user_id = NULL,
+                    candidate.hired_at = NULL
+                WHERE candidate.status = 'expired'
+                  AND member.id IS NULL
+            SQL
+        );
+
+        $spawned = $this->spawnNewCandidates(
+            GameConfig::RECRUITMENT_CANDIDATE_TARGET
+                - $this->availableCandidateCount()
+        );
+
+        $available = (int) $pdo->query(
+            <<<'SQL'
+                SELECT COUNT(*)
+                FROM recruitment_candidates
+                WHERE status = 'available'
+                  AND available_from <= NOW()
+                  AND (expires_at IS NULL OR expires_at > NOW())
+            SQL
+        )->fetchColumn();
+
+        return [
+            'expired' => (int) $expired,
+            'refreshed' => (int) $refreshed,
+            'spawned' => $spawned,
+            'available' => $available,
+        ];
+    }
+
     public function candidates(array $user): array
     {
         $statement = Database::pdo()->prepare(
@@ -598,6 +652,326 @@ final class RecruitmentService
         }
 
         return $reasons;
+    }
+
+    private function availableCandidateCount(): int
+    {
+        return (int) Database::pdo()->query(
+            <<<'SQL'
+                SELECT COUNT(*)
+                FROM recruitment_candidates
+                WHERE status = 'available'
+                  AND available_from <= NOW()
+                  AND (expires_at IS NULL OR expires_at > NOW())
+            SQL
+        )->fetchColumn();
+    }
+
+    private function spawnNewCandidates(int $needed): int
+    {
+        if ($needed <= 0) {
+            return 0;
+        }
+
+        $pdo = Database::pdo();
+        $statement = $pdo->prepare(
+            <<<'SQL'
+                SELECT
+                    npc.id,
+                    npc.home_territory_id,
+                    npc.reputation,
+                    npc.criminal_reputation,
+                    npc.age,
+                    npc.strength,
+                    npc.shooting,
+                    npc.driving,
+                    npc.intelligence,
+                    npc.stealth,
+                    npc.intimidation,
+                    npc.discipline,
+                    npc.street_knowledge,
+                    npc.endurance
+                FROM npcs npc
+                LEFT JOIN recruitment_candidates candidate
+                    ON candidate.npc_id = npc.id
+                LEFT JOIN player_gang_members member
+                    ON member.npc_id = npc.id
+                   AND member.status <> 'dismissed'
+                WHERE (
+                    npc.role = 'recruit'
+                    OR COALESCE(npc.is_recruitable, 0) = 1
+                )
+                  AND npc.alive = 1
+                  AND npc.status = 'active'
+                  AND npc.arrested_until IS NULL
+                  AND COALESCE(npc.is_contact, 0) = 0
+                  AND COALESCE(npc.is_informant, 0) = 0
+                  AND COALESCE(npc.is_witness, 0) = 0
+                  AND COALESCE(npc.is_police, 0) = 0
+                  AND COALESCE(npc.is_rival, 0) = 0
+                  AND candidate.id IS NULL
+                  AND member.id IS NULL
+                ORDER BY npc.reputation DESC, npc.criminal_reputation DESC, npc.id
+                LIMIT ?
+            SQL
+        );
+        $statement->bindValue(1, $needed, \PDO::PARAM_INT);
+        $statement->execute();
+        $rows = $statement->fetchAll();
+
+        $spawned = 0;
+
+        foreach ($rows as $row) {
+            $this->insertCandidateFromNpc($row);
+            $spawned++;
+        }
+
+        $fallbackNeeded = $needed - $spawned;
+
+        for ($index = 0; $index < $fallbackNeeded; $index++) {
+            $npc = $this->createGeneratedRecruitableNpc();
+            $this->insertCandidateFromNpc($npc);
+            $spawned++;
+        }
+
+        return $spawned;
+    }
+
+    /**
+     * @param array<string, mixed> $npc
+     */
+    private function insertCandidateFromNpc(array $npc): void
+    {
+        $stats = [
+            (int) $npc['strength'],
+            (int) $npc['shooting'],
+            (int) $npc['driving'],
+            (int) $npc['intelligence'],
+            (int) $npc['stealth'],
+            (int) $npc['intimidation'],
+            (int) $npc['discipline'],
+            (int) $npc['street_knowledge'],
+            (int) $npc['endurance'],
+        ];
+        $average = (int) round(array_sum($stats) / max(1, count($stats)));
+        $tier = match (true) {
+            $average >= 78 => 'veteran',
+            $average >= 64 => 'specialist',
+            $average >= 50 => 'experienced',
+            default => 'street',
+        };
+        $level = max(1, (int) round($average / 18));
+        $experience = max(0, ($level - 1) * 250);
+        $reputationRequired = max(0, (int) floor(
+            ((int) $npc['reputation'] + (int) $npc['criminal_reputation']) / 15
+        ));
+        $recruitmentFee = max(
+            120,
+            (int) round($average * 8 + $reputationRequired * 25)
+        );
+        $salaryWeekly = max(35, (int) round($recruitmentFee * 0.3));
+        $personalExpensesWeekly = max(20, (int) round($salaryWeekly * 0.6));
+
+        $insert = Database::pdo()->prepare(
+            <<<'SQL'
+                INSERT INTO recruitment_candidates (
+                    npc_id,
+                    territory_id,
+                    tier,
+                    recruitment_fee,
+                    salary_weekly,
+                    personal_expenses_weekly,
+                    reputation_required,
+                    strength,
+                    shooting,
+                    driving,
+                    intelligence,
+                    stealth,
+                    intimidation,
+                    discipline,
+                    street_knowledge,
+                    endurance,
+                    level,
+                    experience,
+                    available_from,
+                    expires_at,
+                    status,
+                    created_at
+                ) VALUES (
+                    ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), DATE_ADD(NOW(), INTERVAL 30 DAY), 'available', NOW()
+                )
+            SQL
+        );
+
+        $insert->execute([
+            $npc['id'],
+            $npc['home_territory_id'] ?? $this->randomTerritoryId(),
+            $tier,
+            $recruitmentFee,
+            $salaryWeekly,
+            $personalExpensesWeekly,
+            $reputationRequired,
+            $npc['strength'],
+            $npc['shooting'],
+            $npc['driving'],
+            $npc['intelligence'],
+            $npc['stealth'],
+            $npc['intimidation'],
+            $npc['discipline'],
+            $npc['street_knowledge'],
+            $npc['endurance'],
+            $level,
+            $experience,
+        ]);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function createGeneratedRecruitableNpc(): array
+    {
+        $profiles = [
+            ['first' => 'Arin', 'last' => 'Kade', 'nick' => 'Side Street', 'gender' => 'male'],
+            ['first' => 'Mira', 'last' => 'Vale', 'nick' => 'Short Fuse', 'gender' => 'female'],
+            ['first' => 'Jon', 'last' => 'Hale', 'nick' => 'Quickstep', 'gender' => 'male'],
+            ['first' => 'Nina', 'last' => 'Rook', 'nick' => 'Low Key', 'gender' => 'female'],
+            ['first' => 'Drew', 'last' => 'Cross', 'nick' => 'Night Shift', 'gender' => 'male'],
+            ['first' => 'Tess', 'last' => 'Marlow', 'nick' => 'Back Alley', 'gender' => 'female'],
+        ];
+        $profile = $profiles[array_rand($profiles)];
+        $territoryId = $this->randomTerritoryId();
+        $personalCash = $this->randomNumber(20, 150);
+        $stats = $this->generatedStats();
+
+        $insert = Database::pdo()->prepare(
+            <<<'SQL'
+                INSERT INTO npcs (
+                    first_name,
+                    last_name,
+                    nickname,
+                    age,
+                    gender,
+                    biography,
+                    background,
+                    occupation,
+                    role,
+                    home_territory_id,
+                    personal_cash,
+                    bank_cash,
+                    income_weekly,
+                    expenses_weekly,
+                    wealth_class,
+                    reputation,
+                    criminal_reputation,
+                    health,
+                    max_health,
+                    morale,
+                    loyalty,
+                    status,
+                    alive,
+                    is_contact,
+                    is_informant,
+                    is_witness,
+                    is_police,
+                    is_rival,
+                    is_recruitable,
+                    reliability,
+                    courage,
+                    greed,
+                    strength,
+                    shooting,
+                    driving,
+                    intelligence,
+                    stealth,
+                    intimidation,
+                    discipline,
+                    street_knowledge,
+                    endurance,
+                    source_event,
+                    created_at,
+                    updated_at
+                ) VALUES (
+                    ?, ?, ?, ?, ?, ?, ?, ?, 'recruit', ?, ?, 0, 0, 0, 'poor', ?, ?, 100, 100, 60, 50, 'active', 1, 0, 0, 0, 0, 0, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'world_recruit_refresh', NOW(), NOW()
+                )
+            SQL
+        );
+
+        $insert->execute([
+            $profile['first'],
+            $profile['last'],
+            $profile['nick'],
+            $this->randomNumber(19, 44),
+            $profile['gender'],
+            'A locally generated recruitable NPC created by world processing.',
+            'A city resident whose life can now intersect with the crew.',
+            'Unemployed local',
+            $territoryId,
+            $personalCash,
+            $stats['reputation'],
+            $stats['criminal_reputation'],
+            $stats['reliability'],
+            $stats['courage'],
+            $stats['greed'],
+            $stats['strength'],
+            $stats['shooting'],
+            $stats['driving'],
+            $stats['intelligence'],
+            $stats['stealth'],
+            $stats['intimidation'],
+            $stats['discipline'],
+            $stats['street_knowledge'],
+            $stats['endurance'],
+        ]);
+
+        $npcId = (int) Database::pdo()->lastInsertId();
+        (new PortraitAssignmentService())->assignToNpc($npcId);
+
+        $statement = Database::pdo()->prepare('SELECT * FROM npcs WHERE id = ? LIMIT 1');
+        $statement->execute([$npcId]);
+
+        return $statement->fetch() ?: [];
+    }
+
+    /**
+     * @return array<string, int>
+     */
+    private function generatedStats(): array
+    {
+        return [
+            'strength' => $this->randomNumber(22, 58),
+            'shooting' => $this->randomNumber(18, 52),
+            'driving' => $this->randomNumber(20, 60),
+            'intelligence' => $this->randomNumber(24, 58),
+            'stealth' => $this->randomNumber(22, 60),
+            'intimidation' => $this->randomNumber(18, 54),
+            'discipline' => $this->randomNumber(26, 60),
+            'street_knowledge' => $this->randomNumber(24, 60),
+            'endurance' => $this->randomNumber(24, 58),
+            'reputation' => $this->randomNumber(0, 8),
+            'criminal_reputation' => $this->randomNumber(0, 14),
+            'reliability' => $this->randomNumber(35, 72),
+            'courage' => $this->randomNumber(32, 70),
+            'greed' => $this->randomNumber(28, 72),
+        ];
+    }
+
+    private function randomTerritoryId(): int
+    {
+        $statement = Database::pdo()->query(
+            'SELECT id FROM territories ORDER BY id ASC'
+        );
+        $territories = array_column($statement->fetchAll(), 'id');
+
+        if ($territories === []) {
+            return 1;
+        }
+
+        return (int) $territories[array_rand($territories)];
+    }
+
+    private function randomNumber(int $minimum, int $maximum): int
+    {
+        return random_int($minimum, $maximum);
     }
 
     private function traits(int $npcId): array

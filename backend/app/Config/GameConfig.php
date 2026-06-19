@@ -4,8 +4,8 @@ namespace App\Config;
 
 final class GameConfig
 {
-    public const VERSION = '0.6.1.2';
-    public const RELEASE_TITLE = 'Criminal Empire Online v0.6.1.2 — Dirty Job Boss Support';
+    public const VERSION = '0.6.2';
+    public const RELEASE_TITLE = 'Criminal Empire Online v0.6.2 — Street Job & Recruitment Refresh Cron';
 
     public const STARTING_CASH = 500;
     public const STARTING_BANK_CASH = 0;
@@ -19,6 +19,7 @@ final class GameConfig
     public const SALARY_INTERVAL_DAYS = 7;
     public const TUTORIAL_COMPLETION_REWARD = 50;
     public const DIRTY_JOB_OPPORTUNITY_TARGET = 6;
+    public const RECRUITMENT_CANDIDATE_TARGET = 3;
     public const WAREHOUSE_DRUG_UNITS_PER_TEN = 1.0;
     public const WAREHOUSE_DEFAULT_WEAPON_UNITS = 4.0;
 

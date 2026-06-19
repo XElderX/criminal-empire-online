@@ -9,6 +9,8 @@ use App\Services\CrewRecoveryService;
 use App\Services\DirtyJobGeneratorService;
 use App\Services\EnergyService;
 use App\Services\HeatService;
+use App\Services\JobService;
+use App\Services\RecruitmentService;
 use App\Services\SalaryService;
 use App\Services\WarehouseService;
 
@@ -101,12 +103,16 @@ function worldStatus(): array
 function processHour(): array
 {
     $generator = new DirtyJobGeneratorService();
+    $jobService = new JobService();
+    $recruitmentService = new RecruitmentService();
 
     return [
         'command' => 'process-hour',
         'processed_at' => date(DATE_ATOM),
         'energy' => (new EnergyService())->regenerate(25),
         'crew_recovery' => (new CrewRecoveryService())->process(),
+        'starter_jobs_refreshed' => $jobService->refreshOpportunityList(),
+        'recruitment_refreshed' => $recruitmentService->refreshCandidatePool(),
         'dirty_jobs_expired' => $generator->expireOldOpportunities(),
     ];
 }
@@ -114,6 +120,8 @@ function processHour(): array
 function processDay(): array
 {
     $generator = new DirtyJobGeneratorService();
+    $jobService = new JobService();
+    $recruitmentService = new RecruitmentService();
 
     return [
         'command' => 'process-day',
@@ -121,6 +129,8 @@ function processDay(): array
         'energy' => (new EnergyService())->regenerate(30),
         'heat' => (new HeatService())->processDecay(),
         'crew_recovery' => (new CrewRecoveryService())->process(),
+        'starter_jobs_refreshed' => $jobService->refreshOpportunityList(),
+        'recruitment_refreshed' => $recruitmentService->refreshCandidatePool(),
         'dirty_jobs_expired' => $generator->expireOldOpportunities(),
         'dirty_jobs_refreshed' => $generator->refreshForAllUsers(),
     ];
@@ -129,6 +139,8 @@ function processDay(): array
 function processWeek(): array
 {
     $generator = new DirtyJobGeneratorService();
+    $jobService = new JobService();
+    $recruitmentService = new RecruitmentService();
 
     return [
         'command' => 'process-week',
@@ -138,6 +150,8 @@ function processWeek(): array
         'crew_recovery' => (new CrewRecoveryService())->process(),
         'salaries' => (new SalaryService())->processDue(),
         'warehouse_costs' => (new WarehouseService())->processWeeklyCosts(),
+        'starter_jobs_refreshed' => $jobService->refreshOpportunityList(),
+        'recruitment_refreshed' => $recruitmentService->refreshCandidatePool(),
         'dirty_jobs_expired' => $generator->expireOldOpportunities(),
         'dirty_jobs_refreshed' => $generator->refreshForAllUsers(),
     ];
