@@ -2,6 +2,8 @@
 
 - Hotfixed Dirty Jobs so all runs require at least one assigned crew member, even if older template data still says `0`.
 - Added server-side validation and frontend status messaging so solo Dirty Job execution can no longer start by mistake.
+- Fixed the Dirty Jobs role-assignment screen so boss/non-crew selections no longer poison the save payload and make assigned NPCs appear to disappear.
+- The Dirty Jobs frontend now filters assignable members to real crew only and counts only valid crew assignments toward the execution requirement.
 
 ## 2026-06-19 — Criminal Empire Online v0.5.1.2 — Admin Heat Reset
 
