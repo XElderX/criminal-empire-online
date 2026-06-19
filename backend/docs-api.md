@@ -313,3 +313,15 @@ Read-only admin endpoints:
 - `GET /api/admin/world-map/locations`
 
 Travel deducts configured cash/energy costs and updates `user_location_state`. Existing users default to Main City / Slums when no location state exists.
+
+## v0.6.1 Map Gameplay Integration API
+
+Authenticated endpoints added/extended:
+
+- `GET /api/world-map/locations/{slug}/activities` — returns real local activity groups, quick-crime previews, dirty-job previews, territory summary, heat summary, and contextual route hints.
+- `GET /api/world-map/regions/{slug}/activities` — aggregates local activity groups across the region.
+- `POST /api/world-map/locations/{slug}/explore` — costs 3 energy, respects hotspot cooldown, and can reveal a local opportunity.
+- `GET /api/quick-crimes?region=&location=` — filters quick crimes by local map rules while preserving the generic no-filter list.
+- `GET /api/dirty-jobs?region=&location=` — filters/prioritizes dirty jobs by local map rules while preserving the generic no-filter list.
+
+Quick-crime start may include `region_slug` and `location_slug`. The backend validates whether the action is allowed at that hotspot and whether current-location travel is required.

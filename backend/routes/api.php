@@ -215,8 +215,10 @@ $router->get('/api/world-map', [WorldMapController::class, 'index'], [AuthMiddle
 $router->get('/api/world-map/regions', [WorldMapController::class, 'regions'], [AuthMiddleware::class]);
 $router->get('/api/world-map/regions/{slug}', [WorldMapController::class, 'region'], [AuthMiddleware::class]);
 $router->get('/api/world-map/regions/{slug}/locations', [WorldMapController::class, 'regionLocations'], [AuthMiddleware::class]);
+$router->get('/api/world-map/regions/{slug}/activities', [WorldMapController::class, 'regionActivities'], [AuthMiddleware::class]);
 $router->get('/api/world-map/locations/{slug}', [WorldMapController::class, 'location'], [AuthMiddleware::class]);
 $router->get('/api/world-map/locations/{slug}/activities', [WorldMapController::class, 'locationActivities'], [AuthMiddleware::class]);
+$router->post('/api/world-map/locations/{slug}/explore', [WorldMapController::class, 'exploreLocation'], [AuthMiddleware::class]);
 $router->get('/api/world-map/current-location', [WorldMapController::class, 'currentLocation'], [AuthMiddleware::class]);
 $router->post('/api/world-map/travel', [WorldMapController::class, 'travel'], [AuthMiddleware::class]);
 $router->get('/api/world-map/territories', [WorldMapController::class, 'territories'], [AuthMiddleware::class]);

@@ -5,6 +5,8 @@ namespace App\Controllers;
 use App\Core\Request;
 use App\Core\Response;
 use App\Middleware\AdminMiddleware;
+use App\Services\HotspotExplorationService;
+use App\Services\LocalActivityService;
 use App\Services\TravelService;
 use App\Services\WorldMapService;
 use Throwable;
@@ -60,10 +62,27 @@ final class WorldMapController
     public function locationActivities(array $params, array $context): void
     {
         try {
-            $response = (new WorldMapService())->location($context['user'], (string) $params['slug']);
-            Response::json(['data' => $response['linkedActions']]);
+            Response::json((new LocalActivityService())->forLocation($context['user'], (string) $params['slug']));
         } catch (Throwable $exception) {
             Response::json(['message' => $exception->getMessage()], 404);
+        }
+    }
+
+    public function regionActivities(array $params, array $context): void
+    {
+        try {
+            Response::json((new LocalActivityService())->forRegion($context['user'], (string) $params['slug']));
+        } catch (Throwable $exception) {
+            Response::json(['message' => $exception->getMessage()], 404);
+        }
+    }
+
+    public function exploreLocation(array $params, array $context): void
+    {
+        try {
+            Response::json((new HotspotExplorationService())->explore($context['user'], (string) $params['slug']));
+        } catch (Throwable $exception) {
+            Response::json(['message' => $exception->getMessage()], 422);
         }
     }
 

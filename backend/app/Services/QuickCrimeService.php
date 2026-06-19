@@ -20,23 +20,48 @@ final class QuickCrimeService
         $this->skills = new SkillProgressionService();
     }
 
-    public function list(array $user): array
+    public function list(array $user, array $filters = []): array
     {
-        $pdo = Database::pdo();
-        $statement = $pdo->query(
-            <<<'SQL'
-                SELECT *
-                FROM quick_crime_templates
-                WHERE active = 1
-                ORDER BY tier, min_level, id
-            SQL
-        );
+        $context = null;
+        $params = [];
+        $sql = <<<'SQL'
+                SELECT DISTINCT template.*, rule.requires_current_location,
+                       rule.reward_multiplier AS local_reward_multiplier,
+                       rule.heat_multiplier AS local_heat_multiplier,
+                       rule.police_risk_multiplier AS local_police_risk_multiplier,
+                       rule.danger_multiplier AS local_danger_multiplier,
+                       region.slug AS local_region_slug,
+                       region.name AS local_region_name,
+                       location.slug AS local_location_slug,
+                       location.name AS local_location_name
+                FROM quick_crime_templates template
+                LEFT JOIN quick_crime_location_rules rule ON rule.quick_crime_template_id = template.id
+                LEFT JOIN world_regions region ON region.id = rule.world_region_id
+                LEFT JOIN world_locations location ON location.id = rule.world_location_id
+                WHERE template.active = 1
+            SQL;
+
+        if (!empty($filters['region']) || !empty($filters['location'])) {
+            $context = (new MapContextService())->resolve(
+                $user,
+                isset($filters['region']) ? (string) $filters['region'] : null,
+                isset($filters['location']) ? (string) $filters['location'] : null
+            );
+            $sql .= ' AND rule.is_allowed = 1 AND (rule.world_location_id = ? OR (rule.world_location_id IS NULL AND rule.world_region_id = ?))';
+            $params[] = $context['location']['id'];
+            $params[] = $context['region']['id'];
+        }
+
+        $sql .= ' ORDER BY COALESCE(rule.sort_order, 999), template.tier, template.min_level, template.id';
+
+        $statement = Database::pdo()->prepare($sql);
+        $statement->execute($params);
         $templates = $statement->fetchAll();
         $inventory = $this->items->inventoryForUser((int) $user['id']);
 
         $data = [];
         foreach ($templates as $template) {
-            $data[] = $this->formatTemplate($template, $user, $inventory);
+            $data[] = $this->formatTemplate($template, $user, $inventory, $context);
         }
 
         return [
@@ -44,6 +69,8 @@ final class QuickCrimeService
             'active_runs' => $this->activeRuns((int) $user['id']),
             'history' => $this->history((int) $user['id'], 12),
             'progression' => $this->progression((int) $user['id']),
+            'locationContext' => $context,
+            'filters' => $filters,
         ];
     }
 
@@ -160,6 +187,8 @@ final class QuickCrimeService
         $equipment = is_array($payload['equipment'] ?? null) ? $payload['equipment'] : [];
         $districtCode = $payload['district_code'] ?? null;
         $targetKey = $payload['target_key'] ?? null;
+        $regionSlug = isset($payload['region_slug']) ? (string) $payload['region_slug'] : null;
+        $locationSlug = isset($payload['location_slug']) ? (string) $payload['location_slug'] : null;
 
         $pdo = Database::pdo();
         $pdo->beginTransaction();
@@ -180,6 +209,20 @@ final class QuickCrimeService
             }
 
             $freshUser = $this->lockUser((int) $user['id']);
+            $localContext = null;
+            $localRule = null;
+            if ($regionSlug !== null || $locationSlug !== null) {
+                $localContext = (new MapContextService())->resolve($freshUser, $regionSlug, $locationSlug);
+                $localRule = $this->locationRuleForTemplate((int) $template['id'], $localContext);
+                if (!$localRule) {
+                    throw new RuntimeException('This quick crime is not available at the selected location.');
+                }
+                if ((int) $localRule['requires_current_location'] === 1 && !$localContext['playerIsHere']) {
+                    throw new RuntimeException('Travel to ' . $localContext['location']['name'] . ' before starting this local quick crime.');
+                }
+                $districtCode = $localContext['region']['slug'];
+                $targetKey = $localContext['location']['slug'];
+            }
             $inventory = $this->items->inventoryForUser((int) $freshUser['id']);
             $validation = $this->requirementMessages($template, $freshUser, $inventory);
 
@@ -201,6 +244,25 @@ final class QuickCrimeService
 
             foreach ($equipmentEffects as $effect => $value) {
                 $effects[$effect] = ($effects[$effect] ?? 0) + $value;
+            }
+            if ($localContext !== null) {
+                $locationModifiers = (new LocationRiskModifierService())->forLocation(
+                    $localContext['location'],
+                    $localContext['territory'],
+                    $localRule
+                );
+                $effects['reward_multiplier'] = (float) $locationModifiers['reward_multiplier'];
+                $effects['heat_multiplier'] = (float) $locationModifiers['heat_multiplier'];
+                $effects['police_risk_multiplier'] = (float) $locationModifiers['police_risk_multiplier'];
+                $effects['danger_multiplier'] = (float) $locationModifiers['danger_multiplier'];
+                $effects['location_context'] = [
+                    'region_slug' => $localContext['region']['slug'],
+                    'region_name' => $localContext['region']['name'],
+                    'location_slug' => $localContext['location']['slug'],
+                    'location_name' => $localContext['location']['name'],
+                    'territory_effect' => $locationModifiers['territory_effect'],
+                    'riskSummary' => $localContext['riskSummary'],
+                ];
             }
 
             $successChance = $this->successChance($template, $freshUser, $crew, $effects);
@@ -436,7 +498,7 @@ final class QuickCrimeService
         ];
     }
 
-    private function formatTemplate(array $template, array $user, array $inventory): array
+    private function formatTemplate(array $template, array $user, array $inventory, ?array $context = null): array
     {
         $requiredAll = $this->decodeJson($template['required_all_item_tags']);
         $requiredAny = $this->decodeJson($template['required_any_item_tags']);
@@ -479,6 +541,13 @@ final class QuickCrimeService
             'missing_items' => $this->missingItemsForTemplate((int) $user['id'], $requiredAll, $requiredAny),
             'cooldown' => $cooldown,
             'prepared' => $this->loadPreparations((int) $user['id'], (int) $template['id']),
+            'is_local' => !empty($template['local_location_slug']) || $context !== null,
+            'local_region_slug' => $template['local_region_slug'] ?? ($context['region']['slug'] ?? null),
+            'local_region_name' => $template['local_region_name'] ?? ($context['region']['name'] ?? null),
+            'local_location_slug' => $template['local_location_slug'] ?? ($context['location']['slug'] ?? null),
+            'local_location_name' => $template['local_location_name'] ?? ($context['location']['name'] ?? null),
+            'requires_current_location' => isset($template['requires_current_location']) ? (bool) $template['requires_current_location'] : false,
+            'local_modifiers' => $context ? (new LocationRiskModifierService())->forLocation($context['location'], $context['territory'], $template) : null,
         ];
     }
 
@@ -647,7 +716,7 @@ final class QuickCrimeService
             $outcome = 'abandoned';
         }
 
-        $rewardCash = $this->rewardForOutcome($template, $outcome, (int) ($effects['loot_bonus'] ?? 0));
+        $rewardCash = $this->rewardForOutcome($template, $outcome, (int) ($effects['loot_bonus'] ?? 0), $effects);
         $heatGained = $this->heatForOutcome($template, $outcome, (int) ($effects['heat_modifier'] ?? 0));
         $experienceGained = $this->xpForOutcome($template, $outcome, (int) ($effects['xp_bonus'] ?? 0));
         $loot = $this->grantLoot((int) $freshUser['id'], $template, $outcome);
@@ -730,6 +799,13 @@ final class QuickCrimeService
             'skill_gains' => $skillGains,
             'boss_consequence' => $bossConsequence,
             'cooldown_started' => true,
+            'location' => $effects['location_context'] ?? null,
+            'local_modifiers' => [
+                'reward_multiplier' => $effects['reward_multiplier'] ?? 1.0,
+                'heat_multiplier' => $effects['heat_multiplier'] ?? 1.0,
+                'police_risk_multiplier' => $effects['police_risk_multiplier'] ?? 1.0,
+                'danger_multiplier' => $effects['danger_multiplier'] ?? 1.0,
+            ],
         ];
 
         $pdo->prepare(
@@ -799,7 +875,7 @@ final class QuickCrimeService
         return $this->hydrateRun($freshRun);
     }
 
-    private function rewardForOutcome(array $template, string $outcome, int $lootBonus): int
+    private function rewardForOutcome(array $template, string $outcome, int $lootBonus, array $effects = []): int
     {
         if (in_array($outcome, ['disaster', 'failed_escaped', 'abandoned'], true)) {
             return $outcome === 'failed_escaped' ? (int) floor((int) $template['reward_min'] * 0.15) : 0;
@@ -813,7 +889,7 @@ final class QuickCrimeService
             default => 0.0,
         };
 
-        return max(0, (int) round($reward * $multiplier + $lootBonus));
+        return max(0, (int) round(($reward * $multiplier + $lootBonus) * (float) ($effects['reward_multiplier'] ?? 1.0)));
     }
 
     private function heatForOutcome(array $template, string $outcome, int $heatModifier): int
@@ -828,7 +904,7 @@ final class QuickCrimeService
             default => 0,
         };
 
-        return max(0, $heat + $heatModifier);
+        return max(0, (int) round(($heat + $heatModifier) * (float) ($effects['heat_multiplier'] ?? 1.0)));
     }
 
     private function xpForOutcome(array $template, string $outcome, int $xpBonus): int
@@ -1043,7 +1119,7 @@ final class QuickCrimeService
         $chance += max(0, (int) floor((int) $user['heat'] / 8));
         $chance += (int) ($effects['event_modifier'] ?? 0);
 
-        return max(0, min(90, $chance));
+        return max(0, min(90, (int) round($chance * (float) ($effects['police_risk_multiplier'] ?? 1.0))));
     }
 
     private function disasterChance(array $template, array $user, array $effects): int
@@ -1053,7 +1129,7 @@ final class QuickCrimeService
         $chance += (int) ($effects['disaster_modifier'] ?? 0);
         $chance += (int) ($effects['injury_modifier'] ?? 0);
 
-        return max(0, min(50, $chance));
+        return max(0, min(50, (int) round($chance * (float) ($effects['danger_multiplier'] ?? 1.0))));
     }
 
     private function validateCrew(int $userId, array $crewIds, int $requiredCrewCount): array

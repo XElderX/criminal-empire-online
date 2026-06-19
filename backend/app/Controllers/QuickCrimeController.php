@@ -12,7 +12,10 @@ final class QuickCrimeController
     public function index(array $params = [], array $context = []): void
     {
         try {
-            Response::json((new QuickCrimeService())->list($context['user']));
+            Response::json((new QuickCrimeService())->list($context['user'], [
+                'region' => $_GET['region'] ?? null,
+                'location' => $_GET['location'] ?? null,
+            ]));
         } catch (Throwable $exception) {
             Response::json(['message' => $exception->getMessage()], 422);
         }
