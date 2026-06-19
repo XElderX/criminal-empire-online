@@ -10,6 +10,7 @@ interface BottomNavigationProps {
 const bottomPages: Array<{ page: PageName; label: string }> = [
   { page: 'dashboard', label: 'Dashboard' },
   { page: 'crew', label: 'Crew' },
+  { page: 'heat', label: 'Heat' },
   { page: 'dirty jobs', label: 'Jobs' },
   { page: 'equipment', label: 'Inventory' },
   { page: 'territories', label: 'Map' },

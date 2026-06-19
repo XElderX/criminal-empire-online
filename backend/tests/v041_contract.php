@@ -124,8 +124,9 @@ $runner->test('Crimes page renders quick crimes, cooldowns, requirements and res
     }
 });
 
-$runner->test('Development log documents v0.4.2', function () use ($runner, $docs): void {
+$runner->test('Development log preserves v0.4.2 and documents v0.5', function () use ($runner, $docs): void {
     $runner->assertContains('v0.4.2 — Fallback Street Actions', $docs);
+    $runner->assertContains('v0.5 — Heat & Police Pressure Expansion', $docs);
     $runner->assertContains('item tags', $docs);
     $runner->assertContains('cooldown', $docs);
 });

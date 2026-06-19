@@ -2,12 +2,14 @@
 
 use App\Controllers\AdminController;
 use App\Controllers\AuthController;
+use App\Controllers\BossController;
 use App\Controllers\CrimeController;
 use App\Controllers\CrewController;
 use App\Controllers\DirtyJobController;
 use App\Controllers\EconomyController;
 use App\Controllers\GangController;
 use App\Controllers\HeatController;
+use App\Controllers\InvestigationController;
 use App\Controllers\ItemController;
 use App\Controllers\JobController;
 use App\Controllers\MarketController;
@@ -16,6 +18,7 @@ use App\Controllers\RecruitmentController;
 use App\Controllers\ShopController;
 use App\Controllers\TerritoryController;
 use App\Controllers\TutorialController;
+use App\Controllers\UpdateNoticeController;
 use App\Controllers\WarehouseController;
 use App\Middleware\AuthMiddleware;
 
@@ -206,11 +209,33 @@ $router->post(
     [AuthMiddleware::class]
 );
 
+$router->get('/api/heat', [HeatController::class, 'index'], [AuthMiddleware::class]);
+$router->get('/api/heat/logs', [HeatController::class, 'logs'], [AuthMiddleware::class]);
+$router->get('/api/heat/reduction-options', [HeatController::class, 'reductionOptions'], [AuthMiddleware::class]);
+$router->post('/api/heat/reduce', [HeatController::class, 'reduce'], [AuthMiddleware::class]);
+$router->post('/api/heat/process-day', [HeatController::class, 'processDaily'], [AuthMiddleware::class]);
+$router->post(
+    '/api/heat/lie-low',
+    [HeatController::class, 'layLow'],
+    [AuthMiddleware::class]
+);
 $router->post(
     '/api/heat/lay-low',
     [HeatController::class, 'layLow'],
     [AuthMiddleware::class]
 );
+
+$router->get('/api/investigations', [InvestigationController::class, 'index'], [AuthMiddleware::class]);
+$router->get('/api/investigations/{id}', [InvestigationController::class, 'show'], [AuthMiddleware::class]);
+$router->post('/api/investigations/{id}/respond', [InvestigationController::class, 'respond'], [AuthMiddleware::class]);
+
+$router->get('/api/boss', [BossController::class, 'show'], [AuthMiddleware::class]);
+$router->get('/api/boss/history', [BossController::class, 'history'], [AuthMiddleware::class]);
+$router->get('/api/boss/succession', [BossController::class, 'succession'], [AuthMiddleware::class]);
+$router->post('/api/boss/rename', [BossController::class, 'rename'], [AuthMiddleware::class]);
+
+$router->get('/api/update-notices/pending', [UpdateNoticeController::class, 'pending'], [AuthMiddleware::class]);
+$router->post('/api/update-notices/acknowledge', [UpdateNoticeController::class, 'acknowledge'], [AuthMiddleware::class]);
 
 $router->get('/api/crimes', [CrimeController::class, 'index'], [AuthMiddleware::class]);
 $router->post(
@@ -339,6 +364,11 @@ $router->post(
     [AdminController::class, 'grantAsset'],
     [AuthMiddleware::class]
 );
+
+
+$router->get('/api/admin/heat', [AdminController::class, 'heat'], [AuthMiddleware::class]);
+$router->get('/api/admin/investigations', [AdminController::class, 'investigations'], [AuthMiddleware::class]);
+$router->get('/api/admin/characters/{type}/{id}/heat', [AdminController::class, 'characterHeat'], [AuthMiddleware::class]);
 
 $router->get(
     '/api/admin/economy',

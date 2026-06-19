@@ -32,7 +32,7 @@ export function CrewMemberCard({
       <div className="crew-member-body">
         <header className="crew-member-header">
           <div>
-            <p className="eyebrow">{member.gender || 'Unknown'} · Age {member.age}</p>
+            <p className="eyebrow">{member.is_boss ? 'Boss character' : (member.gender || 'Unknown')} · Age {member.age}</p>
             <h2>{name}</h2>
             <p className="muted">{member.occupation} · {member.territory_name}</p>
           </div>
@@ -41,7 +41,10 @@ export function CrewMemberCard({
 
         <div className="tag-row">
           <span className="status-badge">{member.role.name}</span>
+          {member.is_boss && <span className="status-badge heat-hot">Boss</span>}
           <span className={`status-badge status-${member.status}`}>{member.status}</span>
+          <span className={`status-badge ${Number(member.personal_heat || 0) >= 50 ? 'heat-hot' : ''}`}>Personal heat {member.personal_heat || 0}</span>
+          {member.under_investigation && <span className="status-badge heat-hot">Under investigation</span>}
         </div>
 
         <div className="crew-meter-stack">
@@ -58,12 +61,12 @@ export function CrewMemberCard({
 
         <footer className="crew-member-actions">
           {onOpen && <button className="btn" onClick={() => onOpen(member)}>Dossier</button>}
-          {member.unpaid_salary > 0 && onPayOverdue && (
+          {!member.is_boss && member.unpaid_salary > 0 && onPayOverdue && (
             <button className="btn primary" disabled={busy} onClick={() => onPayOverdue(member)}>
               Pay ${member.unpaid_salary}
             </button>
           )}
-          {onDismiss && (
+          {!member.is_boss && onDismiss && (
             <button className="btn danger-button" disabled={busy || member.status === 'busy'} onClick={() => onDismiss(member)}>
               Dismiss
             </button>

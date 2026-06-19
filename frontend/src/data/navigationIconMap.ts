@@ -4,6 +4,8 @@ const DEFAULT_NAV_ICON = '/assets/icons/nav/dashboard.webp';
 
 const navigationIconMap: Record<string, string> = {
   dashboard: '/assets/icons/nav/dashboard.webp',
+  heat: '/assets/icons/nav/heat.webp',
+  police: '/assets/icons/nav/heat.webp',
   crimes: '/assets/icons/nav/crimes.webp',
   jobs: '/assets/icons/nav/dirty_jobs.webp',
   dirty_jobs: '/assets/icons/nav/dirty_jobs.webp',

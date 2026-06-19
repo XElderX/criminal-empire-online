@@ -1,3 +1,34 @@
+## 2026-06-19 — Criminal Empire Online v0.5.1.1 — Boss Name Setup
+
+- New registrations now require explicit boss first name and surname instead of inheriting the username as the default boss identity.
+- Existing users can set the boss name once from the Heat & Police page if the account still uses the original default boss name.
+- Added `POST /api/boss/rename` and exposed boss rename eligibility in the boss profile payload.
+
+## 2026-06-19 — Criminal Empire Online v0.5.1 — Boss Character Integration
+
+- Added full boss operational stats beside the older account stats: shooting, driving, stealth, intimidation, discipline, street knowledge, endurance, and age/role metadata.
+- Boss now appears in the Crew page as a real dossier card/profile with skill grid, health, personal heat, and boss status.
+- `/my-gang/0` now returns the boss profile, and `/my-gang/0/history` returns boss history in crew-history compatible format.
+- Discovered crime opportunities can assign the boss as an actor using the existing crew assignment UI. Boss participation uses boss skills in risk calculation and applies boss heat when personally involved.
+- Quick Crimes can select boss and/or crew actors. Boss skills count toward quick crime success, and disastrous boss-led quick crimes can injure the boss.
+- Added actor fields to crime assignment tables so future systems can distinguish boss and crew participation without fake crew rows.
+- Updated Heat & Police boss card to display the full boss skill grid.
+- Added a one-time update notice for v0.5.1.
+
+## 2026-06-19 — Criminal Empire Online v0.5 — Heat & Police Pressure Expansion
+
+- Preserved v0.4 Crimes Expansion, v0.4.1 Quick Crimes, and v0.4.2 crime subtabs while expanding heat into a strategic police-pressure system.
+- Added boss personal heat, gang heat, crew personal heat, NPC heat, district heat, heat logs, police investigations, police events, boss history, update notices, and acknowledgement tracking.
+- Added services: `HeatPressureService`, `InvestigationService`, `BossCharacterService`, `SuccessionService`, and `UpdateNoticeService`.
+- Added routes for heat overview/logs/reduction actions, investigations, boss profile/history/succession, admin heat/investigation views, and update notice acknowledgement.
+- Added daily idle heat decay (-5) and weekly quiet bonus (-15), with idempotent per-day processing state.
+- Added heat reduction actions for lie low, bribe contact, pay lawyer, destroy evidence, and send high-heat crew away.
+- Integrated heat logging into fallback street actions, quick crimes, dirty jobs, and v0.4 major crimes.
+- Added high-heat crew dismissal consequences: Dismissed high-heat crew can reduce pressure while risking revenge. dismissing a hot crew member can reduce boss/gang heat but creates revenge risk and possible sabotage/retaliation events.
+- Added Heat & Police frontend page, crew personal heat badges, and a one-time update notice modal that appears after login until confirmed.
+- Added v0.5 contract/unit coverage and updated verification notes.
+
+
 ## 2026-06-19 — Criminal Empire Online v0.4.2 — Fallback Street Actions
 
 - Split the Crimes page into separate subtabs for `Explore Leads`, `Quick Crimes & Street Actions`, and `Fallback Street Actions`.

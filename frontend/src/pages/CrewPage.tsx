@@ -97,17 +97,19 @@ export function CrewPage({ onChanged }: CrewPageProps) {
     });
   }, [members, statusFilter, roleFilter, ageFilter, sortKey]);
 
+  const crewOnlyMembers = useMemo(() => members.filter((member) => !member.is_boss), [members]);
+
   const summary = useMemo(() => ({
-    active: members.filter((member) => member.status === 'active').length,
-    busy: members.filter((member) => member.status === 'busy').length,
-    injured: members.filter((member) => member.status === 'injured').length,
-    arrested: members.filter((member) => member.status === 'arrested').length,
-    available: members.filter((member) => member.status === 'active').length,
-    weeklySalary: members.reduce(
+    active: crewOnlyMembers.filter((member) => member.status === 'active').length,
+    busy: crewOnlyMembers.filter((member) => member.status === 'busy').length,
+    injured: crewOnlyMembers.filter((member) => member.status === 'injured').length,
+    arrested: crewOnlyMembers.filter((member) => member.status === 'arrested').length,
+    available: crewOnlyMembers.filter((member) => member.status === 'active').length,
+    weeklySalary: crewOnlyMembers.reduce(
       (total, member) => total + Number(member.salary_weekly),
       0,
     ),
-  }), [members]);
+  }), [crewOnlyMembers]);
 
   const roleOptions = useMemo(() => (
     Array.from(new Map(
@@ -210,7 +212,7 @@ export function CrewPage({ onChanged }: CrewPageProps) {
       {error && <Notice message={error} kind="error" />}
 
       <div className="crew-summary-grid">
-        <Summary label="Crew capacity" value={`${members.length}/${maximumCapacity}`} />
+        <Summary label="Crew capacity" value={`${crewOnlyMembers.length}/${maximumCapacity}`} />
         <Summary label="Weekly salaries" value={formatMoney(summary.weeklySalary)} />
         <Summary label="Active" value={summary.active} />
         <Summary label="Busy" value={summary.busy} />
@@ -283,11 +285,11 @@ export function CrewPage({ onChanged }: CrewPageProps) {
 
       {loading && <LoadingState label="Loading crew dossiers…" />}
 
-      {!loading && members.length === 0 && (
+      {!loading && crewOnlyMembers.length === 0 && (
         <div className="card crew-empty-state">
           <div className="crew-empty-portrait" aria-hidden="true">?</div>
           <div>
-            <h2>You are still working alone</h2>
+            <h2>You are the boss, but no crew is hired yet</h2>
             <p>
               Crew members unlock role assignments, specialist skills, and
               more reliable Dirty Job preparation. Recruits cost money and

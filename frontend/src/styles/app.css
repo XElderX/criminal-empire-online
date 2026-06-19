@@ -3217,3 +3217,129 @@ small {
 .warning-text {
   color: var(--accent-risk);
 }
+
+/* v0.5 — Heat & Police Pressure Expansion */
+.heat-page .heat-hero-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.boss-status-card,
+.gang-heat-card,
+.heat-action-card,
+.heat-row-card,
+.update-notice-modal {
+  background:
+    linear-gradient(145deg, rgba(28, 29, 31, 0.96), rgba(12, 13, 16, 0.98)),
+    radial-gradient(circle at top right, rgba(194, 52, 52, 0.13), transparent 36%);
+  border: 1px solid rgba(207, 160, 88, 0.24);
+}
+
+.heat-forecast {
+  color: var(--accent-risk);
+  font-weight: 700;
+}
+
+.boss-rename-panel {
+  border: 1px solid rgba(185, 136, 74, 0.24);
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 14px;
+  padding: 0.9rem;
+  margin-top: 0.9rem;
+}
+
+.heat-warning-panel {
+  border-color: rgba(220, 74, 74, 0.38);
+  background: rgba(95, 24, 24, 0.18);
+}
+
+.heat-action-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.heat-action-card {
+  border-radius: 18px;
+  padding: 1rem;
+}
+
+.heat-action-card.locked {
+  opacity: 0.78;
+}
+
+.heat-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.heat-row-card {
+  border-radius: 16px;
+  padding: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.investigation-card {
+  border-color: rgba(94, 175, 255, 0.26);
+}
+
+.mini-stat-pair {
+  display: flex;
+  gap: 0.7rem;
+}
+
+.mini-stat-pair dt {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+}
+
+.mini-stat-pair dd {
+  margin: 0;
+  font-weight: 800;
+}
+
+.status-badge.heat-hot,
+.heat-hot {
+  color: var(--accent-heat);
+  border-color: rgba(220, 74, 74, 0.42);
+  background: rgba(220, 74, 74, 0.12);
+}
+
+.update-notice-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(8px);
+}
+
+.update-notice-modal {
+  max-width: 620px;
+  width: min(620px, 100%);
+  border-radius: 24px;
+  padding: 1.5rem;
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.55);
+}
+
+.update-notice-points {
+  display: grid;
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+
+.update-notice-points span {
+  border: 1px solid rgba(207, 160, 88, 0.18);
+  border-radius: 999px;
+  padding: 0.45rem 0.65rem;
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.04);
+}

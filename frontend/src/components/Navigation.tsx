@@ -12,6 +12,7 @@ interface NavigationProps {
 const PLAYER_PAGES: Array<{ page: PageName; label: string }> = [
   { page: 'dashboard', label: 'Dashboard' },
   { page: 'crimes', label: 'Crimes' },
+  { page: 'heat', label: 'Heat & Police' },
   { page: 'dirty jobs', label: 'Dirty Jobs' },
   { page: 'crew', label: 'Crew' },
   { page: 'recruitment', label: 'Recruitment' },
@@ -33,7 +34,7 @@ export function Navigation({
     <nav className="nav">
       <div className="brand">
         Criminal Empire
-        <span className="version-badge">v0.4.2</span>
+        <span className="version-badge">v 0.5.1.1</span>
       </div>
 
       <div className="nav-links">

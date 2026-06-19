@@ -35,6 +35,7 @@ export function CrimesPage({ onChanged }: CrimesPageProps) {
   const [quickResult, setQuickResult] = useState<QuickCrimeRun | null>(null);
   const [selectedOpportunityId, setSelectedOpportunityId] = useState<number | null>(null);
   const [selectedCrewIds, setSelectedCrewIds] = useState<number[]>([]);
+  const [selectedQuickCrewIds, setSelectedQuickCrewIds] = useState<number[]>([0]);
   const [selectedEquipmentKeys, setSelectedEquipmentKeys] = useState<string[]>([]);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -223,6 +224,7 @@ export function CrimesPage({ onChanged }: CrimesPageProps) {
           method: 'POST',
           body: JSON.stringify({
             idempotency_key: crypto.randomUUID(),
+            crew_ids: selectedQuickCrewIds,
           }),
         },
       );
@@ -266,6 +268,14 @@ export function CrimesPage({ onChanged }: CrimesPageProps) {
 
   function toggleCrew(id: number): void {
     setSelectedCrewIds((current) => (
+      current.includes(id)
+        ? current.filter((entry) => entry !== id)
+        : [...current, id]
+    ));
+  }
+
+  function toggleQuickCrew(id: number): void {
+    setSelectedQuickCrewIds((current) => (
       current.includes(id)
         ? current.filter((entry) => entry !== id)
         : [...current, id]
@@ -457,7 +467,10 @@ export function CrimesPage({ onChanged }: CrimesPageProps) {
         <QuickCrimesPanel
           overview={quickOverview}
           result={quickResult}
+          crew={overview.crew}
+          selectedCrewIds={selectedQuickCrewIds}
           busyKey={busyKey}
+          onToggleCrew={toggleQuickCrew}
           onPrepare={prepareQuickCrime}
           onStart={startQuickCrime}
           onDecision={decideQuickCrime}
@@ -729,14 +742,20 @@ function HistoryPanel({ runs }: { runs: CrimeRun[] }) {
 function QuickCrimesPanel({
   overview,
   result,
+  crew,
+  selectedCrewIds,
   busyKey,
+  onToggleCrew,
   onPrepare,
   onStart,
   onDecision,
 }: {
   overview: QuickCrimeOverview;
   result: QuickCrimeRun | null;
+  crew: CrimeCrewOption[];
+  selectedCrewIds: number[];
   busyKey: string;
+  onToggleCrew: (id: number) => void;
   onPrepare: (template: QuickCrimeTemplate, optionCode: string) => void;
   onStart: (template: QuickCrimeTemplate) => void;
   onDecision: (run: QuickCrimeRun, choice: QuickCrimeEventChoice) => void;
@@ -788,7 +807,10 @@ function QuickCrimesPanel({
           <QuickCrimeCard
             key={template.id}
             template={template}
+            crew={crew}
+            selectedCrewIds={selectedCrewIds}
             busyKey={busyKey}
+            onToggleCrew={onToggleCrew}
             onPrepare={onPrepare}
             onStart={onStart}
           />
@@ -817,12 +839,18 @@ function QuickCrimesPanel({
 
 function QuickCrimeCard({
   template,
+  crew,
+  selectedCrewIds,
   busyKey,
+  onToggleCrew,
   onPrepare,
   onStart,
 }: {
   template: QuickCrimeTemplate;
+  crew: CrimeCrewOption[];
+  selectedCrewIds: number[];
   busyKey: string;
+  onToggleCrew: (id: number) => void;
   onPrepare: (template: QuickCrimeTemplate, optionCode: string) => void;
   onStart: (template: QuickCrimeTemplate) => void;
 }) {
@@ -850,6 +878,24 @@ function QuickCrimeCard({
       </dl>
 
       <QuickRequirementList template={template} />
+
+      <div className="quick-actor-selector">
+        <h4>Actors</h4>
+        <p className="muted">Select the boss and/or crew who take part. Boss skills now count like crew skills.</p>
+        <div className="crime-selector-grid">
+          {crew.map((member) => (
+            <label key={`quick-${template.id}-${member.id}`} className={`selector-chip ${member.is_boss ? 'boss-selector-chip' : ''}`}>
+              <input
+                type="checkbox"
+                checked={selectedCrewIds.includes(member.id)}
+                onChange={() => onToggleCrew(member.id)}
+              />
+              <span>{member.is_boss ? `Boss: ${member.first_name} ${member.last_name}` : (member.nickname || `${member.first_name} ${member.last_name}`)}</span>
+              <small>{member.role_code} · drive {member.driving} · stealth {member.stealth} · heat {member.personal_heat || 0}</small>
+            </label>
+          ))}
+        </div>
+      </div>
 
       {template.preparation_options.length > 0 && (
         <div className="quick-prep-list">

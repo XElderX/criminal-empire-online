@@ -1,3 +1,27 @@
+## 2026-06-19 — Criminal Empire Online v0.5.1.1 — Boss Name Setup
+
+- New registrations must provide boss first name and surname, which are stored as the initial boss identity instead of falling back to the username.
+- Existing accounts can rename the boss once only if they still use the original default boss name.
+- Added backend boss rename endpoint and Heat & Police UI for one-time boss naming.
+
+## 2026-06-19 — Criminal Empire Online v0.5.1 — Boss Character Integration
+
+- Added full boss operational stats beside the older account stats: shooting, driving, stealth, intimidation, discipline, street knowledge, endurance, and age/role metadata.
+- Boss now appears in the Crew page as a real dossier card/profile with skill grid, health, personal heat, and boss status.
+- `/my-gang/0` now returns the boss profile, and `/my-gang/0/history` returns boss history in crew-history compatible format.
+- Discovered crime opportunities can assign the boss as an actor using the existing crew assignment UI. Boss participation uses boss skills in risk calculation and applies boss heat when personally involved.
+- Quick Crimes can select boss and/or crew actors. Boss skills count toward quick crime success, and disastrous boss-led quick crimes can injure the boss.
+- Added actor fields to crime assignment tables so future systems can distinguish boss and crew participation without fake crew rows.
+- Updated Heat & Police boss card to display the full boss skill grid.
+- Added a one-time update notice for v0.5.1.
+
+## 2026-06-19 — Criminal Empire Online v0.5 — Heat & Police Pressure Expansion
+
+- Reworked heat into boss, crew, NPC, gang, and district pressure with heat logs and police investigations.
+- Added Heat & Police page, reduction actions, idle daily decay, weekly quiet bonus, investigation pressure, boss profile, succession support, and one-time update notice modal.
+- Added high-heat crew dismissal relief with revenge-risk events for furious dismissed NPCs.
+
+
 ## 2026-06-19 — Criminal Empire Online v0.4.2 — Fallback Street Actions
 
 - Split the Crimes page into three subtabs: `Explore Leads`, `Quick Crimes & Street Actions`, and `Fallback Street Actions`.

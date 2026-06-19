@@ -1,4 +1,4 @@
-# Criminal Empire Online v0.4.2 — Fallback Street Actions
+# Criminal Empire Online v0.5.1.1 — Boss Name Setup
 
 Criminal Empire Online is a browser-based, primarily single-player criminal empire simulation. The player begins with $500, performs small NPC-provided jobs, recruits a crew, equips members, plans structured Dirty Jobs, manages heat and consequences, and now discovers more complex crime opportunities through NPCs and city locations.
 
@@ -12,6 +12,25 @@ Criminal Empire Online is a browser-based, primarily single-player criminal empi
 
 This project is **not Laravel**. Business logic is organized into readable controllers and services under `backend/app`.
 
+
+
+
+## v0.5.1.1 highlights
+
+- New registrations must provide the boss first name and surname before starting play.
+- Existing users can set the boss name once if the account still uses the original default boss identity.
+- The boss profile now exposes rename eligibility so the Heat & Police page can guide that one-time setup.
+
+## v0.5 highlights
+
+- Expanded heat into personal boss heat, crew heat, NPC heat, gang heat, district heat, and investigation pressure.
+- Added heat logs, police investigations, police events, boss history, and update notices.
+- Added a Heat & Police page with boss status, gang forecast, crew heat, active investigations, district heat, recent logs, and reduction actions.
+- Added daily idle decay (-5 heat) and weekly quiet bonus (-15 heat) through idempotent daily processing.
+- Improved heat reduction with stronger lie-low, bribe contact, lawyer/legal help, destroy evidence, and send high-heat crew away.
+- Dismissing high-heat crew can lower boss/gang heat, but angry dismissed NPCs may become revenge risks with sabotage or retaliation events.
+- Added boss character status, health, injury/arrest/death-ready fields, boss history, and automatic succession service.
+- Added one-time update notice modal after login that must be confirmed once per account.
 
 ## v0.4.2 highlights
 

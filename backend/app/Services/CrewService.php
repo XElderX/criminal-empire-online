@@ -46,17 +46,25 @@ final class CrewService
 
         foreach ($members as &$member) {
             $member = $this->ensurePortrait($member);
+            $member['member_type'] = 'crew';
+            $member['is_boss'] = false;
             $member['traits'] = $this->traits((int) $member['npc_id']);
             $member['equipment'] = $this->equipment((int) $member['id']);
             $member['recent_history'] = $this->history((int) $member['id'], 5);
             $member = (new CrewPresentationService())->present($member);
         }
 
+        array_unshift($members, (new BossCharacterService())->asCrewMember((int) $user['id']));
+
         return $members;
     }
 
     public function member(array $user, int $memberId): array
     {
+        if ($memberId === 0) {
+            return (new BossCharacterService())->asCrewMember((int) $user['id']);
+        }
+
         $statement = Database::pdo()->prepare(
             <<<'SQL'
                 SELECT
@@ -363,6 +371,8 @@ final class CrewService
                 $candidateUpdate->execute([$member['recruitment_candidate_id']]);
             }
 
+            $heatConsequence = (new HeatPressureService())->dismissHeatRelief($user, $member);
+
             (new CrewHistoryService())->record(
                 $memberId,
                 (int) $user['id'],
@@ -372,6 +382,10 @@ final class CrewService
                 [
                     'unpaid_salary' => (int) $member['unpaid_salary'],
                     'loyalty_at_dismissal' => (int) $member['loyalty'],
+                    'personal_heat_at_dismissal' => (int) ($member['personal_heat'] ?? 0),
+                    'heat_relief' => $heatConsequence['heat_relief'],
+                    'revenge_risk' => $heatConsequence['revenge_risk'],
+                    'revenge_event_created' => $heatConsequence['revenge_event_created'],
                     'time_served_from' => $member['recruited_at'],
                 ]
             );
@@ -392,6 +406,7 @@ final class CrewService
                 'member_id' => $memberId,
                 'equipment_returned' => true,
                 'world_return_delay_days' => 14,
+                'heat_consequence' => $heatConsequence,
             ];
         } catch (Throwable $exception) {
             if ($pdo->inTransaction()) {
@@ -404,6 +419,20 @@ final class CrewService
 
     public function historyForMember(array $user, int $memberId): array
     {
+        if ($memberId === 0) {
+            return array_map(
+                static fn (array $entry): array => [
+                    'id' => (int) $entry['id'],
+                    'event_type' => $entry['event_type'],
+                    'title' => $entry['title'],
+                    'description' => $entry['description'],
+                    'metadata' => is_string($entry['metadata'] ?? null) ? json_decode($entry['metadata'], true) : ($entry['metadata'] ?? null),
+                    'created_at' => $entry['created_at'],
+                ],
+                (new BossCharacterService())->history((int) $user['id'])
+            );
+        }
+
         $this->member($user, $memberId);
 
         return $this->history($memberId, 200);
