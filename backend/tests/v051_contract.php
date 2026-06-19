@@ -11,6 +11,7 @@ $migration = readFileOrFail($root . '/backend/database/migrations/010_v051_boss_
 $boss = readFileOrFail($root . '/backend/app/Services/BossCharacterService.php');
 $auth = readFileOrFail($root . '/backend/app/Services/AuthService.php');
 $bossController = readFileOrFail($root . '/backend/app/Controllers/BossController.php');
+$adminController = readFileOrFail($root . '/backend/app/Controllers/AdminController.php');
 $crew = readFileOrFail($root . '/backend/app/Services/CrewService.php');
 $crime = readFileOrFail($root . '/backend/app/Services/CrimeOpportunityService.php');
 $quick = readFileOrFail($root . '/backend/app/Services/QuickCrimeService.php');
@@ -20,6 +21,7 @@ $authPage = readFileOrFail($root . '/frontend/src/pages/AuthPage.tsx');
 $crewPage = readFileOrFail($root . '/frontend/src/pages/CrewPage.tsx');
 $crimesPage = readFileOrFail($root . '/frontend/src/pages/CrimesPage.tsx');
 $heatPage = readFileOrFail($root . '/frontend/src/pages/HeatPolicePage.tsx');
+$adminPage = readFileOrFail($root . '/frontend/src/pages/AdminPage.tsx');
 $docs = readFileOrFail($root . '/docs/DEVELOPMENT_LOG.md');
 
 $runner->test('v0.5.1 migration adds boss operational skill fields', function () use ($runner, $migration): void {
@@ -47,6 +49,16 @@ $runner->test('Registration and boss routes require explicit boss naming', funct
 
     $runner->assertContains('function rename', $bossController);
     $runner->assertContains('/api/boss/rename', $routes);
+});
+
+$runner->test('Admin panel can clear a user heat profile to zero', function () use ($runner, $adminController, $adminPage, $routes): void {
+    foreach (['function clearHeat', 'boss_personal_heat = 0', 'gang_heat = 0', 'admin.heat_cleared'] as $needle) {
+        $runner->assertContains($needle, $adminController);
+    }
+
+    $runner->assertContains('/api/admin/users/{id}/heat/clear', $routes);
+    $runner->assertContains('Set heat to 0', $adminPage);
+    $runner->assertContains('Boss heat:', $adminPage);
 });
 
 $runner->test('Crew service includes boss in crew section and profile route', function () use ($runner, $crew): void {
@@ -83,8 +95,8 @@ $runner->test('Auth, crew, crime and heat pages expose boss naming and boss stat
     $runner->assertContains('selectedQuickCrewIds', $crimesPage);
 });
 
-$runner->test('Development log documents v0.5.1.1', function () use ($runner, $docs): void {
-    $runner->assertContains('v0.5.1.1 — Boss Name Setup', $docs);
+$runner->test('Development log documents v0.5.1.2', function () use ($runner, $docs): void {
+    $runner->assertContains('v0.5.1.2 — Admin Heat Reset', $docs);
 });
 
 exit($runner->finish());

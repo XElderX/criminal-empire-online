@@ -1,3 +1,8 @@
+## 2026-06-19 — Criminal Empire Online v0.5.1.2 — Admin Heat Reset
+
+- Added an admin panel action to clear a selected player's heat profile to `0`.
+- The admin reset now clears user heat, boss personal heat, gang heat, and crew member personal heat in one step for easier moderation and testing.
+
 ## 2026-06-19 — Criminal Empire Online v0.5.1.1 — Boss Name Setup
 
 - New registrations now require explicit boss first name and surname instead of inheriting the username as the default boss identity.

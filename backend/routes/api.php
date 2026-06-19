@@ -358,6 +358,11 @@ $router->post(
     [AdminController::class, 'setCash'],
     [AuthMiddleware::class]
 );
+$router->post(
+    '/api/admin/users/{id}/heat/clear',
+    [AdminController::class, 'clearHeat'],
+    [AuthMiddleware::class]
+);
 
 $router->post(
     '/api/admin/users/{id}/grant-asset',

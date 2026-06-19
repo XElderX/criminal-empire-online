@@ -1,4 +1,4 @@
-# Criminal Empire Online v0.5.1.1 — Boss Name Setup
+# Criminal Empire Online v0.5.1.2 — Admin Heat Reset
 
 Criminal Empire Online is a browser-based, primarily single-player criminal empire simulation. The player begins with $500, performs small NPC-provided jobs, recruits a crew, equips members, plans structured Dirty Jobs, manages heat and consequences, and now discovers more complex crime opportunities through NPCs and city locations.
 
@@ -15,11 +15,11 @@ This project is **not Laravel**. Business logic is organized into readable contr
 
 
 
-## v0.5.1.1 highlights
+## v0.5.1.2 highlights
 
-- New registrations must provide the boss first name and surname before starting play.
-- Existing users can set the boss name once if the account still uses the original default boss identity.
-- The boss profile now exposes rename eligibility so the Heat & Police page can guide that one-time setup.
+- Admins can now select a player in the Admin panel and set that player's heat back to `0`.
+- The reset clears legacy user heat, boss personal heat, gang heat, and crew-member personal heat for that player.
+- The earlier boss-name setup remains in place for new registrations and one-time default-boss renames.
 
 ## v0.5 highlights
 
