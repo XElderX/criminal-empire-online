@@ -166,12 +166,7 @@ export function DirtyJobsPage({ onChanged }: DirtyJobsPageProps) {
       return;
     }
 
-    const assignments = Object.entries(roleSelections)
-      .filter(([memberId, roleCode]) => roleCode !== '' && assignableMemberIds.has(Number(memberId)))
-      .map(([memberId, roleCode]) => ({
-        member_id: Number(memberId),
-        role_code: roleCode,
-      }));
+    const assignments = buildAssignments(roleSelections, assignableMemberIds);
 
     await performAction(async () => {
       const response = await api<{ message: string }>(
@@ -191,6 +186,7 @@ export function DirtyJobsPage({ onChanged }: DirtyJobsPageProps) {
       return;
     }
 
+    const assignments = buildAssignments(roleSelections, assignableMemberIds);
     const confirmed = window.confirm(
       'Begin execution? Assigned members will become busy and their current loadouts will be used.',
     );
@@ -200,6 +196,14 @@ export function DirtyJobsPage({ onChanged }: DirtyJobsPageProps) {
     }
 
     await performAction(async () => {
+      await api<{ message: string }>(
+        `/dirty-job-runs/${detail.run!.id}/assign-crew`,
+        {
+          method: 'POST',
+          body: JSON.stringify({ assignments }),
+        },
+      );
+
       const response = await api<{ message: string }>(
         `/dirty-job-runs/${detail.run!.id}/execute`,
         { method: 'POST' },
@@ -536,6 +540,9 @@ function OperationWorkspace({
     .filter(([memberId, roleCode]) => roleCode !== '' && assignableMemberIds.has(Number(memberId)))
     .length;
   const minimumCrew = Math.max(1, detail.opportunity.min_crew_size);
+  const unassignMember = (memberId: number): void => {
+    onRoleChange(memberId, '');
+  };
 
   return (
     <>
@@ -608,21 +615,31 @@ function OperationWorkspace({
                       {member.equipment.map((item) => item.name).join(', ') || 'none'}
                     </small>
                   </div>
-                  <select
-                    value={roleSelections[member.id] || ''}
-                    onChange={(event) => onRoleChange(member.id, event.target.value)}
-                  >
-                    <option value="">Not assigned</option>
-                    {Object.entries(detail.crew_roles).map(([code, definition]) => (
-                      <option
-                        value={code}
-                        key={code}
-                        disabled={takenRoles.has(code) && roleSelections[member.id] !== code}
-                      >
-                        {definition.name} ({definition.stats.join(', ')})
-                      </option>
-                    ))}
-                  </select>
+                  <div className="assignment-row-actions">
+                    <select
+                      value={roleSelections[member.id] || ''}
+                      onChange={(event) => onRoleChange(member.id, event.target.value)}
+                    >
+                      <option value="">Not assigned</option>
+                      {Object.entries(detail.crew_roles).map(([code, definition]) => (
+                        <option
+                          value={code}
+                          key={code}
+                          disabled={takenRoles.has(code) && roleSelections[member.id] !== code}
+                        >
+                          {definition.name} ({definition.stats.join(', ')})
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      className="btn"
+                      type="button"
+                      disabled={loading || !roleSelections[member.id]}
+                      onClick={() => unassignMember(member.id)}
+                    >
+                      Unassign
+                    </button>
+                  </div>
                 </div>
               ))}
               {crew.length === 0 && (
@@ -641,8 +658,7 @@ function OperationWorkspace({
             )}
 
             <p className="muted">
-              Assigned crew: {run.assignments?.length || 0} /{' '}
-              {minimumCrew}
+              Assigned crew: {selectedCrewCount} / {minimumCrew}
             </p>
             <p className="muted">
               Each role can only be assigned once. If you need 2 crew members,
@@ -773,10 +789,25 @@ function assignmentsToSelections(run: DirtyJobRun | null): Record<number, string
   const selections: Record<number, string> = {};
 
   for (const assignment of run?.assignments || []) {
-    selections[assignment.gang_member_id] = assignment.role_code;
+    const memberId = assignment.actor_type === 'boss'
+      ? 0
+      : Number(assignment.gang_member_id || 0);
+    selections[memberId] = assignment.role_code;
   }
 
   return selections;
+}
+
+function buildAssignments(
+  roleSelections: Record<number, string>,
+  assignableMemberIds: Set<number>,
+): Array<{ member_id: number; role_code: string }> {
+  return Object.entries(roleSelections)
+    .filter(([memberId, roleCode]) => roleCode !== '' && assignableMemberIds.has(Number(memberId)))
+    .map(([memberId, roleCode]) => ({
+      member_id: Number(memberId),
+      role_code: roleCode,
+    }));
 }
 
 function humanize(value: string): string {

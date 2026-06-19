@@ -760,7 +760,7 @@ final class RecruitmentService
             $average >= 50 => 'experienced',
             default => 'street',
         };
-        $level = max(1, (int) round($average / 18));
+        $level = min(2, max(1, (int) round($average / 18)));
         $experience = max(0, ($level - 1) * 250);
         $reputationRequired = max(0, (int) floor(
             ((int) $npc['reputation'] + (int) $npc['criminal_reputation']) / 15

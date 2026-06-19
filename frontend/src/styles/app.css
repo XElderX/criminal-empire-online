@@ -642,6 +642,21 @@ label {
   width: min(330px, 100%);
 }
 
+.assignment-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  width: min(100%, 470px);
+}
+
+.assignment-row-actions select {
+  flex: 1 1 auto;
+}
+
+.assignment-row-actions .btn {
+  flex: 0 0 auto;
+}
+
 .timeline article {
   position: relative;
   padding: 0.85rem 0.85rem 0.85rem 1rem;
@@ -902,6 +917,12 @@ label {
 
   .assignment-row select {
     width: 100%;
+  }
+
+  .assignment-row-actions {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
   }
 }
 
@@ -2236,7 +2257,7 @@ small {
 .item-icon-frame img,
 .crime-picture-frame img,
 .territory-image-frame img,
-.dashboard-picture-panel img,
+.dashboard-picture-panel > img,
 .operation-list-picture > img,
 .role-icon,
 .crew-role-icon {
@@ -2276,7 +2297,7 @@ small {
   align-items: center;
 }
 
-.dashboard-picture-panel img {
+.dashboard-picture-panel > img {
   height: 5.5rem;
   border: 1px solid var(--border-soft);
   border-radius: 0.7rem;

@@ -4,8 +4,8 @@ namespace App\Config;
 
 final class GameConfig
 {
-    public const VERSION = '0.6.2';
-    public const RELEASE_TITLE = 'Criminal Empire Online v0.6.2 — Street Job & Recruitment Refresh Cron';
+    public const VERSION = '0.6.2.1';
+    public const RELEASE_TITLE = 'Criminal Empire Online v0.6.2.1 — Recruitment Lifecycle Split';
 
     public const STARTING_CASH = 500;
     public const STARTING_BANK_CASH = 0;
