@@ -2733,6 +2733,28 @@ small {
   gap: 1.35rem;
 }
 
+.crimes-subtab-shell {
+  border-color: rgba(76, 160, 255, 0.22);
+}
+
+.crimes-subtab-heading {
+  margin-bottom: 0.9rem;
+}
+
+.crimes-subtab-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.crimes-subtab-row .btn {
+  min-width: 13rem;
+}
+
+.crimes-subtab-active {
+  box-shadow: 0 0 0 1px rgba(76, 160, 255, 0.18), 0 14px 34px rgba(0, 0, 0, 0.32);
+}
+
 .crime-loop-panel,
 .crime-event-panel {
   border-color: rgba(185, 136, 74, 0.35);
@@ -3071,6 +3093,16 @@ small {
 }
 
 @media (max-width: 720px) {
+  .crimes-subtab-row {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .crimes-subtab-row .btn {
+    width: 100%;
+    min-width: 0;
+  }
+
   .crime-opportunity-select,
   .admin-npc-card {
     grid-template-columns: 1fr;

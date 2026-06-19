@@ -9,13 +9,12 @@ use Tests\TestRunner;
 
 $runner = new TestRunner();
 
-$runner->test('Version is v0.4.1', function () use ($runner): void {
-    $runner->assertSame('0.4.1', GameConfig::VERSION);
+$runner->test('Version is v0.4.2', function () use ($runner): void {
+    $runner->assertSame('0.4.2', GameConfig::VERSION);
 });
 
-$runner->test('Release title identifies fallback street actions and quick crimes', function () use ($runner): void {
+$runner->test('Release title identifies fallback street actions', function () use ($runner): void {
     $runner->assertContains('Fallback Street Actions', GameConfig::RELEASE_TITLE);
-    $runner->assertContains('Quick Crimes', GameConfig::RELEASE_TITLE);
 });
 
 $runner->test('Experience level curve increases predictably', function () use ($runner): void {

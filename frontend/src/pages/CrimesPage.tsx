@@ -27,6 +27,8 @@ interface CrimesPageProps {
   onChanged: () => void;
 }
 
+type CrimesSubtab = 'explore_leads' | 'quick_crimes' | 'fallback_street_actions';
+
 export function CrimesPage({ onChanged }: CrimesPageProps) {
   const [overview, setOverview] = useState<CrimeOverview | null>(null);
   const [quickOverview, setQuickOverview] = useState<QuickCrimeOverview | null>(null);
@@ -37,6 +39,7 @@ export function CrimesPage({ onChanged }: CrimesPageProps) {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [busyKey, setBusyKey] = useState('');
+  const [activeSubtab, setActiveSubtab] = useState<CrimesSubtab>('explore_leads');
 
   useEffect(() => {
     void load();
@@ -302,7 +305,7 @@ export function CrimesPage({ onChanged }: CrimesPageProps) {
   return (
     <section className="page-section crimes-v04-page">
       <GameHeader
-        eyebrow="v0.4 crime loop"
+        eyebrow="v0.4.2 crime loop"
         title="Crimes Expansion"
         description="Explore locations, uncover rumors, investigate leads, prepare, assign crew/equipment, handle random events, and let NPCs remember the outcome."
       />
@@ -311,115 +314,159 @@ export function CrimesPage({ onChanged }: CrimesPageProps) {
       {error && <Notice message={error} kind="error" />}
 
       <ActiveEvents runs={overview.active_runs} busyKey={busyKey} onDecision={decide} />
-
-      <section className="card section-card crime-loop-panel">
-        <div className="card-heading">
+      <section className="card section-card crimes-subtab-shell">
+        <div className="card-heading crimes-subtab-heading">
           <div>
-            <p className="eyebrow">Step 1</p>
-            <h2>Explore for opportunities</h2>
-            <p className="muted">Crimes are now discovered through places and NPC information instead of all being static buttons.</p>
+            <p className="eyebrow">Crimes workspace</p>
+            <h2>Choose a crime flow</h2>
+            <p className="muted">Switch between lead-driven operations, the newer quick-crime system, and the simple fallback street-action list.</p>
           </div>
         </div>
-        <div className="crime-location-grid">
-          {overview.locations.map((location) => (
-            <article key={location.code} className="crime-location-card">
-              <RiskBadge value={location.risk_level} />
-              <h3>{location.name}</h3>
-              <p>{location.description}</p>
-              <dl className="details-grid compact-details-grid">
-                <div><dt>Energy</dt><dd>{location.energy_cost}</dd></div>
-                <div><dt>Cash</dt><dd>${location.cash_cost}</dd></div>
-                <div><dt>Level</dt><dd>{location.min_level}+</dd></div>
-              </dl>
-              <button
-                className="btn primary full-width"
-                disabled={!location.can_explore || busyKey === `explore-${location.code}`}
-                onClick={() => explore(location.code)}
-              >
-                {busyKey === `explore-${location.code}` ? 'Searching…' : 'Explore leads'}
-              </button>
-              {location.blocked_reason && <p className="muted warning-text">{location.blocked_reason}</p>}
-            </article>
-          ))}
+
+        <div className="crimes-subtab-row" role="tablist" aria-label="Crimes sections">
+          <button
+            className={`btn ${activeSubtab === 'explore_leads' ? 'primary crimes-subtab-active' : ''}`}
+            onClick={() => setActiveSubtab('explore_leads')}
+            role="tab"
+            aria-selected={activeSubtab === 'explore_leads'}
+          >
+            Explore Leads
+          </button>
+          <button
+            className={`btn ${activeSubtab === 'quick_crimes' ? 'primary crimes-subtab-active' : ''}`}
+            onClick={() => setActiveSubtab('quick_crimes')}
+            role="tab"
+            aria-selected={activeSubtab === 'quick_crimes'}
+          >
+            Quick Crimes & Street Actions
+          </button>
+          <button
+            className={`btn ${activeSubtab === 'fallback_street_actions' ? 'primary crimes-subtab-active' : ''}`}
+            onClick={() => setActiveSubtab('fallback_street_actions')}
+            role="tab"
+            aria-selected={activeSubtab === 'fallback_street_actions'}
+          >
+            Fallback Street Actions
+          </button>
         </div>
       </section>
 
-      <div className="content-grid two-columns crime-v04-main-grid">
-        <section className="card section-card">
-          <div className="card-heading">
-            <div>
-              <p className="eyebrow">Step 2</p>
-              <h2>Known opportunities</h2>
-              <p className="muted">Rumors and leads must be investigated before serious execution.</p>
+      {activeSubtab === 'explore_leads' && (
+        <>
+          <section className="card section-card crime-loop-panel">
+            <div className="card-heading">
+              <div>
+                <p className="eyebrow">Step 1</p>
+                <h2>Explore for opportunities</h2>
+                <p className="muted">Crimes are now discovered through places and NPC information instead of all being static buttons.</p>
+              </div>
             </div>
-          </div>
-
-          {overview.opportunities.length === 0 && (
-            <EmptyState title="No known opportunities" message="Explore a location to generate a rumor, lead, or confirmed opening." />
-          )}
-
-          <div className="crime-opportunity-list">
-            {overview.opportunities.map((opportunity) => (
-              <OpportunityCard
-                key={opportunity.id}
-                opportunity={opportunity}
-                selected={selectedOpportunityId === opportunity.id}
-                busyKey={busyKey}
-                onSelect={() => setSelectedOpportunityId(opportunity.id)}
-                onInvestigate={() => investigate(opportunity)}
-                onExecute={() => execute(opportunity)}
-                onAbandon={() => abandon(opportunity)}
-              />
-            ))}
-          </div>
-        </section>
-
-        <section className="card section-card">
-          <div className="card-heading">
-            <div>
-              <p className="eyebrow">Step 3</p>
-              <h2>Prepare selected opportunity</h2>
-              <p className="muted">Preparation improves odds but never guarantees a clean result.</p>
+            <div className="crime-location-grid">
+              {overview.locations.map((location) => (
+                <article key={location.code} className="crime-location-card">
+                  <RiskBadge value={location.risk_level} />
+                  <h3>{location.name}</h3>
+                  <p>{location.description}</p>
+                  <dl className="details-grid compact-details-grid">
+                    <div><dt>Energy</dt><dd>{location.energy_cost}</dd></div>
+                    <div><dt>Cash</dt><dd>${location.cash_cost}</dd></div>
+                    <div><dt>Level</dt><dd>{location.min_level}+</dd></div>
+                  </dl>
+                  <button
+                    className="btn primary full-width"
+                    disabled={!location.can_explore || busyKey === `explore-${location.code}`}
+                    onClick={() => explore(location.code)}
+                  >
+                    {busyKey === `explore-${location.code}` ? 'Searching…' : 'Explore leads'}
+                  </button>
+                  {location.blocked_reason && <p className="muted warning-text">{location.blocked_reason}</p>}
+                </article>
+              ))}
             </div>
+          </section>
+
+          <div className="content-grid two-columns crime-v04-main-grid">
+            <section className="card section-card">
+              <div className="card-heading">
+                <div>
+                  <p className="eyebrow">Step 2</p>
+                  <h2>Known opportunities</h2>
+                  <p className="muted">Rumors and leads must be investigated before serious execution.</p>
+                </div>
+              </div>
+
+              {overview.opportunities.length === 0 && (
+                <EmptyState title="No known opportunities" message="Explore a location to generate a rumor, lead, or confirmed opening." />
+              )}
+
+              <div className="crime-opportunity-list">
+                {overview.opportunities.map((opportunity) => (
+                  <OpportunityCard
+                    key={opportunity.id}
+                    opportunity={opportunity}
+                    selected={selectedOpportunityId === opportunity.id}
+                    busyKey={busyKey}
+                    onSelect={() => setSelectedOpportunityId(opportunity.id)}
+                    onInvestigate={() => investigate(opportunity)}
+                    onExecute={() => execute(opportunity)}
+                    onAbandon={() => abandon(opportunity)}
+                  />
+                ))}
+              </div>
+            </section>
+
+            <section className="card section-card">
+              <div className="card-heading">
+                <div>
+                  <p className="eyebrow">Step 3</p>
+                  <h2>Prepare selected opportunity</h2>
+                  <p className="muted">Preparation improves odds but never guarantees a clean result.</p>
+                </div>
+              </div>
+
+              {!selectedOpportunity && (
+                <EmptyState title="Select an opportunity" message="Pick a rumor or lead to see preparation, crew, and equipment options." />
+              )}
+
+              {selectedOpportunity && (
+                <OpportunityDetail
+                  opportunity={selectedOpportunity}
+                  crew={overview.crew}
+                  equipment={overview.equipment}
+                  selectedCrewIds={selectedCrewIds}
+                  selectedEquipmentKeys={selectedEquipmentKeys}
+                  busyKey={busyKey}
+                  onToggleCrew={toggleCrew}
+                  onToggleEquipment={toggleEquipment}
+                  onPrepare={(option) => prepare(selectedOpportunity, option)}
+                  onAssignCrew={() => assignCrew(selectedOpportunity)}
+                  onAssignEquipment={() => assignEquipment(selectedOpportunity)}
+                />
+              )}
+            </section>
           </div>
 
-          {!selectedOpportunity && (
-            <EmptyState title="Select an opportunity" message="Pick a rumor or lead to see preparation, crew, and equipment options." />
-          )}
+          <div className="content-grid two-columns">
+            <ContactsPanel contacts={overview.contacts} />
+            <HistoryPanel runs={overview.history} />
+          </div>
+        </>
+      )}
 
-          {selectedOpportunity && (
-            <OpportunityDetail
-              opportunity={selectedOpportunity}
-              crew={overview.crew}
-              equipment={overview.equipment}
-              selectedCrewIds={selectedCrewIds}
-              selectedEquipmentKeys={selectedEquipmentKeys}
-              busyKey={busyKey}
-              onToggleCrew={toggleCrew}
-              onToggleEquipment={toggleEquipment}
-              onPrepare={(option) => prepare(selectedOpportunity, option)}
-              onAssignCrew={() => assignCrew(selectedOpportunity)}
-              onAssignEquipment={() => assignEquipment(selectedOpportunity)}
-            />
-          )}
-        </section>
-      </div>
+      {activeSubtab === 'quick_crimes' && (
+        <QuickCrimesPanel
+          overview={quickOverview}
+          result={quickResult}
+          busyKey={busyKey}
+          onPrepare={prepareQuickCrime}
+          onStart={startQuickCrime}
+          onDecision={decideQuickCrime}
+        />
+      )}
 
-      <div className="content-grid two-columns">
-        <ContactsPanel contacts={overview.contacts} />
-        <HistoryPanel runs={overview.history} />
-      </div>
-
-      <QuickCrimesPanel
-        overview={quickOverview}
-        result={quickResult}
-        busyKey={busyKey}
-        onPrepare={prepareQuickCrime}
-        onStart={startQuickCrime}
-        onDecision={decideQuickCrime}
-      />
-
-      <LegacyCrimesPanel crimes={overview.legacy_crimes} busyKey={busyKey} onCommit={commitLegacy} />
+      {activeSubtab === 'fallback_street_actions' && (
+        <LegacyCrimesPanel crimes={overview.legacy_crimes} busyKey={busyKey} onCommit={commitLegacy} />
+      )}
     </section>
   );
 }
@@ -700,7 +747,7 @@ function QuickCrimesPanel({
     <section className="card section-card quick-crimes-panel">
       <div className="card-heading">
         <div>
-          <p className="eyebrow">v0.4.1 fallback loop</p>
+          <p className="eyebrow">v0.4.2 fallback loop</p>
           <h2>Quick Crimes & Street Actions</h2>
           <p className="muted">
             Smaller cooldown-based actions for early money, XP, fallback leads, and crew practice when no major opportunity is ready.
@@ -943,7 +990,7 @@ function LegacyCrimesPanel({
       <div className="card-heading">
         <div>
           <p className="eyebrow">Fallback street actions</p>
-          <h2>Quick crimes</h2>
+          <h2>Fallback Street Actions</h2>
           <p className="muted">Old simple street actions remain for backward compatibility and early low-risk play.</p>
         </div>
       </div>
@@ -958,10 +1005,12 @@ function LegacyCrimesPanel({
             actions={(
               <button
                 className="btn primary full-width"
-                disabled={busyKey !== ''}
+                disabled={busyKey !== '' || crime.cooldown?.active === true}
                 onClick={() => onCommit(crime)}
               >
-                Commit quick action
+                {crime.cooldown?.active
+                  ? `Cooldown ${formatCooldown(crime.cooldown.remaining_seconds)}`
+                  : 'Commit quick action'}
               </button>
             )}
           >
@@ -970,6 +1019,7 @@ function LegacyCrimesPanel({
               <div><dt>Chance</dt><dd>{crime.success_rate}%</dd></div>
               <div><dt>Reward</dt><dd>${crime.reward_min}–${crime.reward_max}</dd></div>
               <div><dt>Heat</dt><dd><HeatBadge value={crime.heat_gain} /></dd></div>
+              <div><dt>Cooldown</dt><dd>{formatCooldown(crime.cooldown_seconds || 600)}</dd></div>
             </dl>
           </CrimePictureCard>
         ))}

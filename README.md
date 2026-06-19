@@ -1,4 +1,4 @@
-# Criminal Empire Online v0.4.1 — Fallback Street Actions & Quick Crimes
+# Criminal Empire Online v0.4.2 — Fallback Street Actions
 
 Criminal Empire Online is a browser-based, primarily single-player criminal empire simulation. The player begins with $500, performs small NPC-provided jobs, recruits a crew, equips members, plans structured Dirty Jobs, manages heat and consequences, and now discovers more complex crime opportunities through NPCs and city locations.
 
@@ -13,9 +13,9 @@ Criminal Empire Online is a browser-based, primarily single-player criminal empi
 This project is **not Laravel**. Business logic is organized into readable controllers and services under `backend/app`.
 
 
-## v0.4.1 highlights
+## v0.4.2 highlights
 
-- Added Quick Crimes / Fallback Street Actions on top of the v0.4 Crimes Expansion loop.
+- Added 10-minute cooldowns for each fallback street action and kept the crimes area split into focused subtabs.
 - Quick crimes are small cooldown-based actions for early money, XP, loot, and fallback play when no major lead is ready.
 - Added requirement validation for player level, energy, heat, item tags, optional crew, equipment ownership, and cooldown availability.
 - Added lightweight preparation options that can adjust success, heat, event risk, XP, and loot without guaranteeing success.

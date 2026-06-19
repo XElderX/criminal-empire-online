@@ -19,7 +19,7 @@ final class CrimeOpportunityService
     public function overview(array $user): array
     {
         return [
-            'legacy_crimes' => $this->legacyCrimes(),
+            'legacy_crimes' => $this->legacyCrimes((int) $user['id']),
             'locations' => $this->locations($user),
             'opportunities' => $this->opportunities((int) $user['id']),
             'active_runs' => $this->activeRuns((int) $user['id']),
@@ -32,11 +32,44 @@ final class CrimeOpportunityService
     }
 
     /** @return array<int, array<string, mixed>> */
-    public function legacyCrimes(): array
+    public function legacyCrimes(int $userId): array
     {
-        return Database::pdo()
+        $crimes = Database::pdo()
             ->query('SELECT * FROM crimes ORDER BY energy_cost ASC')
             ->fetchAll();
+
+        foreach ($crimes as &$crime) {
+            $crime['cooldown_seconds'] = 600;
+            $crime['cooldown'] = $this->legacyCrimeCooldownState($userId, (int) $crime['id']);
+        }
+
+        return $crimes;
+    }
+
+    private function legacyCrimeCooldownState(int $userId, int $crimeId): array
+    {
+        $statement = Database::pdo()->prepare(
+            <<<'SQL'
+                SELECT
+                    MAX(available_at) AS available_at,
+                    GREATEST(0, TIMESTAMPDIFF(SECOND, NOW(), MAX(available_at))) AS remaining_seconds
+                FROM player_action_cooldowns
+                WHERE user_id = ?
+                  AND action_type = 'legacy_crime'
+                  AND action_code = ?
+                  AND available_at > NOW()
+            SQL
+        );
+        $statement->execute([$userId, 'crime_' . $crimeId]);
+        $row = $statement->fetch();
+
+        $remaining = (int) ($row['remaining_seconds'] ?? 0);
+
+        return [
+            'active' => $remaining > 0,
+            'remaining_seconds' => $remaining,
+            'available_at' => $row['available_at'] ?? null,
+        ];
     }
 
     /** @return array<int, array<string, mixed>> */

@@ -478,6 +478,8 @@ export interface Crime {
   heat_gain: number;
   reward_min: number;
   reward_max: number;
+  cooldown_seconds?: number;
+  cooldown?: QuickCrimeCooldown;
 }
 
 export interface CrimeDiscoveryLocation {

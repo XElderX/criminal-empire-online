@@ -119,13 +119,13 @@ $runner->test('Frontend types define quick crime payloads', function () use ($ru
 });
 
 $runner->test('Crimes page renders quick crimes, cooldowns, requirements and result panels', function () use ($runner, $crimesPage): void {
-    foreach (['Quick Crimes & Street Actions', 'QuickCrimeCard', 'QuickRequirementList', 'Cooldown', 'Missing', 'QuickCrimeResultPanel', 'Start quick crime'] as $needle) {
+    foreach (['Explore Leads', 'Quick Crimes & Street Actions', 'Fallback Street Actions', 'QuickCrimeCard', 'QuickRequirementList', 'Cooldown', 'Missing', 'QuickCrimeResultPanel', 'Start quick crime', 'Commit quick action'] as $needle) {
         $runner->assertContains($needle, $crimesPage);
     }
 });
 
-$runner->test('Development log documents v0.4.1', function () use ($runner, $docs): void {
-    $runner->assertContains('v0.4.1 — Fallback Street Actions & Quick Crimes', $docs);
+$runner->test('Development log documents v0.4.2', function () use ($runner, $docs): void {
+    $runner->assertContains('v0.4.2 — Fallback Street Actions', $docs);
     $runner->assertContains('item tags', $docs);
     $runner->assertContains('cooldown', $docs);
 });

@@ -1,3 +1,10 @@
+## 2026-06-19 — Criminal Empire Online v0.4.2 — Fallback Street Actions
+
+- Split the Crimes page into three subtabs: `Explore Leads`, `Quick Crimes & Street Actions`, and `Fallback Street Actions`.
+- Added a 10-minute per-action cooldown to each fallback street action using server-side enforcement and UI countdowns.
+- Kept the newer quick-crime content intact while leaving the legacy fallback list trimmed down for balance.
+- Bumped application metadata to v0.4.2.
+
 ## 2026-06-19 — Criminal Empire Online v0.4.1 — Fallback Street Actions & Quick Crimes
 
 - Added quick crimes and fallback street actions as a faster loop beside the v0.4 discovered crime system.
