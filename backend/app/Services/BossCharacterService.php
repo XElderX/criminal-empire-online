@@ -8,6 +8,42 @@ use Throwable;
 
 final class BossCharacterService
 {
+    public function renameInitialBoss(array $user, string $firstName, string $lastName): array
+    {
+        $userId = (int) $user['id'];
+        $firstName = $this->sanitizeNamePart($firstName, 'boss_first_name');
+        $lastName = $this->sanitizeNamePart($lastName, 'boss_last_name');
+
+        $statement = Database::pdo()->prepare('SELECT * FROM users WHERE id = ? FOR UPDATE');
+        $statement->execute([$userId]);
+        $freshUser = $statement->fetch();
+
+        if (!$freshUser) {
+            throw new RuntimeException('Boss profile not found.');
+        }
+
+        if (!$this->canRenameInitialName($freshUser)) {
+            throw new RuntimeException('This boss name can no longer be changed.');
+        }
+
+        $displayName = $firstName . ' ' . $lastName;
+
+        Database::pdo()->prepare(
+            <<<'SQL'
+                UPDATE users
+                SET boss_display_name = ?, updated_at = NOW()
+                WHERE id = ?
+            SQL
+        )->execute([$displayName, $userId]);
+
+        $this->recordHistory($userId, 'boss_name_set', 'Boss name established', "Set the boss name to {$displayName}.", [
+            'first_name' => $firstName,
+            'last_name' => $lastName,
+        ]);
+
+        return $this->ensureProfile($userId);
+    }
+
     public function ensureProfile(int $userId): array
     {
         $pdo = Database::pdo();
@@ -261,7 +297,10 @@ final class BossCharacterService
         return [
             'id' => (int) $user['id'],
             'name' => $user['boss_display_name'] ?: $user['username'],
+            'first_name' => $this->firstName((string) ($user['boss_display_name'] ?: $user['username'])),
+            'last_name' => $this->lastName((string) ($user['boss_display_name'] ?: $user['username'])),
             'username' => $user['username'],
+            'can_rename_initial_name' => $this->canRenameInitialName($user),
             'level' => $level,
             'experience' => (int) ($user['experience'] ?? 0),
             'rank' => $user['boss_rank'] ?: $this->rankForLevel($level),
@@ -310,6 +349,29 @@ final class BossCharacterService
     {
         $parts = preg_split('/\s+/', trim($name)) ?: [];
 
-        return count($parts) > 1 ? implode(' ', array_slice($parts, 1)) : 'Character';
+        return count($parts) > 1 ? implode(' ', array_slice($parts, 1)) : '';
+    }
+
+    private function canRenameInitialName(array $user): bool
+    {
+        $displayName = trim((string) ($user['boss_display_name'] ?? ''));
+        $username = trim((string) ($user['username'] ?? ''));
+
+        return $displayName === '' || $displayName === $username || $displayName === 'The Boss';
+    }
+
+    private function sanitizeNamePart(string $value, string $field): string
+    {
+        $value = trim($value);
+
+        if (strlen($value) < 2) {
+            throw new RuntimeException("{$field} must contain at least 2 characters.");
+        }
+
+        if (strlen($value) > 40) {
+            throw new RuntimeException("{$field} must contain at most 40 characters.");
+        }
+
+        return $value;
     }
 }

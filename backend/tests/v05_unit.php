@@ -9,12 +9,12 @@ use Tests\TestRunner;
 
 $runner = new TestRunner();
 
-$runner->test('Version is v0.5.1', function () use ($runner): void {
-    $runner->assertSame('0.5.1', GameConfig::VERSION);
+$runner->test('Version is v0.5.1.1', function () use ($runner): void {
+    $runner->assertSame('0.5.1.1', GameConfig::VERSION);
 });
 
-$runner->test('Release title identifies boss character integration', function () use ($runner): void {
-    $runner->assertContains('Boss Character Integration', GameConfig::RELEASE_TITLE);
+$runner->test('Release title identifies boss name setup', function () use ($runner): void {
+    $runner->assertContains('Boss Name Setup', GameConfig::RELEASE_TITLE);
 });
 
 $runner->test('Boss rank labels scale with level', function () use ($runner): void {

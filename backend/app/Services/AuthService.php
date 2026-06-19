@@ -23,6 +23,7 @@ final class AuthService
                         username,
                         email,
                         password,
+                        boss_display_name,
                         role,
                         cash,
                         bank_cash,
@@ -42,6 +43,7 @@ final class AuthService
                 trim((string) $data['username']),
                 strtolower(trim((string) $data['email'])),
                 password_hash((string) $data['password'], PASSWORD_ARGON2ID),
+                $this->bossDisplayName($data),
                 'player',
                 GameConfig::STARTING_CASH,
                 GameConfig::STARTING_BANK_CASH,
@@ -103,7 +105,7 @@ final class AuthService
 
     private function validateRegistration(array $data): void
     {
-        foreach (['username', 'email', 'password'] as $field) {
+        foreach (['username', 'email', 'password', 'boss_first_name', 'boss_last_name'] as $field) {
             if (empty($data[$field])) {
                 throw new RuntimeException("{$field} is required");
             }
@@ -116,6 +118,23 @@ final class AuthService
         if (strlen((string) $data['password']) < 8) {
             throw new RuntimeException('Password must contain at least 8 characters');
         }
+
+        foreach (['boss_first_name', 'boss_last_name'] as $field) {
+            $value = trim((string) $data[$field]);
+
+            if (strlen($value) < 2) {
+                throw new RuntimeException("{$field} must contain at least 2 characters");
+            }
+
+            if (strlen($value) > 40) {
+                throw new RuntimeException("{$field} must contain at most 40 characters");
+            }
+        }
+    }
+
+    private function bossDisplayName(array $data): string
+    {
+        return trim((string) $data['boss_first_name']) . ' ' . trim((string) $data['boss_last_name']);
     }
 
     private function startingTerritoryId(): ?int

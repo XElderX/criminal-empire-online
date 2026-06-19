@@ -16,6 +16,8 @@ export function HeatPolicePage({ onChanged }: HeatPolicePageProps) {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [busyCode, setBusyCode] = useState('');
+  const [bossFirstName, setBossFirstName] = useState('');
+  const [bossLastName, setBossLastName] = useState('');
 
   useEffect(() => {
     void load();
@@ -25,9 +27,39 @@ export function HeatPolicePage({ onChanged }: HeatPolicePageProps) {
     setError('');
 
     try {
-      setOverview(await api<HeatOverview>('/heat'));
+      const nextOverview = await api<HeatOverview>('/heat');
+      setOverview(nextOverview);
+      setBossFirstName(nextOverview.boss.first_name || '');
+      setBossLastName(nextOverview.boss.last_name || '');
     } catch (requestError) {
       setError((requestError as Error).message);
+    }
+  }
+
+  async function renameBoss(): Promise<void> {
+    setBusyCode('rename-boss');
+    setMessage('');
+    setError('');
+
+    try {
+      const response = await api<{ boss: HeatOverview['boss']; message: string }>(
+        '/boss/rename',
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            first_name: bossFirstName,
+            last_name: bossLastName,
+          }),
+        },
+      );
+
+      setOverview((current) => current ? { ...current, boss: response.boss } : current);
+      setMessage(response.message);
+      onChanged();
+    } catch (requestError) {
+      setError((requestError as Error).message);
+    } finally {
+      setBusyCode('');
     }
   }
 
@@ -108,6 +140,24 @@ export function HeatPolicePage({ onChanged }: HeatPolicePageProps) {
             <div><dt>Alive</dt><dd>{overview.boss.alive ? 'Yes' : 'Dead'}</dd></div>
             <div><dt>Injury</dt><dd>{overview.boss.injury_status || 'None'}</dd></div>
           </dl>
+          {overview.boss.can_rename_initial_name && (
+            <div className="boss-rename-panel">
+              <p className="muted">This account still uses the original default boss name. You can set it once.</p>
+              <div className="admin-form-grid">
+                <label>
+                  Boss first name
+                  <input value={bossFirstName} onChange={(event) => setBossFirstName(event.target.value)} />
+                </label>
+                <label>
+                  Boss surname
+                  <input value={bossLastName} onChange={(event) => setBossLastName(event.target.value)} />
+                </label>
+              </div>
+              <button className="btn" disabled={busyCode !== ''} onClick={renameBoss}>
+                {busyCode === 'rename-boss' ? 'Saving…' : 'Set boss name'}
+              </button>
+            </div>
+          )}
           {overview.boss.skills && (
             <dl className="details-grid compact-details-grid boss-skill-grid">
               <div><dt>Shooting</dt><dd>{overview.boss.skills.shooting}</dd></div>

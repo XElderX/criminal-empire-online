@@ -50,7 +50,10 @@ export interface HeatLevelInfo {
 export interface BossProfile {
   id: number;
   name: string;
+  first_name: string;
+  last_name: string;
   username: string;
+  can_rename_initial_name: boolean;
   level: number;
   experience: number;
   rank: string;

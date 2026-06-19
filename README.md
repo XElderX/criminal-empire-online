@@ -1,4 +1,4 @@
-# Criminal Empire Online v0.5.1 — Boss Character Integration
+# Criminal Empire Online v0.5.1.1 — Boss Name Setup
 
 Criminal Empire Online is a browser-based, primarily single-player criminal empire simulation. The player begins with $500, performs small NPC-provided jobs, recruits a crew, equips members, plans structured Dirty Jobs, manages heat and consequences, and now discovers more complex crime opportunities through NPCs and city locations.
 
@@ -15,13 +15,11 @@ This project is **not Laravel**. Business logic is organized into readable contr
 
 
 
-## v0.5.1 highlights
+## v0.5.1.1 highlights
 
-- The boss is now visible as a full character in the Crew page.
-- Boss has operational skills like crew members: shooting, driving, stealth, intimidation, discipline, street knowledge, and endurance.
-- Boss can be selected for discovered crimes and Quick Crimes.
-- Boss participation affects risk calculation and personal boss heat.
-- The boss profile is available from `/api/boss` and as a crew-compatible profile from `/api/my-gang/0`.
+- New registrations must provide the boss first name and surname before starting play.
+- Existing users can set the boss name once if the account still uses the original default boss identity.
+- The boss profile now exposes rename eligibility so the Heat & Police page can guide that one-time setup.
 
 ## v0.5 highlights
 

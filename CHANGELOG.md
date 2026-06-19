@@ -1,3 +1,9 @@
+## 2026-06-19 — Criminal Empire Online v0.5.1.1 — Boss Name Setup
+
+- New registrations must provide boss first name and surname, which are stored as the initial boss identity instead of falling back to the username.
+- Existing accounts can rename the boss once only if they still use the original default boss name.
+- Added backend boss rename endpoint and Heat & Police UI for one-time boss naming.
+
 ## 2026-06-19 — Criminal Empire Online v0.5.1 — Boss Character Integration
 
 - Added full boss operational stats beside the older account stats: shooting, driving, stealth, intimidation, discipline, street knowledge, endurance, and age/role metadata.

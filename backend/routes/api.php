@@ -232,6 +232,7 @@ $router->post('/api/investigations/{id}/respond', [InvestigationController::clas
 $router->get('/api/boss', [BossController::class, 'show'], [AuthMiddleware::class]);
 $router->get('/api/boss/history', [BossController::class, 'history'], [AuthMiddleware::class]);
 $router->get('/api/boss/succession', [BossController::class, 'succession'], [AuthMiddleware::class]);
+$router->post('/api/boss/rename', [BossController::class, 'rename'], [AuthMiddleware::class]);
 
 $router->get('/api/update-notices/pending', [UpdateNoticeController::class, 'pending'], [AuthMiddleware::class]);
 $router->post('/api/update-notices/acknowledge', [UpdateNoticeController::class, 'acknowledge'], [AuthMiddleware::class]);

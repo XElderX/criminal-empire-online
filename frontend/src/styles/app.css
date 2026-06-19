@@ -3242,6 +3242,14 @@ small {
   font-weight: 700;
 }
 
+.boss-rename-panel {
+  border: 1px solid rgba(185, 136, 74, 0.24);
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 14px;
+  padding: 0.9rem;
+  margin-top: 0.9rem;
+}
+
 .heat-warning-panel {
   border-color: rgba(220, 74, 74, 0.38);
   background: rgba(95, 24, 24, 0.18);

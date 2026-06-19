@@ -13,6 +13,8 @@ export function AuthPage({ onAuthenticated }: AuthPageProps) {
     username: '',
     email: 'admin@criminal.test',
     password: 'password',
+    boss_first_name: '',
+    boss_last_name: '',
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -44,20 +46,42 @@ export function AuthPage({ onAuthenticated }: AuthPageProps) {
       <section className="card auth-card">
         <p className="eyebrow">Dirty Jobs Expansion</p>
         <h1>Criminal Empire Online</h1>
-        <p className="muted">Version 0.4.0</p>
+        <p className="muted">Version 0.5.1.1</p>
 
         {error && <Notice message={error} kind="error" />}
 
         {mode === 'register' && (
-          <label>
-            Username
-            <input
-              value={form.username}
-              onChange={(event) =>
-                setForm({ ...form, username: event.target.value })
-              }
-            />
-          </label>
+          <>
+            <label>
+              Username
+              <input
+                value={form.username}
+                onChange={(event) =>
+                  setForm({ ...form, username: event.target.value })
+                }
+              />
+            </label>
+
+            <label>
+              Boss first name
+              <input
+                value={form.boss_first_name}
+                onChange={(event) =>
+                  setForm({ ...form, boss_first_name: event.target.value })
+                }
+              />
+            </label>
+
+            <label>
+              Boss surname
+              <input
+                value={form.boss_last_name}
+                onChange={(event) =>
+                  setForm({ ...form, boss_last_name: event.target.value })
+                }
+              />
+            </label>
+          </>
         )}
 
         <label>
