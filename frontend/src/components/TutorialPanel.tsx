@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { api } from '../api/client';
 import type { PageName, TutorialState } from '../types';
 import { Notice } from './Notice';
@@ -17,28 +17,40 @@ export function TutorialPanel({
   onNavigate,
 }: TutorialPanelProps) {
   const [tutorial, setTutorial] = useState<TutorialState | null>(null);
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    void loadTutorial();
+  }, [isOpen, refreshKey]);
+
+  const currentModule = useMemo(() => {
+    if (!tutorial?.current_step) {
+      return null;
+    }
+
+    return tutorial.modules.find(
+      (module) => module.module_key === tutorial.current_step?.module_key,
+    ) ?? null;
+  }, [tutorial]);
 
   async function loadTutorial(): Promise<void> {
+    setLoading(true);
+    setError(null);
+
     try {
-      const response = await api<{ tutorial: TutorialState }>('/tutorial');
+      const response = await api<{ tutorial: TutorialState }>('/tutorial/current');
       setTutorial(response.tutorial);
-    } catch (requestError) {
-      setError((requestError as Error).message);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : 'Tutorial could not be loaded.');
+    } finally {
+      setLoading(false);
     }
   }
-
-  useEffect(() => {
-    void loadTutorial();
-  }, [refreshKey]);
-
-  useEffect(() => {
-    if (isOpen) {
-      void loadTutorial();
-    }
-  }, [isOpen]);
 
   async function advance(): Promise<void> {
     if (!tutorial?.current_step) {
@@ -46,58 +58,42 @@ export function TutorialPanel({
     }
 
     setLoading(true);
-    setMessage('');
-    setError('');
+    setError(null);
 
     try {
-      const response = await api<{ tutorial: TutorialState }>(
-        '/tutorial/advance',
-        {
-          method: 'POST',
-          body: JSON.stringify({
-            step_code: tutorial.current_step.code,
-            acknowledged: tutorial.current_step.requires_acknowledgement,
-          }),
-        },
-      );
-
+      const response = await api<{ tutorial: TutorialState }>('/tutorial/advance', {
+        method: 'POST',
+        body: JSON.stringify({
+          step_code: tutorial.current_step.code,
+          acknowledged: tutorial.current_step.requires_acknowledgement
+            || tutorial.current_step.objective_type === 'acknowledge'
+            || tutorial.current_step.objective_type === 'view_guide',
+        }),
+      });
       setTutorial(response.tutorial);
-
-      if ((response.tutorial.reward_granted || 0) > 0) {
-        setMessage(
-          `Tutorial complete. You received $${response.tutorial.reward_granted}.`,
-        );
-      } else {
-        setMessage('Tutorial progress updated.');
-      }
-    } catch (requestError) {
-      setError((requestError as Error).message);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : 'Tutorial objective is not complete yet.');
     } finally {
       setLoading(false);
     }
   }
 
   async function skipTutorial(): Promise<void> {
-    const confirmed = window.confirm(
-      'Skip the guided tutorial? No tutorial completion reward will be granted.',
-    );
-
-    if (!confirmed) {
+    if (!window.confirm('Skip this tutorial? Rewards are not granted for skipped tutorials. You can reopen the guide later.')) {
       return;
     }
 
     setLoading(true);
-    setError('');
+    setError(null);
 
     try {
-      const response = await api<{ tutorial: TutorialState }>(
-        '/tutorial/skip',
-        { method: 'POST' },
-      );
+      const response = await api<{ tutorial: TutorialState }>('/tutorial/skip', {
+        method: 'POST',
+        body: JSON.stringify({}),
+      });
       setTutorial(response.tutorial);
-      setMessage('Tutorial skipped. You can reopen this guide at any time.');
-    } catch (requestError) {
-      setError((requestError as Error).message);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : 'Tutorial could not be skipped.');
     } finally {
       setLoading(false);
     }
@@ -109,20 +105,19 @@ export function TutorialPanel({
 
   return (
     <aside className="tutorial-panel">
-      <header className="tutorial-header">
+      <div className="tutorial-header">
         <div>
-          <p className="eyebrow">New-player guide</p>
-          <h2>Rise from the street</h2>
+          <p className="eyebrow">Tutorial v{tutorial?.tutorial_version ?? '0.6.4'}</p>
+          <h2>{tutorial?.title ?? 'World Tutorial'}</h2>
+          {tutorial?.is_update_tutorial && (
+            <small>World Systems Update: short update guide for existing players. Your old tutorial progress stays intact.</small>
+          )}
         </div>
-        <button className="icon-button" onClick={onClose} aria-label="Close tutorial">
-          ×
-        </button>
-      </header>
+        <button className="icon-button" onClick={onClose}>×</button>
+      </div>
 
-      {error && <Notice message={error} kind="error" />}
-      {message && <Notice message={message} kind="success" />}
-
-      {!tutorial && <p className="muted">Loading tutorial progress…</p>}
+      {loading && <Notice message="Checking tutorial progress…" />}
+      {error && <Notice kind="error" message={error} />}
 
       {tutorial && (
         <>
@@ -133,19 +128,37 @@ export function TutorialPanel({
             <div className="progress-track">
               <span
                 style={{
-                  width: `${
-                    (tutorial.progress.completed / tutorial.progress.total) * 100
-                  }%`,
+                  width: `${tutorial.progress.total > 0
+                    ? (tutorial.progress.completed / tutorial.progress.total) * 100
+                    : 0}%`,
                 }}
               />
             </div>
           </div>
+
+          {tutorial.modules.length > 0 && (
+            <div className="tutorial-module-list">
+              {tutorial.modules.map((module) => (
+                <div
+                  key={module.module_key}
+                  className={`tutorial-module ${currentModule?.module_key === module.module_key ? 'active' : ''}`}
+                >
+                  <strong>{module.title}</strong>
+                  <small>{module.completed}/{module.total}</small>
+                </div>
+              ))}
+            </div>
+          )}
 
           {tutorial.status === 'active' && tutorial.current_step && (
             <section className="tutorial-current card">
               <p className="eyebrow">Current objective</p>
               <h3>{tutorial.current_step.title}</h3>
               <p>{tutorial.current_step.objective}</p>
+              <div className="tag-row">
+                <span className="status-badge">{tutorial.current_step.module_title}</span>
+                <span className="status-badge">{tutorial.current_step.objective_type.replace(/_/g, ' ')}</span>
+              </div>
 
               <div className="button-row">
                 <button
@@ -154,8 +167,9 @@ export function TutorialPanel({
                 >
                   Open {tutorial.current_step.page}
                 </button>
-                <button className="btn" disabled={loading} onClick={advance}>
+                <button className="btn" disabled={loading} onClick={() => void advance()}>
                   {tutorial.current_step.requires_acknowledgement
+                    || tutorial.current_step.objective_type === 'acknowledge'
                     ? 'I understand'
                     : 'Check progress'}
                 </button>
@@ -166,14 +180,12 @@ export function TutorialPanel({
           {tutorial.status === 'completed' && (
             <Notice
               kind="success"
-              message="Tutorial completed. The full step history remains available below."
+              message="Tutorial completed. You can reopen the guide any time from navigation."
             />
           )}
 
           {tutorial.status === 'skipped' && (
-            <Notice
-              message="Tutorial was skipped. The guide remains available for reference."
-            />
+            <Notice message="Tutorial was skipped. The guide remains available for reference." />
           )}
 
           <div className="tutorial-step-list">
@@ -193,7 +205,7 @@ export function TutorialPanel({
           </div>
 
           {tutorial.status === 'active' && (
-            <button className="btn danger-button full-width" onClick={skipTutorial}>
+            <button className="btn danger-button full-width" onClick={() => void skipTutorial()}>
               Skip tutorial
             </button>
           )}

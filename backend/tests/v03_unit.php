@@ -28,12 +28,12 @@ $baseDistrict = [
     'police_presence' => 45,
 ];
 
-$runner->test('Version is v0.6.3', function () use ($runner): void {
-    $runner->assertSame('0.6.3', GameConfig::VERSION);
+$runner->test('Version is v0.6.4', function () use ($runner): void {
+    $runner->assertSame('0.6.4', GameConfig::VERSION);
 });
 
 $runner->test('Release title identifies meaningful travel', function () use ($runner): void {
-    $runner->assertContains('Meaningful Travel', GameConfig::RELEASE_TITLE);
+    $runner->assertContains('World Tutorial & Player Guidance Update', GameConfig::RELEASE_TITLE);
 });
 
 $runner->test('New-player starting cash is exactly 500', function () use ($runner): void {
@@ -45,11 +45,11 @@ $runner->test('New-player bank and dirty balances start at zero', function () us
     $runner->assertSame(0, GameConfig::STARTING_DIRTY_MONEY);
 });
 
-$runner->test('Tutorial contains ten sequential steps', function () use ($runner): void {
+$runner->test('Tutorial contains v0.6.4 world guidance steps', function () use ($runner): void {
     $steps = GameConfig::tutorialSteps();
-    $runner->assertSame(10, count($steps));
-    $runner->assertSame('welcome', $steps[0]['code']);
-    $runner->assertSame('warehouse_intro', $steps[9]['code']);
+    $runner->assertSame(20, count($steps));
+    $runner->assertSame('welcome_riverdale', $steps[0]['code']);
+    $runner->assertSame('finish_world_tutorial', $steps[19]['code']);
 });
 
 $runner->test('Tutorial step codes are unique', function () use ($runner): void {

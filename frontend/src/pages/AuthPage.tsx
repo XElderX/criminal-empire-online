@@ -46,7 +46,7 @@ export function AuthPage({ onAuthenticated }: AuthPageProps) {
       <section className="card auth-card">
         <p className="eyebrow">Dirty Jobs Expansion</p>
         <h1>Criminal Empire Online</h1>
-        <p className="muted">Version 0.6.3</p>
+        <p className="muted">Version 0.6.4</p>
 
         {error && <Notice message={error} kind="error" />}
 

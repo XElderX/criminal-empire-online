@@ -27,26 +27,18 @@ $router->post('/api/register', [AuthController::class, 'register']);
 $router->post('/api/login', [AuthController::class, 'login']);
 $router->get('/api/me', [AuthController::class, 'me'], [AuthMiddleware::class]);
 
-$router->get(
-    '/api/tutorial',
-    [TutorialController::class, 'state'],
-    [AuthMiddleware::class]
-);
-$router->post(
-    '/api/tutorial/advance',
-    [TutorialController::class, 'advance'],
-    [AuthMiddleware::class]
-);
-$router->post(
-    '/api/tutorial/skip',
-    [TutorialController::class, 'skip'],
-    [AuthMiddleware::class]
-);
-$router->post(
-    '/api/tutorial/reopen',
-    [TutorialController::class, 'reopen'],
-    [AuthMiddleware::class]
-);
+$router->get('/api/tutorial', [TutorialController::class, 'state'], [AuthMiddleware::class]);
+$router->get('/api/tutorial/current', [TutorialController::class, 'current'], [AuthMiddleware::class]);
+$router->get('/api/tutorial/steps', [TutorialController::class, 'steps'], [AuthMiddleware::class]);
+$router->post('/api/tutorial/objective', [TutorialController::class, 'recordObjective'], [AuthMiddleware::class]);
+$router->post('/api/tutorial/advance', [TutorialController::class, 'advance'], [AuthMiddleware::class]);
+$router->post('/api/tutorial/skip', [TutorialController::class, 'skip'], [AuthMiddleware::class]);
+$router->post('/api/tutorial/reopen', [TutorialController::class, 'reopen'], [AuthMiddleware::class]);
+$router->post('/api/tutorial/reset-dev', [TutorialController::class, 'resetDev'], [AuthMiddleware::class]);
+$router->get('/api/tutorial/guide', [TutorialController::class, 'guide'], [AuthMiddleware::class]);
+$router->get('/api/help/tips', [TutorialController::class, 'tips'], [AuthMiddleware::class]);
+$router->post('/api/help/tips/{tipKey}/dismiss', [TutorialController::class, 'dismissTip'], [AuthMiddleware::class]);
+$router->post('/api/help/tips/{tipKey}/reopen', [TutorialController::class, 'reopenTip'], [AuthMiddleware::class]);
 
 $router->get('/api/jobs', [JobController::class, 'index'], [AuthMiddleware::class]);
 $router->get('/api/jobs/active', [JobController::class, 'active'], [AuthMiddleware::class]);

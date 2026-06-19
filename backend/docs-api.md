@@ -1,4 +1,31 @@
-# Criminal Empire Online v0.6.3 API
+# Criminal Empire Online v0.6.4 API
+
+
+## v0.6.4 World Tutorial & Player Guidance Update
+
+The tutorial system now supports tutorial versioning, a full new-player world guide, and a shorter existing-player `World Systems Update` guide.
+
+### Tutorial endpoints
+
+- `GET /api/tutorial` — current tutorial state, backward-compatible with previous UI.
+- `GET /api/tutorial/current` — current versioned tutorial state.
+- `GET /api/tutorial/steps` — current tutorial modules and steps.
+- `POST /api/tutorial/objective` — records a specific tutorial objective event such as viewing a page. This does not directly complete a step.
+- `POST /api/tutorial/advance` — attempts to advance the current step after backend validation.
+- `POST /api/tutorial/skip` — skips the active tutorial without granting completion rewards.
+- `POST /api/tutorial/reopen` — reopens tutorial/help mode without resetting rewards.
+- `POST /api/tutorial/reset-dev` — admin-only tutorial reset for development/testing.
+- `GET /api/tutorial/guide` — persistent guide/help content.
+- `GET /api/help/tips?page={page}` — contextual help tips for a page.
+- `POST /api/help/tips/{tipKey}/dismiss` — dismiss a contextual help tip.
+- `POST /api/help/tips/{tipKey}/reopen` — reopen a dismissed contextual help tip.
+
+### Tutorial validation
+
+Tutorial progress is validated by backend objective types such as `view_page`, `travel_to_location`, `explore_hotspot`, `complete_job`, `complete_quick_crime`, `inspect_candidate`, `hire_crew`, `equip_item`, `inspect_dirty_job`, `execute_dirty_job`, `view_heat_page`, `view_territory`, `view_warehouse`, and `view_guide`.
+
+Rewards are small, once-only, and do not reset money, crew, inventory, warehouse, heat, map state, tutorial history, or progression.
+
 
 All protected endpoints require:
 
@@ -327,6 +354,13 @@ Authenticated endpoints added/extended:
 - `GET /api/dirty-jobs?region=&location=` — filters/prioritizes dirty jobs by local map rules while preserving the generic no-filter list.
 
 Quick-crime start may include `region_slug` and `location_slug`. The backend validates whether the action is allowed at that hotspot and whether current-location travel is required.
+
+
+## v0.6.3.1 Street Job NPC Assignment Hotfix
+
+- `GET /api/jobs` now includes `min_assigned_members`, `assignable_crew_count`, `requires_npc_assignment`, and `assignment_hint` for Street Job cards.
+- `POST /api/jobs/{id}/start` now requires at least one assigned active NPC crew member for every Street Job, even older jobs with `min_gang_size = 0`.
+- Boss/fake crew ids such as `0` are rejected for Street Jobs.
 
 
 ## v0.6.3 Meaningful Travel & Local Presence

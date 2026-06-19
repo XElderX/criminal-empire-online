@@ -52,7 +52,10 @@ export function JobsPage({ onChanged }: JobsPageProps) {
   }, []);
 
   const availableCrew = useMemo(
-    () => crew.filter((member) => member.status === 'active'),
+    () =>
+      crew.filter(
+        (member) => member.status === 'active' && !member.is_boss && member.id > 0,
+      ),
     [crew],
   );
 
@@ -183,12 +186,17 @@ export function JobsPage({ onChanged }: JobsPageProps) {
         </section>
       )}
 
-      {availableCrew.length > 0 && (
-        <section className="card section-card">
-          <h2>Optional crew assistance</h2>
-          <p className="muted">
-            Select active members before starting a job that requires help.
+      <section className="card section-card">
+        <h2>Required crew assignment</h2>
+        <p className="muted">
+          Street Jobs now require at least one active real NPC crew member. The boss
+          cannot be assigned to these jobs.
+        </p>
+        {availableCrew.length === 0 ? (
+          <p className="danger">
+            Hire an NPC crew member from Recruitment before starting Street Jobs.
           </p>
+        ) : (
           <div className="choice-grid">
             {availableCrew.map((member) => (
               <label className="choice-card" key={member.id}>
@@ -207,13 +215,14 @@ export function JobsPage({ onChanged }: JobsPageProps) {
               </label>
             ))}
           </div>
-        </section>
-      )}
+        )}
+      </section>
 
       <JobGroup
         title="Legal starter jobs"
         jobs={legalJobs}
         loading={loading}
+        selectedMemberCount={selectedMembers.length}
         onStartJob={startJob}
       />
 
@@ -221,6 +230,7 @@ export function JobsPage({ onChanged }: JobsPageProps) {
         title="Other starter jobs"
         jobs={criminalJobs}
         loading={loading}
+        selectedMemberCount={selectedMembers.length}
         onStartJob={startJob}
       />
 
@@ -252,11 +262,13 @@ function JobGroup({
   title,
   jobs,
   loading,
+  selectedMemberCount,
   onStartJob,
 }: {
   title: string;
   jobs: StarterJob[];
   loading: boolean;
+  selectedMemberCount: number;
   onStartJob: (opportunityId: number) => Promise<void>;
 }) {
   if (jobs.length === 0) {
@@ -267,7 +279,16 @@ function JobGroup({
     <section className="section-card">
       <h2>{title}</h2>
       <div className="card-grid">
-        {jobs.map((job) => (
+        {jobs.map((job) => {
+          const requiredMembers = Math.max(1, job.min_assigned_members ?? 1);
+          const hasSelectedCrew = selectedMemberCount >= requiredMembers;
+          const assignmentMessage =
+            job.assignment_hint ||
+            `Assign at least ${requiredMembers} active NPC crew member${
+              requiredMembers === 1 ? '' : 's'
+            } before starting this Street Job.`;
+
+          return (
           <article className="card" key={job.opportunity_id}>
             <div className="card-heading">
               <div>
@@ -297,7 +318,15 @@ function JobGroup({
                   {job.heat_min}–{job.heat_max}
                 </dd>
               </div>
+              <div>
+                <dt>NPC crew required</dt>
+                <dd>{requiredMembers}</dd>
+              </div>
             </dl>
+
+            {!hasSelectedCrew && (
+              <p className="danger">{assignmentMessage}</p>
+            )}
 
             {!job.can_start && (
               <p className="danger">
@@ -307,13 +336,14 @@ function JobGroup({
 
             <button
               className="btn primary full-width"
-              disabled={loading || !job.can_start}
+              disabled={loading || !job.can_start || !hasSelectedCrew}
               onClick={() => onStartJob(job.opportunity_id)}
             >
               Start job
             </button>
           </article>
-        ))}
+          );
+        })}
       </div>
     </section>
   );

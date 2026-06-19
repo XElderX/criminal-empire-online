@@ -90,6 +90,8 @@ final class JobService
         $statement->execute();
         $jobs = $statement->fetchAll();
 
+        $activeAssignableCrewCount = $this->activeAssignableCrewCount((int) $user['id']);
+
         foreach ($jobs as &$job) {
             $job['duration_seconds_effective'] = max(
                 1,
@@ -99,9 +101,14 @@ final class JobService
                 )
             );
 
+            $job['min_assigned_members'] = $this->requiredNpcAssignmentCount($job);
+            $job['assignable_crew_count'] = $activeAssignableCrewCount;
+            $job['requires_npc_assignment'] = true;
+            $job['assignment_hint'] = 'Assign at least one active NPC crew member before starting this Street Job.';
             $job['requirement_messages'] = $this->requirementMessages(
                 $user,
-                $job
+                $job,
+                $activeAssignableCrewCount
             );
             $job['can_start'] = $job['requirement_messages'] === [];
         }
@@ -234,14 +241,12 @@ final class JobService
             $freshUser = $this->lockUser((int) $user['id']);
             $this->validatePlayerRequirements($freshUser, $job);
 
-            $memberIds = array_values(array_unique(array_map(
-                static fn (mixed $memberId): int => (int) $memberId,
-                $memberIds
-            )));
+            $memberIds = $this->normalizeAssignedMemberIds($memberIds);
+            $requiredMembers = $this->requiredNpcAssignmentCount($job);
 
-            if (count($memberIds) < (int) $job['min_gang_size']) {
+            if (count($memberIds) < $requiredMembers) {
                 throw new RuntimeException(
-                    'This job requires more active gang members.'
+                    $this->assignmentRequirementMessage($requiredMembers)
                 );
             }
 
@@ -473,8 +478,11 @@ final class JobService
         }
     }
 
-    private function requirementMessages(array $user, array $job): array
-    {
+    private function requirementMessages(
+        array $user,
+        array $job,
+        ?int $activeAssignableCrewCount = null
+    ): array {
         $messages = [];
 
         if ((int) $user['energy'] < (int) $job['energy_cost']) {
@@ -483,6 +491,13 @@ final class JobService
 
         if ((int) ($user['reputation'] ?? 0) < (int) $job['min_reputation']) {
             $messages[] = "Requires {$job['min_reputation']} reputation.";
+        }
+
+        $requiredMembers = $this->requiredNpcAssignmentCount($job);
+        $activeAssignableCrewCount ??= $this->activeAssignableCrewCount((int) $user['id']);
+
+        if ($activeAssignableCrewCount < $requiredMembers) {
+            $messages[] = $this->assignmentRequirementMessage($requiredMembers);
         }
 
         return $messages;
@@ -495,6 +510,58 @@ final class JobService
         if ($messages !== []) {
             throw new RuntimeException(implode(' ', $messages));
         }
+    }
+
+    private function requiredNpcAssignmentCount(array $job): int
+    {
+        return max(1, (int) ($job['min_gang_size'] ?? 0));
+    }
+
+    private function assignmentRequirementMessage(int $requiredMembers): string
+    {
+        if ($requiredMembers <= 1) {
+            return 'Street Jobs require at least one assigned active NPC crew member.';
+        }
+
+        return "This Street Job requires at least {$requiredMembers} assigned active NPC crew members.";
+    }
+
+    /**
+     * @param array<int, mixed> $memberIds
+     * @return array<int, int>
+     */
+    private function normalizeAssignedMemberIds(array $memberIds): array
+    {
+        $normalized = [];
+
+        foreach ($memberIds as $memberId) {
+            $memberId = (int) $memberId;
+
+            if ($memberId <= 0) {
+                throw new RuntimeException(
+                    'Street Jobs must use real NPC crew members. The boss cannot be assigned to Street Jobs.'
+                );
+            }
+
+            $normalized[$memberId] = $memberId;
+        }
+
+        return array_values($normalized);
+    }
+
+    private function activeAssignableCrewCount(int $userId): int
+    {
+        $statement = Database::pdo()->prepare(
+            <<<'SQL'
+                SELECT COUNT(*)
+                FROM player_gang_members
+                WHERE user_id = ?
+                  AND status = 'active'
+            SQL
+        );
+        $statement->execute([$userId]);
+
+        return (int) $statement->fetchColumn();
     }
 
     private function normalizeIdempotencyKey(string $idempotencyKey): string
