@@ -45,6 +45,7 @@ final class LocalActivityService
         $quick = $this->quickCrimePreview($user, $context);
         $dirty = $this->dirtyJobPreview($user, $context);
         $local = $this->localOpportunities((int) $user['id'], (int) $context['location']['id']);
+        $shops = (new MapShopService())->countsForLocation((int) $user['id'], (int) $context['location']['id']);
         $recruitment = $this->recruitmentPreview($context);
         $business = $this->businessPreview($context);
         $territory = $context['territory'];
@@ -58,11 +59,12 @@ final class LocalActivityService
             $context['region'],
             $context['location']
         );
-        $travelPurpose = $this->travelPurpose($context, $quick, $dirty, $recruitment, $business, $local);
+        $travelPurpose = $this->travelPurpose($context, $quick, $dirty, $recruitment, $business, $local, $shops);
         $activityGroups = array_values(array_filter([
             $this->group('quick_crimes', 'Quick Crimes Nearby', $quick['available'], $quick['locked'], $quick['preview'], 'crimes?tab=quick_crimes', $context['playerIsHere']),
             $this->group('dirty_jobs', 'Dirty Jobs Nearby', $dirty['available'], $dirty['locked'], $dirty['preview'], 'dirty jobs', $context['playerIsHere']),
             $this->group('crime_leads', 'Crime Leads / Rumors', count($local), 0, $local, 'crimes?tab=explore_leads', true),
+            $this->group('shops', 'Shops Nearby', $shops['available'], $shops['locked'], $shops['shops'], 'shops', $context['playerIsHere']),
             $this->group('recruitment', 'Recruitment Nearby', $context['playerIsHere'] ? count($recruitment) : 0, $context['playerIsHere'] ? 0 : count($recruitment), $recruitment, 'recruitment', $context['playerIsHere']),
             $this->group('businesses', 'Businesses Nearby', $context['playerIsHere'] ? count($business) : 0, $context['playerIsHere'] ? 0 : count($business), $business, 'territories', $context['playerIsHere']),
             $territory ? $this->group('territory', 'Territory Control', 1, 0, [$territory], 'territories', true) : null,
@@ -85,6 +87,8 @@ final class LocalActivityService
                 'quick_crimes_available' => $quick['available'],
                 'dirty_jobs_available' => $dirty['available'],
                 'known_local_leads' => count($local),
+                'shops_nearby' => count($shops['shops']),
+                'shops_available_here' => $shops['available'],
                 'player_is_here' => $context['playerIsHere'],
             ],
             'quickCrimesPreview' => $quick['preview'],
@@ -92,6 +96,7 @@ final class LocalActivityService
             'crimeLeadsPreview' => $local,
             'recruitmentPreview' => $recruitment,
             'businessesPreview' => $business,
+            'shopsPreview' => $shops['shops'],
             'territorySummary' => $territory,
             'heatSummary' => $context['riskSummary'],
             'actions' => $this->actionsForContext($context),
@@ -248,7 +253,7 @@ final class LocalActivityService
     }
 
 
-    private function travelPurpose(array $context, array $quick, array $dirty, array $recruitment, array $business, array $local): array
+    private function travelPurpose(array $context, array $quick, array $dirty, array $recruitment, array $business, array $local, array $shops): array
     {
         $items = [];
         if ($quick['available'] + $quick['locked'] > 0) {
@@ -265,6 +270,9 @@ final class LocalActivityService
         }
         if ($local !== []) {
             $items[] = count($local) . ' discovered local lead(s)';
+        }
+        if (($shops['available'] + $shops['locked']) > 0) {
+            $items[] = ($shops['available'] + $shops['locked']) . ' shop/dealer location(s) for buying or selling gear';
         }
         if ($context['territory']) {
             $items[] = 'territory scouting context';
@@ -331,6 +339,7 @@ final class LocalActivityService
             ['label' => 'View Local Dirty Jobs', 'route_hint' => 'dirty jobs?' . $locationQuery],
             ['label' => 'Search Recruits Here', 'route_hint' => 'recruitment?' . $locationQuery],
             ['label' => 'View Businesses Here', 'route_hint' => 'territories?' . $locationQuery],
+            ['label' => 'Open Shops Nearby', 'route_hint' => 'shops?' . $locationQuery],
             ['label' => 'Open Heat Warnings', 'route_hint' => 'heat'],
         ];
     }

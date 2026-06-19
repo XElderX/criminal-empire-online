@@ -107,7 +107,7 @@ export function TutorialPanel({
     <aside className="tutorial-panel">
       <div className="tutorial-header">
         <div>
-          <p className="eyebrow">Tutorial v{tutorial?.tutorial_version ?? '0.6.4'}</p>
+          <p className="eyebrow">Tutorial v{tutorial?.tutorial_version ?? '0.6.5'}</p>
           <h2>{tutorial?.title ?? 'World Tutorial'}</h2>
           {tutorial?.is_update_tutorial && (
             <small>World Systems Update: short update guide for existing players. Your old tutorial progress stays intact.</small>

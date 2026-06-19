@@ -1011,9 +1011,20 @@ function QuickRequirementList({ template }: { template: QuickCrimeTemplate }) {
         )}
       </div>
       {template.missing_items.length > 0 && (
-        <p className="muted warning-text">
-          Missing: {template.missing_items.map((item) => item.label).join('; ')}. Buy or obtain it through shop/inventory before starting.
-        </p>
+        <div className="missing-item-notice">
+          <strong>Missing gear</strong>
+          <ul>
+            {template.missing_items.map((item) => (
+              <li key={`${item.type}-${item.tag}`}>
+                {item.label}
+                {item.source_hints && item.source_hints.length > 0 && (
+                  <span className="muted"> — possible source: {item.source_hints.slice(0, 2).map((source) => `${source.shop_name} (${source.location_label || source.location_slug})`).join(', ')}</span>
+                )}
+              </li>
+            ))}
+          </ul>
+          <p className="muted warning-text">Travel to map shops to buy starter equipment. Powerful items may be black-market/future-only.</p>
+        </div>
       )}
     </div>
   );

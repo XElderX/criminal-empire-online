@@ -150,6 +150,11 @@ export function LocationMapPage({
     openRouteHint(String(action.route_hint));
   }
 
+  function openShopFromMap(shopSlug: string): void {
+    window.history.pushState({}, '', `/?shop=${encodeURIComponent(shopSlug)}`);
+    onNavigate('shops');
+  }
+
   if (!region) {
     return (
       <section className="page-section world-map-page">
@@ -185,6 +190,7 @@ export function LocationMapPage({
               locations={region.locations}
               selectedLocation={selectedLocation}
               onSelect={(location) => setSelectedSlug(location.slug)}
+              onOpenShop={openShopFromMap}
             />
           )}
         </div>
@@ -199,6 +205,7 @@ export function LocationMapPage({
             onTravel={travel}
             onTravelAndExplore={travelAndExploreSelectedHotspot}
             onNavigateAction={navigateAction}
+            onOpenShop={openShopFromMap}
           />
           <LocalActivityPanel
             activities={activities}

@@ -1,0 +1,201 @@
+<?php
+
+namespace App\Config;
+
+final class ShopConfig
+{
+    public const VERSION = '0.6.5';
+
+    /**
+     * Config is the source of truth for what can be sold where.
+     * Database rows hold live shop location, stock, and transaction history.
+     */
+    public static function shops(): array
+    {
+        return [
+            'pawn_row_fence' => [
+                'enabled' => true,
+                'name' => 'Pawn Row Fence',
+                'shop_type' => 'pawn_fence',
+                'location_slug' => 'pawn-row',
+                'requires_local_presence' => true,
+                'can_view_remotely' => true,
+                'is_black_market' => false,
+                'is_legal' => false,
+                'heat_risk' => 2,
+                'buys_categories' => ['stolen_good', 'vehicle_part', 'tool', 'utility'],
+                'description' => 'A cramped second-hand counter that buys small loot and sells used starter tools.',
+            ],
+            'market_tool_shop' => [
+                'enabled' => true,
+                'name' => 'Market Tool Shop',
+                'shop_type' => 'tool_shop',
+                'location_slug' => 'market-district',
+                'requires_local_presence' => true,
+                'can_view_remotely' => true,
+                'is_black_market' => false,
+                'is_legal' => true,
+                'heat_risk' => 0,
+                'buys_categories' => ['tool', 'utility'],
+                'description' => 'A legal market stall for basic tools, bags, and practical street supplies.',
+            ],
+            'market_workwear_store' => [
+                'enabled' => true,
+                'name' => 'Workwear Store',
+                'shop_type' => 'workwear',
+                'location_slug' => 'market-district',
+                'requires_local_presence' => true,
+                'can_view_remotely' => true,
+                'is_black_market' => false,
+                'is_legal' => true,
+                'heat_risk' => 0,
+                'buys_categories' => ['clothing'],
+                'description' => 'A plain clothing shop for gloves, work uniforms, and low-profile clothing.',
+            ],
+            'suburban_garage' => [
+                'enabled' => true,
+                'name' => 'Suburban Garage Counter',
+                'shop_type' => 'auto_parts',
+                'location_slug' => 'suburban-garage',
+                'requires_local_presence' => true,
+                'can_view_remotely' => true,
+                'is_black_market' => false,
+                'is_legal' => true,
+                'heat_risk' => 1,
+                'buys_categories' => ['vehicle_part', 'tool'],
+                'description' => 'A local garage counter with vehicle tools, repair basics, and parts buyers.',
+            ],
+            'rural_scrapyard_buyer' => [
+                'enabled' => true,
+                'name' => 'Rural Scrapyard Buyer',
+                'shop_type' => 'scrapyard',
+                'location_slug' => 'junkyard-entrance',
+                'requires_local_presence' => true,
+                'can_view_remotely' => true,
+                'is_black_market' => false,
+                'is_legal' => false,
+                'heat_risk' => 2,
+                'buys_categories' => ['vehicle_part', 'stolen_good', 'tool'],
+                'description' => 'A muddy yard that buys vehicle parts and sometimes sells used tools.',
+            ],
+            'medical_supply_counter' => [
+                'enabled' => true,
+                'name' => 'Medical Supply Counter',
+                'shop_type' => 'medical',
+                'location_slug' => 'shopping-plaza',
+                'requires_local_presence' => true,
+                'can_view_remotely' => true,
+                'is_black_market' => false,
+                'is_legal' => true,
+                'heat_risk' => 0,
+                'buys_categories' => ['utility'],
+                'description' => 'A clean counter for bandages and basic first-aid supplies.',
+            ],
+            'smuggler_pier_dealer' => [
+                'enabled' => true,
+                'name' => 'Smuggler Pier Dealer',
+                'shop_type' => 'black_market',
+                'location_slug' => 'smuggler-pier',
+                'requires_local_presence' => true,
+                'can_view_remotely' => false,
+                'is_black_market' => true,
+                'is_legal' => false,
+                'heat_risk' => 8,
+                'min_reputation' => 6,
+                'buys_categories' => ['stolen_good', 'vehicle_part'],
+                'description' => 'A risky pier contact. Most powerful inventory is intentionally disabled until a future dark-market update.',
+            ],
+            'basement_bar_contact' => [
+                'enabled' => true,
+                'name' => 'Basement Bar Contact',
+                'shop_type' => 'black_market_contact',
+                'location_slug' => 'basement-bars',
+                'requires_local_presence' => true,
+                'can_view_remotely' => false,
+                'is_black_market' => true,
+                'is_legal' => false,
+                'heat_risk' => 5,
+                'min_reputation' => 3,
+                'buys_categories' => ['stolen_good'],
+                'description' => 'A social contact for future dealer introductions. Current stock is intentionally limited.',
+            ],
+        ];
+    }
+
+    public static function catalog(): array
+    {
+        return [
+            'work_gloves' => self::item('Work Gloves', 'item', 'clothing', 25, 'legal', ['tool_shop', 'workwear', 'pawn_fence'], stock: 8),
+            'screwdriver_set' => self::item('Screwdriver Set', 'item', 'tool', 95, 'legal', ['tool_shop', 'pawn_fence', 'scrapyard'], stock: 6),
+            'lockpick_set' => self::item('Lockpick Set', 'item', 'tool', 140, 'starter_shady', ['pawn_fence', 'black_market_contact'], stock: 3, heatRisk: 1),
+            'crowbar' => self::item('Crowbar', 'item', 'tool', 95, 'starter_shady', ['tool_shop', 'pawn_fence', 'scrapyard'], stock: 4, heatRisk: 1),
+            'flashlight' => self::item('Flashlight', 'item', 'utility', 35, 'legal', ['tool_shop', 'auto_parts'], stock: 8),
+            'glass_breaker' => self::item('Glass Breaker', 'item', 'tool', 130, 'starter_shady', ['pawn_fence', 'auto_parts', 'scrapyard'], stock: 2, heatRisk: 1),
+            'duffel_bag' => self::item('Duffel Bag', 'item', 'utility', 120, 'legal', ['tool_shop', 'pawn_fence'], stock: 5),
+            'backpack' => self::item('Backpack', 'item', 'utility', 45, 'legal', ['tool_shop', 'workwear'], stock: 8),
+            'face_covering' => self::item('Face Covering', 'item', 'clothing', 40, 'legal', ['workwear', 'pawn_fence'], stock: 6),
+            'dark_clothing' => self::item('Dark Clothing', 'item', 'clothing', 90, 'legal', ['workwear', 'pawn_fence'], stock: 6),
+            'work_uniform' => self::item('Work Uniform', 'item', 'clothing', 180, 'legal', ['workwear'], stock: 4, minReputation: 1),
+            'first_aid_kit' => self::item('First-Aid Kit', 'item', 'utility', 140, 'legal', ['medical'], stock: 5),
+            'bandages' => self::item('Bandages', 'item', 'utility', 20, 'legal', ['medical'], stock: 12),
+            'burner_phone' => self::item('Burner Phone', 'item', 'utility', 90, 'starter_shady', ['pawn_fence', 'black_market_contact'], stock: 3, heatRisk: 1),
+            'vehicle_tools' => self::item('Vehicle Tools', 'item', 'tool', 260, 'restricted', ['auto_parts', 'scrapyard'], stock: 3, minReputation: 1),
+            'basic_vest' => self::item('Basic Protective Vest', 'item', 'armor', 450, 'restricted', ['black_market_contact'], stock: 1, minReputation: 5, heatRisk: 2),
+            'cheap_knife' => self::item('Street Knife', 'item', 'melee_weapon', 80, 'starter_shady', ['pawn_fence', 'black_market_contact'], stock: 2, heatRisk: 1),
+            'basic_pistol' => self::item('Basic Pistol', 'weapon', 'weapon', 1200, 'black_market_only', ['black_market'], enabled: false, stock: 0, minReputation: 8, heatRisk: 6, reason: 'black_market_only'),
+            'pump_shotgun' => self::item('Pump Shotgun', 'weapon', 'weapon', 12000, 'future_only', ['black_market'], enabled: false, stock: 0, minReputation: 12, heatRisk: 10, reason: 'future_dark_market_expansion'),
+        ];
+    }
+
+    public static function sourceHints(): array
+    {
+        return [
+            'work_gloves' => ['Market District / Workwear Store', 'Market District / Market Tool Shop'],
+            'screwdriver_set' => ['Market District / Market Tool Shop', 'Main City / Pawn Row Fence'],
+            'lockpick_set' => ['Main City / Pawn Row Fence'],
+            'crowbar' => ['Market District / Market Tool Shop', 'Rural County / Rural Scrapyard Buyer'],
+            'duffel_bag' => ['Market District / Market Tool Shop'],
+            'dark_clothing' => ['Market District / Workwear Store'],
+            'vehicle_tools' => ['Suburbs / Suburban Garage Counter', 'Rural County / Rural Scrapyard Buyer'],
+            'first_aid_kit' => ['Suburbs / Medical Supply Counter'],
+            'basic_vest' => ['Black-market contact, reputation gated'],
+            'cheap_knife' => ['Main City / Pawn Row Fence'],
+            'basic_pistol' => ['Not available in normal shops; future black-market/dealer content'],
+        ];
+    }
+
+    private static function item(
+        string $name,
+        string $assetType,
+        string $category,
+        int $price,
+        string $availability,
+        array $shopTypes,
+        bool $enabled = true,
+        int $stock = 5,
+        int $minLevel = 1,
+        int $minReputation = 0,
+        int $heatRisk = 0,
+        string $reason = ''
+    ): array {
+        return [
+            'name' => $name,
+            'asset_type' => $assetType,
+            'category' => $category,
+            'buy_price' => $price,
+            'sell_price_multiplier' => 0.45,
+            'availability_status' => $availability,
+            'allowed_shop_types' => $shopTypes,
+            'enabled' => $enabled,
+            'can_buy' => $enabled,
+            'can_sell' => true,
+            'stock_quantity' => $stock,
+            'max_stock' => max($stock, 1),
+            'restock_interval_minutes' => 720,
+            'min_level' => $minLevel,
+            'min_reputation' => $minReputation,
+            'heat_risk' => $heatRisk,
+            'disabled_reason' => $reason,
+        ];
+    }
+}

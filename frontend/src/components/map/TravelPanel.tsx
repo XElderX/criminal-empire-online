@@ -34,6 +34,7 @@ export function TravelPanel({
   onTravel,
   onTravelAndExplore,
   onNavigateAction,
+  onOpenShop,
 }: {
   selectedRegion?: WorldRegion | null;
   regionResponse?: RegionMapResponse | null;
@@ -44,11 +45,13 @@ export function TravelPanel({
   onTravel?: () => void;
   onTravelAndExplore?: () => void;
   onNavigateAction?: (action: MapHotspotAction) => void;
+  onOpenShop?: (shopSlug: string) => void;
 }) {
   if (locationResponse) {
     const isHere = hotspotIsCurrent(locationResponse);
     const unlocks = unlockLabels(locationResponse);
     const routeOptions = locationResponse.travelInfo.route_options || [];
+    const shopSummary = locationResponse.location.shopSummary;
 
     return (
       <aside className="travel-panel card">
@@ -110,6 +113,18 @@ export function TravelPanel({
         )}
 
         {locationResponse.travelInfo.warnings.map((warning) => <p key={warning} className="warning-text">{warning}</p>)}
+
+        {shopSummary && shopSummary.count > 0 && (
+          <div className="local-purpose-box shop-map-callout">
+            <strong>Shop on this hotspot</strong>
+            <p className="muted">{shopSummary.primary_shop_name || 'Known shop'} · {shopSummary.count} shop/dealer marker{shopSummary.count === 1 ? '' : 's'} here.</p>
+            {shopSummary.primary_shop_slug && (
+              <button className="btn primary full-width" onClick={() => onOpenShop?.(shopSummary.primary_shop_slug || '')}>
+                Open shop catalog
+              </button>
+            )}
+          </div>
+        )}
 
         {travelResult && (
           <div className="travel-result-panel">

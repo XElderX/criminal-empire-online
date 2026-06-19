@@ -1,3 +1,35 @@
+# Criminal Empire Online v0.6.5.1 — Map Shop UX & Navigation Hotfix
+
+This patch builds on **v0.6.5 — Map Shops & Item Availability Expansion** and preserves the v0.6.4 tutorial/help update plus the v0.6.3.1 Street Job NPC assignment hotfix.
+
+## v0.6.5.1 highlights
+
+- Shops are now presented as map-first gameplay: open the World Map, click a shop icon on a hotspot, then open that local shop catalog.
+- Removed the normal player-facing Shops entry from the main navigation so shops feel connected to location/map travel instead of another global tab.
+- Kept a Shops page for map links and optional known-shop shortcuts, but the default view now explains the map-first flow instead of dumping every shop in a long list.
+- Fixed oversized item images and overlapping cards in shop catalogs.
+- Reworked shop item cards with compact thumbnails, readable descriptions, stock/price badges, and safer disabled/locked messages.
+- Added styling for clickable shop markers on location maps.
+- Improved the selected-hotspot shop callout and map shop marker presentation.
+- Added admin page subtabs for Players & tools, Asset catalog, NPC browser, and Audit log.
+- Fixed tutorial update behavior so patch releases do not reopen the World Systems tutorial for players who already completed the v0.6.4 guide/update path.
+
+## Install/update
+
+```bash
+cd criminal-empire-online
+php backend/database/migrate.php
+cd frontend
+npm install
+npm run build
+```
+
+## Shop configuration
+
+Edit `backend/app/Config/ShopConfig.php` to enable or disable item sales without changing controllers. The config controls global item sale enablement, allowed shop types, black-market/future-only flags, prices, stock, restock intervals, level/reputation requirements, heat risk, and source hints.
+
+---
+
 # Criminal Empire Online v0.6.4 — World Tutorial & Player Guidance Update
 
 This patch builds on **v0.6.3.1 — Street Job NPC Assignment Hotfix** and preserves the v0.6/v0.6.3 world map, travel, local presence, and Street Job NPC assignment behavior.

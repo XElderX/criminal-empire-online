@@ -4,8 +4,8 @@ namespace App\Config;
 
 final class GameConfig
 {
-    public const VERSION = '0.6.4';
-    public const RELEASE_TITLE = 'Criminal Empire Online v0.6.4 — World Tutorial & Player Guidance Update';
+    public const VERSION = '0.6.5.1';
+    public const RELEASE_TITLE = 'Criminal Empire Online v0.6.5.1 — Map Shop UX & Navigation Hotfix';
 
     public const STARTING_CASH = 500;
     public const STARTING_BANK_CASH = 0;
@@ -18,7 +18,8 @@ final class GameConfig
     public const MAX_GANG_MEMBERS = 12;
     public const SALARY_INTERVAL_DAYS = 7;
     public const TUTORIAL_COMPLETION_REWARD = 60;
-    public const TUTORIAL_VERSION = '0.6.4';
+    public const TUTORIAL_VERSION = '0.6.5';
+    public const TUTORIAL_UPDATE_TRIGGER_VERSION = '0.6.4';
     public const TUTORIAL_KEY_FULL = 'new_player_world_guide';
     public const TUTORIAL_KEY_UPDATE = 'world_systems_update';
     public const DIRTY_JOB_OPPORTUNITY_TARGET = 6;
@@ -102,7 +103,7 @@ final class GameConfig
             self::tutorialStep('view_territory', 'pressure', 'View Territory Risk', 'territories', 'Open Territories or a map-linked territory and review local police, rival, and reward effects.', 'view_territory', []),
             self::tutorialStep('view_warehouse', 'storage', 'Understand Warehouse & Storage', 'warehouse', 'Open Warehouse or warehouse help and learn that physical loot can be stored instead of instantly sold.', 'view_warehouse', []),
             self::tutorialStep('boss_and_succession', 'storage', 'Boss and Succession', 'crew', 'Review that the boss has health, heat, XP, rank, and succession risk if severe events happen.', 'acknowledge', ['message' => 'Keep the boss alive and build eligible crew for the future.'], true),
-            self::tutorialStep('finish_world_tutorial', 'storage', 'Finish the World Tutorial', 'guide', 'Review next goals: earn money, hire crew, buy equipment, travel locally, reduce heat, explore hotspots, and save for storage.', 'view_guide', [], true, ['cash' => self::TUTORIAL_COMPLETION_REWARD, 'xp' => 15]),
+            self::tutorialStep('finish_world_tutorial', 'storage', 'Finish the World Tutorial', 'guide', 'Review next goals: earn money, hire crew, travel to map shops for equipment, reduce heat, explore hotspots, and save for storage.', 'view_guide', [], true, ['cash' => self::TUTORIAL_COMPLETION_REWARD, 'xp' => 15]),
         ];
     }
 
@@ -129,7 +130,8 @@ final class GameConfig
             'dirty_jobs' => ['page' => 'dirty jobs', 'title' => 'Dirty Jobs', 'body' => 'Dirty Jobs are structured operations with preparation, crew assignment, equipment, travel requirements, and consequences.'],
             'recruitment' => ['page' => 'recruitment', 'title' => 'Recruitment', 'body' => 'Recruitable NPCs have stats, traits, salary, morale, loyalty, heat, and sometimes local source hotspots.'],
             'crew' => ['page' => 'crew', 'title' => 'Crew', 'body' => 'Crew members are persistent NPCs. Watch their heat, injuries, status, equipment, history, and loyalty.'],
-            'equipment' => ['page' => 'equipment', 'title' => 'Inventory & Equipment', 'body' => 'Basic tools and protective gear improve outcomes. One item cannot be equipped by multiple crew at the same time.'],
+            'equipment' => ['page' => 'equipment', 'title' => 'Inventory & Equipment', 'body' => 'Inventory now focuses on owned-item management and crew loadouts. Buy gear from map shops after traveling there.'],
+            'shops' => ['page' => 'shops', 'title' => 'Map Shops', 'body' => 'Shops and dealers live on map hotspots. Travel to a shop to buy or sell; powerful items can be disabled or black-market-only by config.'],
             'warehouse' => ['page' => 'warehouse', 'title' => 'Warehouse', 'body' => 'Storage helps keep physical loot and illegal goods off the boss while adding capacity and security choices.'],
             'territories' => ['page' => 'territories', 'title' => 'Territories', 'body' => 'Territories connect to map areas. Police pressure and rival control can change local danger and rewards.'],
             'heat' => ['page' => 'heat', 'title' => 'Heat & Police', 'body' => 'Heat belongs to the boss, crew, gang, NPCs, and districts. High heat can feed investigations and travel risk.'],
@@ -147,7 +149,8 @@ final class GameConfig
             ['key' => 'quick_crimes', 'title' => 'Quick Crimes', 'body' => 'Quick Crimes are fast, low-to-mid tier actions. Some are location-specific and will tell you where to travel before starting.'],
             ['key' => 'dirty_jobs', 'title' => 'Dirty Jobs', 'body' => 'Dirty Jobs have contacts, preparation, crew roles, equipment, execution, and consequences. Some require local presence before accepting or executing.'],
             ['key' => 'crew', 'title' => 'Crew & Recruitment', 'body' => 'Crew are named NPCs with portraits, age, stats, traits, salaries, heat, morale, loyalty, and histories. Low-level dismissed crew may return to recruitment; experienced crew return to ordinary NPC life.'],
-            ['key' => 'equipment', 'title' => 'Equipment', 'body' => 'Items like gloves, masks, tools, bags, clothing, first aid, and fictional weapons modify risks and outcomes. Use them carefully because heat and searches matter.'],
+            ['key' => 'equipment', 'title' => 'Equipment', 'body' => 'Owned items can be equipped to the boss or crew from Inventory. One item cannot be equipped by multiple crew at the same time.'],
+            ['key' => 'shops', 'title' => 'Map Shops & Item Availability', 'body' => 'Buying moved into the world. Travel to tool shops, workwear stores, garages, medical counters, pawn fences, or black-market contacts to buy and sell. Shop config controls which items are enabled, restricted, black-market-only, or future-only.'],
             ['key' => 'heat_police', 'title' => 'Heat & Police Pressure', 'body' => 'Actions and travel can raise heat. Heat can exist on the boss, crew, gang, districts, and NPCs. Reduction options and quiet days help manage pressure.'],
             ['key' => 'territories', 'title' => 'Territories', 'body' => 'Territories tie map places to risk, rewards, police presence, and rival pressure. Scout before pushing deeper.'],
             ['key' => 'warehouse', 'title' => 'Warehouse & Storage', 'body' => 'Warehouses store physical loot and supplies. Stored items can reduce travel-carrying risk where systems support it.'],

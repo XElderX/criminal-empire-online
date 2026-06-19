@@ -30,6 +30,7 @@ interface AdminUserSummary {
 
 type AdminAssetType = 'item' | 'weapon' | 'drug';
 type AdminAssetFilter = AdminAssetType | 'all';
+type AdminTab = 'players' | 'catalog' | 'npcs' | 'logs';
 
 interface AdminCatalogAsset {
   id: number;
@@ -68,6 +69,7 @@ export function AdminPage({ currentUser, onChanged }: AdminPageProps) {
   const [catalogSearch, setCatalogSearch] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [activeTab, setActiveTab] = useState<AdminTab>('players');
 
   async function load(): Promise<void> {
     try {
@@ -229,68 +231,173 @@ export function AdminPage({ currentUser, onChanged }: AdminPageProps) {
       {message && <Notice message={message} kind="success" />}
       {error && <Notice message={error} kind="error" />}
 
-      <div className="content-grid two-columns admin-tools-grid">
-        <section className="card section-card">
-          <h2>Player tools</h2>
-          <div className="admin-form-grid">
-            <label>
-              User
-              <select value={targetUserId} onChange={(event) => setTargetUserId(event.target.value)}>
+      <div className="admin-tabs" role="tablist" aria-label="Admin sections">
+        {([
+          ['players', 'Players & tools'],
+          ['catalog', 'Asset catalog'],
+          ['npcs', 'NPC browser'],
+          ['logs', 'Audit log'],
+        ] as Array<[AdminTab, string]>).map(([tab, label]) => (
+          <button
+            key={tab}
+            type="button"
+            className={activeTab === tab ? 'active' : ''}
+            onClick={() => setActiveTab(tab)}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {activeTab === 'players' && (
+        <>
+          <div className="content-grid two-columns admin-tools-grid">
+            <section className="card section-card">
+              <h2>Player tools</h2>
+              <div className="admin-form-grid">
+                <label>
+                  User
+                  <select value={targetUserId} onChange={(event) => setTargetUserId(event.target.value)}>
+                    {users.map((user) => (
+                      <option key={user.id} value={user.id}>
+                        #{user.id} · {user.username}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label>
+                  Cash amount
+                  <input
+                    type="number"
+                    min="0"
+                    value={cashAmount}
+                    onChange={(event) => setCashAmount(event.target.value)}
+                  />
+                </label>
+              </div>
+
+              {selectedUser && (
+                <div className="admin-user-summary muted">
+                  <strong>
+                    #{selectedUser.id} · {selectedUser.username}
+                  </strong>
+                  <span>Role: {selectedUser.role}</span>
+                  <span>Cash: ${selectedUser.cash.toLocaleString()}</span>
+                  <span>Bank: ${selectedUser.bank_cash.toLocaleString()}</span>
+                  <span>
+                    Energy: {selectedUser.energy}/{selectedUser.max_energy}
+                  </span>
+                  <span>Heat: {selectedUser.heat}</span>
+                  <span>Boss heat: {selectedUser.boss_personal_heat}</span>
+                  <span>Gang heat: {selectedUser.gang_heat}</span>
+                </div>
+              )}
+
+              <div className="admin-action-row">
+                <button className="btn" onClick={refillEnergy}>Refill energy</button>
+                <button className="btn" onClick={setCash}>Set cash</button>
+                <button className="btn" onClick={clearHeat}>Set heat to 0</button>
+              </div>
+            </section>
+
+            <section className="card section-card">
+              <h2>Grant inventory asset</h2>
+              <div className="admin-form-grid">
+                <label>
+                  Asset type
+                  <select value={grantType} onChange={(event) => setGrantType(event.target.value as AdminAssetType)}>
+                    <option value="item">Items</option>
+                    <option value="weapon">Weapons</option>
+                    <option value="drug">Drugs</option>
+                  </select>
+                </label>
+
+                <label>
+                  Quantity
+                  <input
+                    type="number"
+                    min="1"
+                    max="10000"
+                    value={grantQuantity}
+                    onChange={(event) => setGrantQuantity(event.target.value)}
+                  />
+                </label>
+
+                <label className="admin-full-width">
+                  Asset
+                  <select value={grantAssetId} onChange={(event) => setGrantAssetId(event.target.value)}>
+                    {grantOptions.map((asset) => (
+                      <option key={`${asset.asset_type}-${asset.id}`} value={asset.id}>
+                        [{asset.asset_type}] #{asset.id} · {asset.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
+              <button className="btn primary" onClick={grantAsset} disabled={!grantAssetId}>
+                Add to inventory
+              </button>
+
+              <div className="admin-catalog-summary muted">
+                <span>Item defs: {assetCounts.item}</span>
+                <span>Weapon defs: {assetCounts.weapon}</span>
+                <span>Drug defs: {assetCounts.drug}</span>
+              </div>
+              <div className="admin-catalog-summary muted">
+                <span>Total item qty in game: {assetCounts.itemQuantity}</span>
+                <span>Total weapon qty in game: {assetCounts.weaponQuantity}</span>
+                <span>Total drug qty in game: {assetCounts.drugQuantity}</span>
+              </div>
+            </section>
+          </div>
+
+          <div className="content-grid two-columns">
+            <section className="card section-card">
+              <h2>World summary</h2>
+              <pre>{JSON.stringify(stats, null, 2)}</pre>
+            </section>
+
+            <section className="card section-card">
+              <h2>Users</h2>
+              <div className="admin-user-list">
                 {users.map((user) => (
-                  <option key={user.id} value={user.id}>
-                    #{user.id} · {user.username}
-                  </option>
+                  <article key={user.id} className="list-row compact-list-row">
+                    <div>
+                      <strong>
+                        #{user.id} · {user.username}
+                      </strong>
+                      <p className="muted">
+                        {user.role} · cash ${user.cash.toLocaleString()} · bank ${user.bank_cash.toLocaleString()} · energy {user.energy}/{user.max_energy}
+                      </p>
+                    </div>
+                  </article>
                 ))}
-              </select>
-            </label>
-
-            <label>
-              Cash amount
-              <input
-                type="number"
-                min="0"
-                value={cashAmount}
-                onChange={(event) => setCashAmount(event.target.value)}
-              />
-            </label>
+              </div>
+            </section>
           </div>
+        </>
+      )}
 
-          {selectedUser && (
-            <div className="admin-user-summary muted">
-              <strong>
-                #{selectedUser.id} · {selectedUser.username}
-              </strong>
-              <span>Role: {selectedUser.role}</span>
-              <span>Cash: ${selectedUser.cash.toLocaleString()}</span>
-              <span>Bank: ${selectedUser.bank_cash.toLocaleString()}</span>
-              <span>
-                Energy: {selectedUser.energy}/{selectedUser.max_energy}
-              </span>
-              <span>Heat: {selectedUser.heat}</span>
-              <span>Boss heat: {selectedUser.boss_personal_heat}</span>
-              <span>Gang heat: {selectedUser.gang_heat}</span>
-            </div>
-          )}
-
-          <div className="admin-action-row">
-            <button className="btn" onClick={refillEnergy}>
-              Refill energy
-            </button>
-            <button className="btn" onClick={setCash}>
-              Set cash
-            </button>
-            <button className="btn" onClick={clearHeat}>
-              Set heat to 0
-            </button>
-          </div>
-        </section>
-
+      {activeTab === 'catalog' && (
         <section className="card section-card">
-          <h2>Grant inventory asset</h2>
-          <div className="admin-form-grid">
+          <div className="card-heading">
+            <div>
+              <p className="eyebrow">Reference list</p>
+              <h2>Obtainable and equipmentable assets</h2>
+              <p className="muted">Each row shows the image, internal id, type, and the current total count present across player inventories and warehouse storage.</p>
+            </div>
+          </div>
+
+          <div className="admin-filter-row">
             <label>
-              Asset type
-              <select value={grantType} onChange={(event) => setGrantType(event.target.value as AdminAssetType)}>
+              Type filter
+              <select
+                value={catalogTypeFilter}
+                onChange={(event) => setCatalogTypeFilter(event.target.value as AdminAssetFilter)}
+              >
+                <option value="all">All</option>
                 <option value="item">Items</option>
                 <option value="weapon">Weapons</option>
                 <option value="drug">Drugs</option>
@@ -298,167 +405,82 @@ export function AdminPage({ currentUser, onChanged }: AdminPageProps) {
             </label>
 
             <label>
-              Quantity
+              Search
               <input
-                type="number"
-                min="1"
-                max="10000"
-                value={grantQuantity}
-                onChange={(event) => setGrantQuantity(event.target.value)}
+                type="text"
+                value={catalogSearch}
+                onChange={(event) => setCatalogSearch(event.target.value)}
+                placeholder="Search by id, name, code, category, or slot"
               />
             </label>
+          </div>
 
-            <label className="admin-full-width">
-              Asset
-              <select value={grantAssetId} onChange={(event) => setGrantAssetId(event.target.value)}>
-                {grantOptions.map((asset) => (
-                  <option key={`${asset.asset_type}-${asset.id}`} value={asset.id}>
-                    [{asset.asset_type}] #{asset.id} · {asset.name}
-                  </option>
+          <div className="admin-asset-table-wrap">
+            <table className="admin-asset-table">
+              <thead>
+                <tr>
+                  <th>Asset</th>
+                  <th>ID</th>
+                  <th>Type</th>
+                  <th>Category</th>
+                  <th>Slot</th>
+                  <th>Inv qty</th>
+                  <th>Storage qty</th>
+                  <th>Total in game</th>
+                  <th>Owners</th>
+                  <th>Warehouses</th>
+                  <th>Price</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredAssets.map((asset) => (
+                  <tr key={`${asset.asset_type}-${asset.id}`}>
+                    <td>
+                      <div className="admin-asset-name">
+                        <img src={getItemIcon(asset.name, asset.category || asset.asset_type)} alt="" />
+                        <div>
+                          <strong>{asset.name}</strong>
+                          <small>
+                            {asset.code ? asset.code : asset.asset_type === 'weapon' ? 'weapon' : 'inventory asset'}
+                          </small>
+                        </div>
+                      </div>
+                    </td>
+                    <td>#{asset.id}</td>
+                    <td>{asset.asset_type}</td>
+                    <td>{asset.category || '—'}</td>
+                    <td>{asset.equipment_slot || '—'}</td>
+                    <td>{Number(asset.inventory_quantity || 0).toLocaleString()}</td>
+                    <td>{Number(asset.storage_quantity || 0).toLocaleString()}</td>
+                    <td><strong>{Number(asset.total_quantity || 0).toLocaleString()}</strong></td>
+                    <td>{Number(asset.inventory_owner_count || 0).toLocaleString()}</td>
+                    <td>{Number(asset.storage_location_count || 0).toLocaleString()}</td>
+                    <td>${Number(asset.price || 0).toLocaleString()}</td>
+                  </tr>
                 ))}
-              </select>
-            </label>
-          </div>
+              </tbody>
+            </table>
 
-          <button className="btn primary" onClick={grantAsset} disabled={!grantAssetId}>
-            Add to inventory
-          </button>
-
-          <div className="admin-catalog-summary muted">
-            <span>Item defs: {assetCounts.item}</span>
-            <span>Weapon defs: {assetCounts.weapon}</span>
-            <span>Drug defs: {assetCounts.drug}</span>
-          </div>
-          <div className="admin-catalog-summary muted">
-            <span>Total item qty in game: {assetCounts.itemQuantity}</span>
-            <span>Total weapon qty in game: {assetCounts.weaponQuantity}</span>
-            <span>Total drug qty in game: {assetCounts.drugQuantity}</span>
+            {filteredAssets.length === 0 && <p className="muted">No assets matched the current filter.</p>}
           </div>
         </section>
-      </div>
+      )}
 
-      <div className="content-grid two-columns">
-        <section className="card section-card">
-          <h2>World summary</h2>
-          <pre>{JSON.stringify(stats, null, 2)}</pre>
-        </section>
+      {activeTab === 'npcs' && <AdminNpcBrowser />}
 
+      {activeTab === 'logs' && (
         <section className="card section-card">
-          <h2>Users</h2>
-          <div className="admin-user-list">
-            {users.map((user) => (
-              <article key={user.id} className="list-row compact-list-row">
-                <div>
-                  <strong>
-                    #{user.id} · {user.username}
-                  </strong>
-                  <p className="muted">
-                    {user.role} · cash ${user.cash.toLocaleString()} · bank ${user.bank_cash.toLocaleString()} · energy {user.energy}/{user.max_energy}
-                  </p>
-                </div>
+          <h2>Audit log</h2>
+          <div className="timeline compact-timeline">
+            {logs.map((log) => (
+              <article key={log.id}>
+                <span>{new Date(log.created_at).toLocaleString()}</span>
+                <strong>{log.action}</strong>
               </article>
             ))}
           </div>
         </section>
-      </div>
-
-      <section className="card section-card">
-        <div className="card-heading">
-          <div>
-            <p className="eyebrow">Reference list</p>
-            <h2>Obtainable and equipmentable assets</h2>
-            <p className="muted">Each row shows the image, internal id, type, and the current total count present across player inventories and warehouse storage.</p>
-          </div>
-        </div>
-
-        <div className="admin-filter-row">
-          <label>
-            Type filter
-            <select
-              value={catalogTypeFilter}
-              onChange={(event) => setCatalogTypeFilter(event.target.value as AdminAssetFilter)}
-            >
-              <option value="all">All</option>
-              <option value="item">Items</option>
-              <option value="weapon">Weapons</option>
-              <option value="drug">Drugs</option>
-            </select>
-          </label>
-
-          <label>
-            Search
-            <input
-              type="text"
-              value={catalogSearch}
-              onChange={(event) => setCatalogSearch(event.target.value)}
-              placeholder="Search by id, name, code, category, or slot"
-            />
-          </label>
-        </div>
-
-        <div className="admin-asset-table-wrap">
-          <table className="admin-asset-table">
-            <thead>
-              <tr>
-                <th>Asset</th>
-                <th>ID</th>
-                <th>Type</th>
-                <th>Category</th>
-                <th>Slot</th>
-                <th>Inv qty</th>
-                <th>Storage qty</th>
-                <th>Total in game</th>
-                <th>Owners</th>
-                <th>Warehouses</th>
-                <th>Price</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredAssets.map((asset) => (
-                <tr key={`${asset.asset_type}-${asset.id}`}>
-                  <td>
-                    <div className="admin-asset-name">
-                      <img src={getItemIcon(asset.name, asset.category || asset.asset_type)} alt="" />
-                      <div>
-                        <strong>{asset.name}</strong>
-                        <small>
-                          {asset.code ? asset.code : asset.asset_type === 'weapon' ? 'weapon' : 'inventory asset'}
-                        </small>
-                      </div>
-                    </div>
-                  </td>
-                  <td>#{asset.id}</td>
-                  <td>{asset.asset_type}</td>
-                  <td>{asset.category || '—'}</td>
-                  <td>{asset.equipment_slot || '—'}</td>
-                  <td>{Number(asset.inventory_quantity || 0).toLocaleString()}</td>
-                  <td>{Number(asset.storage_quantity || 0).toLocaleString()}</td>
-                  <td><strong>{Number(asset.total_quantity || 0).toLocaleString()}</strong></td>
-                  <td>{Number(asset.inventory_owner_count || 0).toLocaleString()}</td>
-                  <td>{Number(asset.storage_location_count || 0).toLocaleString()}</td>
-                  <td>${Number(asset.price || 0).toLocaleString()}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          {filteredAssets.length === 0 && <p className="muted">No assets matched the current filter.</p>}
-        </div>
-      </section>
-
-      <AdminNpcBrowser />
-
-      <section className="card section-card">
-        <h2>Audit log</h2>
-        <div className="timeline compact-timeline">
-          {logs.map((log) => (
-            <article key={log.id}>
-              <span>{new Date(log.created_at).toLocaleString()}</span>
-              <strong>{log.action}</strong>
-            </article>
-          ))}
-        </div>
-      </section>
+      )}
     </section>
   );
 }

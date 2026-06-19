@@ -8,6 +8,7 @@ export function LocationMap({
   locations,
   selectedLocation,
   onSelect,
+  onOpenShop,
 }: {
   mapAsset: string;
   overlayAsset?: string | null;
@@ -15,6 +16,7 @@ export function LocationMap({
   locations: WorldLocation[];
   selectedLocation: WorldLocation | null;
   onSelect: (location: WorldLocation) => void;
+  onOpenShop?: (shopSlug: string) => void;
 }) {
   return (
     <div className="location-map-shell">
@@ -26,6 +28,7 @@ export function LocationMap({
           location={location}
           selected={selectedLocation?.slug === location.slug}
           onSelect={onSelect}
+          onOpenShop={onOpenShop}
         />
       ))}
     </div>

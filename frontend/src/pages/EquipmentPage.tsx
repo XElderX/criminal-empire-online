@@ -4,19 +4,14 @@ import { Notice } from '../components/Notice';
 import { GameHeader } from '../components/game/GameHeader';
 import { ItemIconCard } from '../components/game/ItemIconCard';
 import { SectionCard } from '../components/game/SectionCard';
-import type { CrewMember, InventoryAsset, InventoryResponse } from '../types';
+import type { CrewMember, InventoryAsset, InventoryResponse, PageName } from '../types';
 
 interface EquipmentPageProps {
   onChanged: () => void;
+  onNavigate: (page: PageName) => void;
 }
 
-interface ShopResponse {
-  data: InventoryAsset[];
-}
-
-export function EquipmentPage({ onChanged }: EquipmentPageProps) {
-  const [itemShop, setItemShop] = useState<InventoryAsset[]>([]);
-  const [weaponShop, setWeaponShop] = useState<InventoryAsset[]>([]);
+export function EquipmentPage({ onChanged, onNavigate }: EquipmentPageProps) {
   const [inventory, setInventory] = useState<InventoryResponse>({
     items: [],
     weapons: [],
@@ -30,15 +25,11 @@ export function EquipmentPage({ onChanged }: EquipmentPageProps) {
 
   async function load(): Promise<void> {
     try {
-      const [itemShopResponse, weaponShopResponse, inventoryResponse, crewResponse] = await Promise.all([
-        api<ShopResponse>('/items'),
-        api<ShopResponse>('/weapons'),
+      const [inventoryResponse, crewResponse] = await Promise.all([
         api<InventoryResponse>('/inventory'),
         api<{ data: CrewMember[] }>('/my-gang'),
       ]);
 
-      setItemShop(itemShopResponse.data);
-      setWeaponShop(weaponShopResponse.data);
       setInventory(inventoryResponse);
       setCrew(crewResponse.data);
 
@@ -58,30 +49,6 @@ export function EquipmentPage({ onChanged }: EquipmentPageProps) {
     () => crew.find((member) => member.id === selectedMemberId) || null,
     [crew, selectedMemberId],
   );
-
-  async function buy(assetType: 'item' | 'weapon', assetId: number): Promise<void> {
-    setLoading(true);
-    setMessage('');
-    setError('');
-
-    try {
-      const response = await api<{ message: string }>(
-        assetType === 'weapon' ? `/weapons/${assetId}/buy` : `/items/${assetId}/buy`,
-        {
-          method: 'POST',
-          body: JSON.stringify({ quantity: 1 }),
-        },
-      );
-
-      setMessage(response.message);
-      await load();
-      onChanged();
-    } catch (requestError) {
-      setError((requestError as Error).message);
-    } finally {
-      setLoading(false);
-    }
-  }
 
   async function equip(assetType: 'item' | 'weapon', assetId: number): Promise<void> {
     if (!selectedMember) {
@@ -126,8 +93,8 @@ export function EquipmentPage({ onChanged }: EquipmentPageProps) {
 
     try {
       const response = await api<{ message: string }>(
-        `/my-gang/${selectedMember.id}/equipment/${equipmentId}`,
-        { method: 'DELETE' },
+        `/my-gang/${selectedMember.id}/equipment/${equipmentId}/unequip`,
+        { method: 'POST' },
       );
 
       setMessage(response.message);
@@ -140,12 +107,14 @@ export function EquipmentPage({ onChanged }: EquipmentPageProps) {
     }
   }
 
+  const ownedAssets = [...inventory.items, ...inventory.weapons];
+
   return (
     <section className="page-section">
       <GameHeader
         eyebrow="Storage locker"
-        title="Inventory / Equipment / Weapons"
-        description="Manage crew loadouts, equip owned gear, and buy both general equipment and weapons from one place."
+        title="Inventory / Equipment"
+        description="Manage owned items, crew loadouts, storage context, and equipment effects. Buying now happens through shops and dealers on the World Map."
       />
 
       {message && <Notice message={message} kind="success" />}
@@ -155,7 +124,7 @@ export function EquipmentPage({ onChanged }: EquipmentPageProps) {
         <div className="section-heading-row">
           <div>
             <h2>Crew loadout</h2>
-            <p className="muted">One asset can only be equipped by one member.</p>
+            <p className="muted">One asset can only be equipped by one member. Buy missing gear from map shops.</p>
           </div>
           <select
             value={selectedMemberId || ''}
@@ -193,91 +162,70 @@ export function EquipmentPage({ onChanged }: EquipmentPageProps) {
         )}
       </SectionCard>
 
+      <SectionCard>
+        <div className="section-heading-row">
+          <div>
+            <h2>Need gear?</h2>
+            <p className="muted">Inventory no longer sells global equipment. Travel to local shops, pawn fences, garages, medical counters, or future dealers.</p>
+          </div>
+          <div className="map-action-grid">
+            <button className="btn primary" onClick={() => onNavigate('world map')}>Open World Map</button>
+            <button className="btn" onClick={() => onNavigate('shops')}>Known shop shortcuts</button>
+          </div>
+        </div>
+        <div className="location-effect-summary">
+          <span className="info-pill">Tool shops: basic tools and bags</span>
+          <span className="info-pill">Workwear: clothing and gloves</span>
+          <span className="info-pill">Fences: sell small loot</span>
+          <span className="info-pill">Powerful items: black-market/future only</span>
+        </div>
+      </SectionCard>
+
       <section className="page-subsection">
         <h2>Owned equipment</h2>
-        <div className="inventory-icon-grid">
-          {[...inventory.items, ...inventory.weapons].map((asset) => {
-            const assetType = asset.class ? 'weapon' : 'item';
-            const available = asset.available_quantity ?? asset.quantity;
+        {ownedAssets.length === 0 ? (
+          <p className="muted">No owned equipment yet. Use Find Shops to travel to a local shop and buy starter gear.</p>
+        ) : (
+          <div className="inventory-icon-grid">
+            {ownedAssets.map((asset) => {
+              const assetType = asset.class ? 'weapon' : 'item';
+              const available = asset.available_quantity ?? asset.quantity;
 
-            return (
-              <ItemIconCard
-                item={asset}
-                key={`${assetType}-${asset.id}`}
-                footer={(
-                  <>
-                    <EffectList effects={asset.effects || {}} />
-                    <p className="muted">Available to equip: {available}</p>
-                    <button
-                      className="btn primary full-width"
-                      disabled={loading || !selectedMember || available < 1}
-                      onClick={() => equip(assetType, asset.id)}
-                    >
-                      Equip to selected member
-                    </button>
-                  </>
-                )}
-              />
-            );
-          })}
-        </div>
+              return (
+                <ItemIconCard
+                  item={asset}
+                  key={`${assetType}-${asset.id}`}
+                  footer={(
+                    <>
+                      <EffectList effects={asset.effects || {}} />
+                      <p className="muted">Owned {asset.quantity || 0} · available to equip: {available}</p>
+                      <button
+                        className="btn primary full-width"
+                        disabled={loading || !selectedMember || available < 1}
+                        onClick={() => equip(assetType, asset.id)}
+                      >
+                        Equip to selected member
+                      </button>
+                    </>
+                  )}
+                />
+              );
+            })}
+          </div>
+        )}
       </section>
 
-      <section className="page-subsection">
-        <h2>Equipment shop</h2>
-        <div className="inventory-icon-grid">
-          {itemShop.map((item) => (
-            <ItemIconCard
-              item={item}
-              key={`item-shop-${item.id}`}
-              footer={(
-                <>
-                  <strong className="money-text">${item.price}</strong>
-                  <EffectList effects={item.effects || {}} />
-                  <p className="muted">
-                    Owned {item.quantity || 0} · durability {item.base_durability || 100}%
-                  </p>
-                  <button
-                    className="btn primary full-width"
-                    disabled={loading || item.can_buy === false}
-                    onClick={() => buy('item', item.id)}
-                  >
-                    Buy one
-                  </button>
-                </>
-              )}
-            />
-          ))}
-        </div>
-      </section>
-
-      <section className="page-subsection">
-        <h2>Weapon shop</h2>
-        <div className="inventory-icon-grid">
-          {weaponShop.map((weapon) => (
-            <ItemIconCard
-              item={weapon}
-              key={`weapon-shop-${weapon.id}`}
-              footer={(
-                <>
-                  <strong className="money-text">${weapon.price}</strong>
-                  <EffectList effects={weapon.effects || {}} />
-                  <p className="muted">
-                    Slot {weapon.equipment_slot || weapon.class || 'weapon'} · durability {weapon.base_durability || 100}%
-                  </p>
-                  <button
-                    className="btn primary full-width"
-                    disabled={loading}
-                    onClick={() => buy('weapon', weapon.id)}
-                  >
-                    Buy weapon
-                  </button>
-                </>
-              )}
-            />
-          ))}
-        </div>
-      </section>
+      {inventory.drugs.length > 0 && (
+        <section className="page-subsection">
+          <h2>Carried contraband</h2>
+          <p className="muted">Carried illegal goods can increase travel search risk. Use warehouse storage where available.</p>
+          <div className="inventory-icon-grid">
+            {inventory.drugs.map((drug) => (
+              <ItemIconCard key={`drug-${drug.id}`} item={drug} footer={<p className="muted">Quantity {drug.quantity}</p>} />
+            ))}
+          </div>
+        </section>
+      )}
     </section>
   );
 }

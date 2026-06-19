@@ -36,7 +36,7 @@ export function Navigation({
     <nav className="nav">
       <div className="brand">
         Criminal Empire
-        <span className="version-badge">v 0.6.4</span>
+        <span className="version-badge">v 0.6.5.1</span>
       </div>
 
       <div className="nav-links">

@@ -46,7 +46,17 @@ export interface WorldRegion {
   recommended_level: number;
   is_active: boolean;
   sort_order: number;
+  shopSummary?: LocationShopSummary;
   riskSummary: MapRiskSummary;
+}
+
+
+export interface LocationShopSummary {
+  count: number;
+  has_black_market: boolean;
+  shop_types: string[];
+  primary_shop_slug?: string | null;
+  primary_shop_name?: string | null;
 }
 
 export interface WorldLocation {
@@ -77,6 +87,7 @@ export interface WorldLocation {
   territory?: TerritoryMapSummary | null;
   is_active: boolean;
   riskSummary: MapRiskSummary;
+  shopSummary?: LocationShopSummary;
 }
 
 export interface UserLocationState {
@@ -241,6 +252,7 @@ export interface LocationActivitiesResponse {
   crimeLeadsPreview: Array<Record<string, unknown>>;
   recruitmentPreview: Array<Record<string, unknown>>;
   businessesPreview: Array<Record<string, unknown>>;
+  shopsPreview?: Array<Record<string, unknown>>;
   territorySummary?: TerritoryMapSummary | null;
   heatSummary: MapRiskSummary;
   actions: Array<{ label: string; route_hint: string }>;
