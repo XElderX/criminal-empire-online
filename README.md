@@ -1,4 +1,4 @@
-# Criminal Empire Online v0.5.1.2 — Admin Heat Reset
+# Criminal Empire Online v0.5.1.3 — Dirty Job Crew Requirement Hotfix
 
 Criminal Empire Online is a browser-based, primarily single-player criminal empire simulation. The player begins with $500, performs small NPC-provided jobs, recruits a crew, equips members, plans structured Dirty Jobs, manages heat and consequences, and now discovers more complex crime opportunities through NPCs and city locations.
 
@@ -15,11 +15,11 @@ This project is **not Laravel**. Business logic is organized into readable contr
 
 
 
-## v0.5.1.2 highlights
+## v0.5.1.3 highlights
 
-- Admins can now select a player in the Admin panel and set that player's heat back to `0`.
-- The reset clears legacy user heat, boss personal heat, gang heat, and crew-member personal heat for that player.
-- The earlier boss-name setup remains in place for new registrations and one-time default-boss renames.
+- Every Dirty Job now requires at least `1` assigned crew member, even if an older template was configured with `0`.
+- Dirty Job execution is blocked both in the backend and UI until the minimum crew assignment is present.
+- The earlier admin heat reset and boss-name setup changes remain in place.
 
 ## v0.5 highlights
 

@@ -1,3 +1,8 @@
+## 2026-06-19 — Criminal Empire Online v0.5.1.3 — Dirty Job Crew Requirement Hotfix
+
+- Hotfixed Dirty Jobs so all runs require at least one assigned crew member, even if older template data still says `0`.
+- Added server-side validation and frontend status messaging so solo Dirty Job execution can no longer start by mistake.
+
 ## 2026-06-19 — Criminal Empire Online v0.5.1.2 — Admin Heat Reset
 
 - Added an admin panel action to clear a selected player's heat profile to `0`.

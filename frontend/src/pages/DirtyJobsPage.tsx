@@ -495,6 +495,8 @@ function OperationWorkspace({
   const takenRoles = new Set(
     Object.values(roleSelections).filter((roleCode) => roleCode !== ''),
   );
+  const selectedCrewCount = Object.values(roleSelections).filter((roleCode) => roleCode !== '').length;
+  const minimumCrew = Math.max(1, detail.opportunity.min_crew_size);
 
   return (
     <>
@@ -586,8 +588,8 @@ function OperationWorkspace({
               ))}
               {crew.length === 0 && (
                 <p className="muted">
-                  You have no active crew. Tier 1 jobs with no crew requirement
-                  can still be attempted alone.
+                  You have no active crew. Every Dirty Job now requires at least
+                  one assigned crew member before execution can begin.
                 </p>
               )}
             </div>
@@ -601,12 +603,17 @@ function OperationWorkspace({
 
             <p className="muted">
               Assigned crew: {run.assignments?.length || 0} /{' '}
-              {detail.opportunity.min_crew_size}
+              {minimumCrew}
             </p>
             <p className="muted">
               Each role can only be assigned once. If you need 2 crew members,
               give the second one a different role or leave them unassigned.
             </p>
+            {selectedCrewCount < minimumCrew && (
+              <p className="danger">
+                Assign at least {minimumCrew} crew member{minimumCrew > 1 ? 's' : ''} before execution.
+              </p>
+            )}
 
             {missingRequiredRoles.length > 0 && (
               <p className="danger">
@@ -620,7 +627,11 @@ function OperationWorkspace({
               <button className="btn" disabled={loading} onClick={onSaveAssignments}>
                 Save assignments
               </button>
-              <button className="btn primary" disabled={loading} onClick={onExecute}>
+              <button
+                className="btn primary"
+                disabled={loading || selectedCrewCount < minimumCrew}
+                onClick={onExecute}
+              >
                 Begin execution
               </button>
             </div>

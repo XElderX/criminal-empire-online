@@ -28,12 +28,12 @@ $baseDistrict = [
     'police_presence' => 45,
 ];
 
-$runner->test('Version is v0.5.1.2', function () use ($runner): void {
-    $runner->assertSame('0.5.1.2', GameConfig::VERSION);
+$runner->test('Version is v0.5.1.3', function () use ($runner): void {
+    $runner->assertSame('0.5.1.3', GameConfig::VERSION);
 });
 
-$runner->test('Release title identifies admin heat reset', function () use ($runner): void {
-    $runner->assertContains('Admin Heat Reset', GameConfig::RELEASE_TITLE);
+$runner->test('Release title identifies dirty job crew hotfix', function () use ($runner): void {
+    $runner->assertContains('Dirty Job Crew Requirement Hotfix', GameConfig::RELEASE_TITLE);
 });
 
 $runner->test('New-player starting cash is exactly 500', function () use ($runner): void {
