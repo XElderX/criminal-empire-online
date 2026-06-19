@@ -68,7 +68,7 @@ export function DirtyJobsPage({ onChanged }: DirtyJobsPageProps) {
   }, []);
 
   const activeCrew = useMemo(
-    () => crew.filter((member) => member.status === 'active'),
+    () => crew.filter((member) => member.status === 'active' && !member.is_boss && member.id > 0),
     [crew],
   );
 
@@ -142,7 +142,7 @@ export function DirtyJobsPage({ onChanged }: DirtyJobsPageProps) {
     }
 
     const assignments = Object.entries(roleSelections)
-      .filter(([, roleCode]) => roleCode !== '')
+      .filter(([memberId, roleCode]) => roleCode !== '' && Number(memberId) > 0)
       .map(([memberId, roleCode]) => ({
         member_id: Number(memberId),
         role_code: roleCode,
@@ -495,7 +495,9 @@ function OperationWorkspace({
   const takenRoles = new Set(
     Object.values(roleSelections).filter((roleCode) => roleCode !== ''),
   );
-  const selectedCrewCount = Object.values(roleSelections).filter((roleCode) => roleCode !== '').length;
+  const selectedCrewCount = Object.entries(roleSelections)
+    .filter(([memberId, roleCode]) => roleCode !== '' && Number(memberId) > 0)
+    .length;
   const minimumCrew = Math.max(1, detail.opportunity.min_crew_size);
 
   return (
