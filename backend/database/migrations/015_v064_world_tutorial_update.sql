@@ -1,13 +1,13 @@
 -- Criminal Empire Online v0.6.4 — World Tutorial & Player Guidance Update
 
 ALTER TABLE user_tutorial_progress
-  ADD COLUMN IF NOT EXISTS tutorial_key VARCHAR(80) NOT NULL DEFAULT 'new_player_world_guide' AFTER user_id,
-  ADD COLUMN IF NOT EXISTS tutorial_version VARCHAR(20) NOT NULL DEFAULT '0.6.4' AFTER tutorial_key,
-  ADD COLUMN IF NOT EXISTS completed_tutorial_version VARCHAR(20) NULL AFTER tutorial_version,
-  ADD COLUMN IF NOT EXISTS completed_update_tutorial_versions JSON NULL AFTER completed_tutorial_version,
-  ADD COLUMN IF NOT EXISTS dismissed_update_tutorial_versions JSON NULL AFTER completed_update_tutorial_versions,
-  ADD COLUMN IF NOT EXISTS reopened_at DATETIME NULL AFTER skipped_at,
-  ADD COLUMN IF NOT EXISTS last_seen_at DATETIME NULL AFTER reopened_at;
+  ADD COLUMN tutorial_key VARCHAR(80) NOT NULL DEFAULT 'new_player_world_guide' AFTER user_id,
+  ADD COLUMN tutorial_version VARCHAR(20) NOT NULL DEFAULT '0.6.4' AFTER tutorial_key,
+  ADD COLUMN completed_tutorial_version VARCHAR(20) NULL AFTER tutorial_version,
+  ADD COLUMN completed_update_tutorial_versions JSON NULL AFTER completed_tutorial_version,
+  ADD COLUMN dismissed_update_tutorial_versions JSON NULL AFTER completed_update_tutorial_versions,
+  ADD COLUMN reopened_at DATETIME NULL AFTER skipped_at,
+  ADD COLUMN last_seen_at DATETIME NULL AFTER reopened_at;
 
 CREATE TABLE IF NOT EXISTS tutorial_definitions (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
