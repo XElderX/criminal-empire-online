@@ -1,3 +1,17 @@
+## 2026-06-19 — Criminal Empire Online v0.4.2 — Fallback Street Actions
+
+- Split the Crimes page into three subtabs: `Explore Leads`, `Quick Crimes & Street Actions`, and `Fallback Street Actions`.
+- Added a 10-minute per-action cooldown to each fallback street action using server-side enforcement and UI countdowns.
+- Kept the newer quick-crime content intact while leaving the legacy fallback list trimmed down for balance.
+- Bumped application metadata to v0.4.2.
+
+## 2026-06-19 — Criminal Empire Online v0.4.1 — Fallback Street Actions & Quick Crimes
+
+- Added quick crimes and fallback street actions as a faster loop beside the v0.4 discovered crime system.
+- Added item-tag requirements, level requirements, cooldowns, lightweight preparation, random events, result panels, XP, crew XP, rare skill progression logs, heat/repeat penalties, and API routes.
+- Updated frontend Crimes page with a Quick Crimes section, requirement/missing-item display, cooldowns, event choices, result summaries, and quick action history.
+
+
 ## v0.4.0
 - Implemented Crimes Expansion: discovery locations, player-specific crime opportunities, investigation/preparation/execution flow, event decisions, NPC relationships, NPC timeline memory, admin NPC browser, dead NPC watermark UI, and v0.4 equipment/image mappings.
 - Added v0.3.6.5 asset primer: refreshed supplied crime/job/territory art and new item art for Screwdriver Set, First-Aid Kit, Surveillance Kit, Dark Clothing, Work Uniform, Vehicle Tools, and Duffel Bag.

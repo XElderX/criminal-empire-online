@@ -3,6 +3,21 @@ import { slugify } from '../utils/stringFormat';
 export const DEFAULT_ITEM_ICON = '/assets/placeholders/default_item.webp';
 
 export const itemIconMap: Record<string, string> = {
+
+  // v0.4.1 quick crime loot and fallback street-action items
+  stolen_wallet: '/assets/icons/items/valuables/wallet.webp',
+  cheap_phone: '/assets/icons/items/tools/burner_phone.webp',
+  small_electronics: '/assets/icons/items/tools/laptop.webp',
+  bicycle_parts: '/assets/icons/items/vehicles/spare_plates.webp',
+  car_lamps: '/assets/icons/items/vehicles/spare_plates.webp',
+  vehicle_parts: '/assets/icons/items/vehicles/spare_plates.webp',
+  stolen_documents: '/assets/icons/items/valuables/contract.webp',
+  stolen_goods_bundle: '/assets/icons/items/contraband/package.webp',
+  warehouse_supplies: '/assets/icons/items/tools/toolbox.webp',
+  cash_drawer_bundle: '/assets/icons/items/valuables/cash_bundle.webp',
+  small_jewelry: '/assets/icons/items/valuables/jewelry.webp',
+  low_value_vehicle: '/assets/icons/items/vehicles/sedan.webp',
+  glass_breaker: '/assets/icons/items/tools/crowbar.webp',
   // Weapons
   saturday_night_special: '/assets/icons/items/weapons/basic_pistol.webp',
   basic_pistol: '/assets/icons/items/weapons/basic_pistol.webp',

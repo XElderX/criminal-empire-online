@@ -242,6 +242,14 @@ $runner->test('Crew dismissal preserves member row and records history', functio
     );
 });
 
+$runner->test('Dirty Job service uses centralized experience updates for crew progression', function () use (
+    $runner,
+    $dirtyJobs
+): void {
+    $runner->assertContains('grantCrew(', $dirtyJobs);
+    $runner->assertContains('grantPlayer(', $dirtyJobs);
+});
+
 $runner->test('Crew dismissal blocks active assignments', function () use (
     $runner,
     $crew

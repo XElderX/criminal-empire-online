@@ -8,18 +8,21 @@ use Throwable;
 
 final class CrimeOpportunityService
 {
+    private ExperienceService $experience;
+
     public function __construct(
         private readonly RandomSource $random = new SecureRandomSource(),
         private readonly ?CrimeRiskCalculator $riskCalculator = null,
         private readonly ?CrimeNarrativeService $narrative = null
     ) {
+        $this->experience = new ExperienceService();
     }
 
     /** @return array<string, mixed> */
     public function overview(array $user): array
     {
         return [
-            'legacy_crimes' => $this->legacyCrimes(),
+            'legacy_crimes' => $this->legacyCrimes((int) $user['id']),
             'locations' => $this->locations($user),
             'opportunities' => $this->opportunities((int) $user['id']),
             'active_runs' => $this->activeRuns((int) $user['id']),
@@ -32,11 +35,44 @@ final class CrimeOpportunityService
     }
 
     /** @return array<int, array<string, mixed>> */
-    public function legacyCrimes(): array
+    public function legacyCrimes(int $userId): array
     {
-        return Database::pdo()
+        $crimes = Database::pdo()
             ->query('SELECT * FROM crimes ORDER BY energy_cost ASC')
             ->fetchAll();
+
+        foreach ($crimes as &$crime) {
+            $crime['cooldown_seconds'] = 600;
+            $crime['cooldown'] = $this->legacyCrimeCooldownState($userId, (int) $crime['id']);
+        }
+
+        return $crimes;
+    }
+
+    private function legacyCrimeCooldownState(int $userId, int $crimeId): array
+    {
+        $statement = Database::pdo()->prepare(
+            <<<'SQL'
+                SELECT
+                    MAX(available_at) AS available_at,
+                    GREATEST(0, TIMESTAMPDIFF(SECOND, NOW(), MAX(available_at))) AS remaining_seconds
+                FROM player_action_cooldowns
+                WHERE user_id = ?
+                  AND action_type = 'legacy_crime'
+                  AND action_code = ?
+                  AND available_at > NOW()
+            SQL
+        );
+        $statement->execute([$userId, 'crime_' . $crimeId]);
+        $row = $statement->fetch();
+
+        $remaining = (int) ($row['remaining_seconds'] ?? 0);
+
+        return [
+            'active' => $remaining > 0,
+            'remaining_seconds' => $remaining,
+            'available_at' => $row['available_at'] ?? null,
+        ];
     }
 
     /** @return array<int, array<string, mixed>> */
@@ -988,12 +1024,19 @@ final class CrimeOpportunityService
                 UPDATE users
                 SET dirty_money = dirty_money + ?,
                     heat = heat + ?,
-                    experience = experience + ?,
                     reputation = GREATEST(0, reputation + ?),
                     updated_at = NOW()
                 WHERE id = ?
             SQL
-        )->execute([$baseReward, $heat, $experience, $reputation, $run['user_id']]);
+        )->execute([$baseReward, $heat, $reputation, $run['user_id']]);
+
+        $this->experience->grantPlayer(
+            (int) $run['user_id'],
+            $experience,
+            'crime_v04',
+            $runId,
+            'Crime opportunity outcome: ' . $outcome
+        );
 
         $pdo->prepare(
             <<<'SQL'
@@ -1017,6 +1060,27 @@ final class CrimeOpportunityService
 
         $pdo->prepare("UPDATE crime_opportunities SET status = 'completed', updated_at = NOW() WHERE id = ?")
             ->execute([$run['opportunity_id']]);
+
+        $crewAssignments = Database::pdo()->prepare(
+            <<<'SQL'
+                SELECT gang_member_id, role_code
+                FROM crime_run_assignments
+                WHERE run_id = ?
+                ORDER BY id
+            SQL
+        );
+        $crewAssignments->execute([$runId]);
+
+        foreach ($crewAssignments->fetchAll() as $assignment) {
+            $this->experience->grantCrew(
+                (int) $run['user_id'],
+                (int) $assignment['gang_member_id'],
+                $experience,
+                'crime_v04',
+                $runId,
+                'Participated in crime opportunity as ' . (string) $assignment['role_code']
+            );
+        }
 
         if (!empty($opportunity['source_npc_id'])) {
             $relationshipChange = in_array($outcome, ['success', 'critical_success'], true) ? 4 : -3;

@@ -2733,6 +2733,28 @@ small {
   gap: 1.35rem;
 }
 
+.crimes-subtab-shell {
+  border-color: rgba(76, 160, 255, 0.22);
+}
+
+.crimes-subtab-heading {
+  margin-bottom: 0.9rem;
+}
+
+.crimes-subtab-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.crimes-subtab-row .btn {
+  min-width: 13rem;
+}
+
+.crimes-subtab-active {
+  box-shadow: 0 0 0 1px rgba(76, 160, 255, 0.18), 0 14px 34px rgba(0, 0, 0, 0.32);
+}
+
 .crime-loop-panel,
 .crime-event-panel {
   border-color: rgba(185, 136, 74, 0.35);
@@ -3071,6 +3093,16 @@ small {
 }
 
 @media (max-width: 720px) {
+  .crimes-subtab-row {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .crimes-subtab-row .btn {
+    width: 100%;
+    min-width: 0;
+  }
+
   .crime-opportunity-select,
   .admin-npc-card {
     grid-template-columns: 1fr;
@@ -3085,4 +3117,103 @@ small {
   .crime-action-row {
     flex-direction: column;
   }
+}
+
+
+/* v0.4.1 — Quick Crimes & Fallback Street Actions */
+.quick-crimes-panel {
+  margin-top: 1.5rem;
+  border-color: rgba(207, 160, 88, 0.32);
+}
+
+.quick-crime-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.quick-crime-card {
+  background:
+    linear-gradient(145deg, rgba(29, 29, 29, 0.95), rgba(14, 14, 16, 0.98)),
+    radial-gradient(circle at top left, rgba(207, 160, 88, 0.12), transparent 34%);
+  border: 1px solid rgba(207, 160, 88, 0.22);
+  border-radius: 18px;
+  padding: 1rem;
+  box-shadow: 0 20px 44px rgba(0, 0, 0, 0.28);
+}
+
+.quick-crime-card.locked {
+  opacity: 0.8;
+}
+
+.quick-card-topline,
+.chip-row,
+.crime-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.quick-prep-list {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0.8rem 0;
+}
+
+.quick-requirements {
+  margin: 0.8rem 0;
+}
+
+.requirement-chip {
+  border: 1px solid rgba(132, 150, 166, 0.28);
+  border-radius: 999px;
+  padding: 0.25rem 0.55rem;
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.04);
+  font-size: 0.78rem;
+}
+
+.requirement-chip.required {
+  color: var(--accent-risk);
+  border-color: rgba(230, 169, 74, 0.36);
+  background: rgba(230, 169, 74, 0.08);
+}
+
+.missing-item-notice {
+  border: 1px solid rgba(213, 83, 83, 0.32);
+  background: rgba(213, 83, 83, 0.08);
+  color: var(--text-main);
+  border-radius: 14px;
+  padding: 0.75rem;
+  margin: 0.75rem 0;
+}
+
+.missing-item-notice ul {
+  margin: 0.35rem 0 0;
+  padding-left: 1.1rem;
+}
+
+.quick-result-panel,
+.quick-event-card {
+  border: 1px solid rgba(94, 175, 255, 0.28);
+  border-radius: 18px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background:
+    linear-gradient(145deg, rgba(15, 25, 33, 0.92), rgba(13, 14, 18, 0.96)),
+    radial-gradient(circle at top right, rgba(94, 175, 255, 0.12), transparent 34%);
+}
+
+.quick-history-panel {
+  margin-top: 1.2rem;
+}
+
+.success-text {
+  color: var(--accent-money);
+  font-weight: 700;
+}
+
+.warning-text {
+  color: var(--accent-risk);
 }

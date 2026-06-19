@@ -4,8 +4,8 @@ namespace App\Config;
 
 final class GameConfig
 {
-    public const VERSION = '0.4.0';
-    public const RELEASE_TITLE = 'Criminal Empire Online v0.4 — Crimes Expansion';
+    public const VERSION = '0.4.2';
+    public const RELEASE_TITLE = 'Criminal Empire Online v0.4.2 — Fallback Street Actions';
 
     public const STARTING_CASH = 500;
     public const STARTING_BANK_CASH = 0;

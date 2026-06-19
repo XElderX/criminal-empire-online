@@ -11,18 +11,6 @@ INSERT INTO crimes (name,description,risk_level,energy_cost,success_rate,reward_
 SELECT 'Protection Collection','Collect protection money from small shops.',2,10,80,800,2500,3,12,NOW(),NOW()
 FROM DUAL
 WHERE NOT EXISTS (SELECT 1 FROM crimes WHERE name = 'Protection Collection');
-INSERT INTO crimes (name,description,risk_level,energy_cost,success_rate,reward_min,reward_max,heat_gain,experience_gain,created_at,updated_at)
-SELECT 'Store Robbery','Armed robbery against a local store.',3,15,70,1000,5000,5,20,NOW(),NOW()
-FROM DUAL
-WHERE NOT EXISTS (SELECT 1 FROM crimes WHERE name = 'Store Robbery');
-INSERT INTO crimes (name,description,risk_level,energy_cost,success_rate,reward_min,reward_max,heat_gain,experience_gain,created_at,updated_at)
-SELECT 'Vehicle Theft','Steal and strip a luxury vehicle.',4,25,60,5000,18000,10,45,NOW(),NOW()
-FROM DUAL
-WHERE NOT EXISTS (SELECT 1 FROM crimes WHERE name = 'Vehicle Theft');
-INSERT INTO crimes (name,description,risk_level,energy_cost,success_rate,reward_min,reward_max,heat_gain,experience_gain,created_at,updated_at)
-SELECT 'Armored Truck Heist','High-risk crew job with major payout.',6,40,40,25000,100000,25,100,NOW(),NOW()
-FROM DUAL
-WHERE NOT EXISTS (SELECT 1 FROM crimes WHERE name = 'Armored Truck Heist');
 
 INSERT INTO weapons (name,class,damage,accuracy,reliability,concealment,maintenance_cost,price,created_at,updated_at)
 SELECT 'Saturday Night Special','pistol',12,55,60,90,25,1200,NOW(),NOW()

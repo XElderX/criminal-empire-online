@@ -478,6 +478,8 @@ export interface Crime {
   heat_gain: number;
   reward_min: number;
   reward_max: number;
+  cooldown_seconds?: number;
+  cooldown?: QuickCrimeCooldown;
 }
 
 export interface CrimeDiscoveryLocation {
@@ -667,6 +669,128 @@ export interface CrimeOverview {
   equipment: CrimeEquipmentOption[];
   preparation_options: CrimePreparationOption[];
 }
+
+
+export interface QuickCrimePreparationOption {
+  code: string;
+  name: string;
+  description: string;
+  cash_cost: number;
+  energy_cost: number;
+  effects: Record<string, number>;
+}
+
+export interface QuickCrimePreparedAction {
+  id: number;
+  code: string;
+  name: string;
+  description: string;
+  cash_cost: number;
+  energy_cost: number;
+  effects: Record<string, number>;
+  applied_at?: string;
+}
+
+export interface QuickCrimeCooldown {
+  active: boolean;
+  remaining_seconds: number;
+  available_at?: string | null;
+}
+
+export interface QuickCrimeMissingItem {
+  tag: string;
+  label: string;
+  type: string;
+}
+
+export interface QuickCrimeTemplate {
+  id: number;
+  code: string;
+  title: string;
+  category: string;
+  description: string;
+  tier: number;
+  min_level: number;
+  energy_cost: number;
+  max_heat?: number | null;
+  cooldown_seconds: number;
+  base_success_rate: number;
+  base_event_chance: number;
+  base_disaster_chance: number;
+  reward_min: number;
+  reward_max: number;
+  heat_min: number;
+  heat_max: number;
+  xp_min: number;
+  xp_max: number;
+  required_all_item_tags: string[];
+  required_any_item_tags: string[];
+  recommended_item_tags: string[];
+  required_crew_count: number;
+  recommended_crew_roles: string[];
+  relevant_stats: string[];
+  preparation_options: QuickCrimePreparationOption[];
+  can_start: boolean;
+  locked_reasons: string[];
+  missing_items: QuickCrimeMissingItem[];
+  cooldown: QuickCrimeCooldown;
+  prepared: QuickCrimePreparedAction[];
+}
+
+export interface QuickCrimeEventChoice {
+  code: string;
+  label: string;
+  description?: string;
+  effects?: Record<string, number>;
+}
+
+export interface QuickCrimeEvent {
+  id: number;
+  event_code: string;
+  title: string;
+  description: string;
+  status: string;
+  choices: QuickCrimeEventChoice[];
+}
+
+export interface QuickCrimeResultPayload {
+  outcome?: string;
+  title?: string;
+  description?: string;
+  decision_code?: string | null;
+  cash_gained?: number;
+  loot?: Array<{ item_code: string; quantity: number }>;
+  xp?: Record<string, unknown>;
+  crew_xp?: Array<Record<string, unknown>>;
+  skill_gains?: Array<Record<string, unknown>>;
+  cooldown_started?: boolean;
+}
+
+export interface QuickCrimeRun {
+  id: number;
+  template_id: number;
+  status: string;
+  outcome?: string | null;
+  success_chance: number;
+  event_chance: number;
+  disaster_chance: number;
+  reward_cash: number;
+  reward_dirty_cash: number;
+  heat_gained: number;
+  experience_gained: number;
+  result?: QuickCrimeResultPayload | null;
+  event?: QuickCrimeEvent | null;
+  started_at?: string | null;
+  resolved_at?: string | null;
+}
+
+export interface QuickCrimeOverview {
+  data: QuickCrimeTemplate[];
+  active_runs: QuickCrimeRun[];
+  history: QuickCrimeRun[];
+  progression: Record<string, unknown>;
+}
+
 
 export interface AdminNpcSummary {
   id: number;

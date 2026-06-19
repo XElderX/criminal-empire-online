@@ -63,6 +63,11 @@ $runner->test('Crime service is transaction-aware and prevents duplicate reward 
     $runner->assertContains('resolved = 1', $service);
 });
 
+$runner->test('Crime service uses centralized experience updates for player and crew', function () use ($runner, $service): void {
+    $runner->assertContains('grantPlayer(', $service);
+    $runner->assertContains('grantCrew(', $service);
+});
+
 $runner->test('Risk calculator uses crew, equipment, heat, police and contact reliability', function () use ($runner, $risk): void {
     foreach (['crewStatAverage', 'police_risk', 'loot_capacity', 'district_police_presence', 'contact_reliability'] as $needle) {
         $runner->assertContains($needle, $risk);
