@@ -500,17 +500,26 @@ final class DirtyJobService
                 <<<'SQL'
                     INSERT INTO dirty_job_assignments (
                         dirty_job_run_id,
+                        actor_type,
+                        actor_id,
                         gang_member_id,
                         role_code,
                         created_at
-                    ) VALUES (?, ?, ?, NOW())
+                    ) VALUES (?, ?, ?, ?, ?, NOW())
                 SQL
             );
 
             foreach ($normalized as $assignment) {
+                $actorType = $assignment['member_id'] === 0 ? 'boss' : 'crew';
+                $actorId = $actorType === 'boss'
+                    ? (int) $user['id']
+                    : (int) $assignment['member_id'];
+
                 $insert->execute([
                     $runId,
-                    $assignment['member_id'],
+                    $actorType,
+                    $actorId,
+                    $actorType === 'crew' ? $assignment['member_id'] : null,
                     $assignment['role_code'],
                 ]);
             }
@@ -574,7 +583,14 @@ final class DirtyJobService
                 SQL
             )->execute([$run['energy_cost'], $freshUser['id']]);
 
-            $memberIds = array_column($assignments, 'gang_member_id');
+            $memberIds = array_values(array_filter(
+                array_map(
+                    static fn (array $assignment): int => (($assignment['actor_type'] ?? 'crew') === 'crew')
+                        ? (int) ($assignment['gang_member_id'] ?? 0)
+                        : 0,
+                    $assignments
+                )
+            ));
             $equipment = (new EquipmentEffectService())->loadForMembers($memberIds);
             $equipmentInsert = $pdo->prepare(
                 <<<'SQL'
@@ -614,6 +630,10 @@ final class DirtyJobService
             );
 
             foreach ($assignments as $assignment) {
+                if (($assignment['actor_type'] ?? 'crew') === 'boss') {
+                    continue;
+                }
+
                 $memberUpdate->execute([
                     $runId,
                     $assignment['gang_member_id'],
@@ -929,7 +949,12 @@ final class DirtyJobService
             (int) $run['id'],
             (int) $calculation['heat'],
             'Dirty Job heat: ' . $run['title'],
-            array_map(static fn (array $assignment): int => (int) $assignment['gang_member_id'], $assignments ?? []),
+            array_values(array_filter(array_map(
+                static fn (array $assignment): int => (($assignment['actor_type'] ?? 'crew') === 'crew')
+                    ? (int) ($assignment['gang_member_id'] ?? 0)
+                    : 0,
+                $assignments ?? []
+            ))),
             null,
             (string) $run['category']
         );
@@ -1245,54 +1270,75 @@ final class DirtyJobService
         };
         $injuryRisk = max(0, min(80, $baseInjuryRisk + $injuryModifier));
         $targetIndex = $this->random->integer(0, count($assignments) - 1);
-        $targetMemberId = (int) $assignments[$targetIndex]['gang_member_id'];
+        $targetAssignment = $assignments[$targetIndex];
+        $targetMemberId = (int) ($targetAssignment['gang_member_id'] ?? 0);
+        $targetIsBoss = ($targetAssignment['actor_type'] ?? 'crew') === 'boss';
         $arrestApplied = false;
         $injuryApplied = false;
 
         if ($outcome === 'critical_failure' && $this->random->integer(1, 100) <= 30) {
-            $releaseAt = (new DateTimeImmutable())
-                ->add(new DateInterval('P1D'))
-                ->format('Y-m-d H:i:s');
+            if ($targetIsBoss) {
+                $hours = 24;
+                (new BossCharacterService())->arrestBoss(
+                    (int) $user['id'],
+                    $hours,
+                    "The boss was arrested during {$run['title']}."
+                );
 
-            Database::pdo()->prepare(
-                <<<'SQL'
-                    UPDATE player_gang_members
-                    SET
-                        status = 'arrested',
-                        arrests = arrests + 1,
-                        arrested_until = ?,
-                        current_assignment_type = NULL,
-                        current_assignment_id = NULL,
-                        jobs_failed = jobs_failed + 1,
-                        updated_at = NOW()
-                    WHERE id = ?
-                SQL
-            )->execute([$releaseAt, $targetMemberId]);
+                $consequences[] = [
+                    'member_id' => 0,
+                    'actor_type' => 'boss',
+                    'type' => 'arrest',
+                    'release_at' => (new DateTimeImmutable())
+                        ->add(new DateInterval('PT24H'))
+                        ->format('Y-m-d H:i:s'),
+                ];
+            } else {
+                $releaseAt = (new DateTimeImmutable())
+                    ->add(new DateInterval('P1D'))
+                    ->format('Y-m-d H:i:s');
 
-            $this->experience->grantCrew(
-                (int) $user['id'],
-                $targetMemberId,
-                $experience,
-                'dirty_job',
-                (int) $run['id'],
-                'Dirty Job outcome while arrested: ' . $run['title']
-            );
+                Database::pdo()->prepare(
+                    <<<'SQL'
+                        UPDATE player_gang_members
+                        SET
+                            status = 'arrested',
+                            arrests = arrests + 1,
+                            arrested_until = ?,
+                            current_assignment_type = NULL,
+                            current_assignment_id = NULL,
+                            jobs_failed = jobs_failed + 1,
+                            updated_at = NOW()
+                        WHERE id = ?
+                    SQL
+                )->execute([$releaseAt, $targetMemberId]);
 
-            (new CrewHistoryService())->record(
-                $targetMemberId,
-                (int) $user['id'],
-                'arrested',
-                'Arrested after a Dirty Job',
-                "The member was arrested during {$run['title']} and is expected to return after a short sentence.",
-                ['release_at' => $releaseAt],
-                (int) $run['id']
-            );
+                $this->experience->grantCrew(
+                    (int) $user['id'],
+                    $targetMemberId,
+                    $experience,
+                    'dirty_job',
+                    (int) $run['id'],
+                    'Dirty Job outcome while arrested: ' . $run['title']
+                );
 
-            $consequences[] = [
-                'member_id' => $targetMemberId,
-                'type' => 'arrest',
-                'release_at' => $releaseAt,
-            ];
+                (new CrewHistoryService())->record(
+                    $targetMemberId,
+                    (int) $user['id'],
+                    'arrested',
+                    'Arrested after a Dirty Job',
+                    "The member was arrested during {$run['title']} and is expected to return after a short sentence.",
+                    ['release_at' => $releaseAt],
+                    (int) $run['id']
+                );
+
+                $consequences[] = [
+                    'member_id' => $targetMemberId,
+                    'actor_type' => 'crew',
+                    'type' => 'arrest',
+                    'release_at' => $releaseAt,
+                ];
+            }
             $arrestApplied = true;
         } elseif ($this->random->integer(1, 100) <= $injuryRisk) {
             $healthLoss = $this->random->integer(8, $outcome === 'critical_failure' ? 28 : 18);
@@ -1301,54 +1347,74 @@ final class DirtyJobService
                 ->add(new DateInterval("PT{$recoveryHours}H"))
                 ->format('Y-m-d H:i:s');
 
-            Database::pdo()->prepare(
-                <<<'SQL'
-                    UPDATE player_gang_members
-                    SET
-                        status = 'injured',
-                        health = GREATEST(1, health - ?),
-                        injuries = injuries + 1,
-                        recovering_until = ?,
-                        current_assignment_type = NULL,
-                        current_assignment_id = NULL,
-                        jobs_failed = jobs_failed + 1,
-                        updated_at = NOW()
-                    WHERE id = ?
-                SQL
-            )->execute([
-                $healthLoss,
-                $recoverAt,
-                $targetMemberId,
-            ]);
+            if ($targetIsBoss) {
+                $severity = $outcome === 'critical_failure' ? 'serious' : 'moderate';
+                (new BossCharacterService())->injureBoss(
+                    (int) $user['id'],
+                    $severity,
+                    'dirty_job',
+                    (int) $run['id'],
+                    "The boss was injured during {$run['title']}."
+                );
 
-            $this->experience->grantCrew(
-                (int) $user['id'],
-                $targetMemberId,
-                $experience,
-                'dirty_job',
-                (int) $run['id'],
-                'Dirty Job outcome while injured: ' . $run['title']
-            );
-
-            (new CrewHistoryService())->record(
-                $targetMemberId,
-                (int) $user['id'],
-                'injured',
-                'Injured during a Dirty Job',
-                "The member was injured during {$run['title']} and needs time to recover.",
-                [
+                $consequences[] = [
+                    'member_id' => 0,
+                    'actor_type' => 'boss',
+                    'type' => 'injury',
                     'health_loss' => $healthLoss,
                     'recover_at' => $recoverAt,
-                ],
-                (int) $run['id']
-            );
+                ];
+            } else {
+                Database::pdo()->prepare(
+                    <<<'SQL'
+                        UPDATE player_gang_members
+                        SET
+                            status = 'injured',
+                            health = GREATEST(1, health - ?),
+                            injuries = injuries + 1,
+                            recovering_until = ?,
+                            current_assignment_type = NULL,
+                            current_assignment_id = NULL,
+                            jobs_failed = jobs_failed + 1,
+                            updated_at = NOW()
+                        WHERE id = ?
+                    SQL
+                )->execute([
+                    $healthLoss,
+                    $recoverAt,
+                    $targetMemberId,
+                ]);
 
-            $consequences[] = [
-                'member_id' => $targetMemberId,
-                'type' => 'injury',
-                'health_loss' => $healthLoss,
-                'recover_at' => $recoverAt,
-            ];
+                $this->experience->grantCrew(
+                    (int) $user['id'],
+                    $targetMemberId,
+                    $experience,
+                    'dirty_job',
+                    (int) $run['id'],
+                    'Dirty Job outcome while injured: ' . $run['title']
+                );
+
+                (new CrewHistoryService())->record(
+                    $targetMemberId,
+                    (int) $user['id'],
+                    'injured',
+                    'Injured during a Dirty Job',
+                    "The member was injured during {$run['title']} and needs time to recover.",
+                    [
+                        'health_loss' => $healthLoss,
+                        'recover_at' => $recoverAt,
+                    ],
+                    (int) $run['id']
+                );
+
+                $consequences[] = [
+                    'member_id' => $targetMemberId,
+                    'actor_type' => 'crew',
+                    'type' => 'injury',
+                    'health_loss' => $healthLoss,
+                    'recover_at' => $recoverAt,
+                ];
+            }
             $injuryApplied = true;
         }
 
@@ -1358,12 +1424,28 @@ final class DirtyJobService
             : (int) floor($totalReward / max(1, count($assignments)));
 
         foreach ($assignments as $assignment) {
-            $memberId = (int) $assignment['gang_member_id'];
+            $actorType = (string) ($assignment['actor_type'] ?? 'crew');
+            $memberId = (int) ($assignment['gang_member_id'] ?? 0);
 
             if (
                 ($arrestApplied || $injuryApplied)
-                && $memberId === $targetMemberId
+                && (($actorType === 'boss' && $targetIsBoss) || ($actorType === 'crew' && $memberId === $targetMemberId))
             ) {
+                continue;
+            }
+
+            if ($actorType === 'boss') {
+                (new BossCharacterService())->recordHistory(
+                    (int) $user['id'],
+                    $completed ? 'dirty_job_completed' : 'dirty_job_failed',
+                    $completed ? 'Dirty Job completed' : 'Dirty Job failed',
+                    "The boss participated as {$assignment['role_code']} in {$run['title']}.",
+                    [
+                        'outcome' => $outcome,
+                        'role' => $assignment['role_code'],
+                        'run_id' => (int) $run['id'],
+                    ]
+                );
                 continue;
             }
 
@@ -1619,6 +1701,37 @@ final class DirtyJobService
         int $runId,
         int $memberId
     ): void {
+        if ($memberId === 0) {
+            $boss = $this->bossActor($userId);
+
+            if (($boss['status'] ?? 'active') !== 'active') {
+                throw new RuntimeException('The boss is unavailable for this Dirty Job.');
+            }
+
+            if ((int) ($boss['health'] ?? 100) < 30) {
+                throw new RuntimeException('The boss is too injured to work this Dirty Job.');
+            }
+
+            $statement = Database::pdo()->prepare(
+                <<<'SQL'
+                    SELECT COUNT(*)
+                    FROM dirty_job_assignments assignment
+                    JOIN dirty_job_runs run ON run.id = assignment.dirty_job_run_id
+                    WHERE assignment.actor_type = 'boss'
+                      AND assignment.actor_id = ?
+                      AND assignment.dirty_job_run_id <> ?
+                      AND run.status IN ('accepted', 'preparing', 'ready', 'executing', 'awaiting_decision')
+                SQL
+            );
+            $statement->execute([$userId, $runId]);
+
+            if ((int) $statement->fetchColumn() > 0) {
+                throw new RuntimeException('The boss is already assigned to another Dirty Job.');
+            }
+
+            return;
+        }
+
         $statement = Database::pdo()->prepare(
             <<<'SQL'
                 SELECT *
@@ -1663,7 +1776,7 @@ final class DirtyJobService
             $memberId = (int) ($assignment['member_id'] ?? 0);
             $roleCode = trim((string) ($assignment['role_code'] ?? ''));
 
-            if ($memberId <= 0 || !in_array($roleCode, $allowedRoles, true)) {
+            if ($memberId < 0 || !in_array($roleCode, $allowedRoles, true)) {
                 throw new RuntimeException('Invalid crew member or role.');
             }
 
@@ -1683,6 +1796,8 @@ final class DirtyJobService
                 SELECT
                     assignment.id,
                     assignment.dirty_job_run_id,
+                    assignment.actor_type,
+                    assignment.actor_id,
                     assignment.gang_member_id,
                     assignment.role_code,
                     member.*,
@@ -1702,10 +1817,32 @@ final class DirtyJobService
         $assignments = $statement->fetchAll();
 
         if (!$withTraits) {
+            foreach ($assignments as &$assignment) {
+                if (($assignment['actor_type'] ?? 'crew') === 'boss') {
+                    $assignment = [
+                        ...$assignment,
+                        ...$this->bossActor((int) ($assignment['actor_id'] ?? 0)),
+                        'gang_member_id' => 0,
+                        'is_boss' => true,
+                    ];
+                }
+            }
             return $assignments;
         }
 
         foreach ($assignments as &$assignment) {
+            if (($assignment['actor_type'] ?? 'crew') === 'boss') {
+                $assignment = [
+                    ...$assignment,
+                    ...$this->bossActor((int) ($assignment['actor_id'] ?? 0)),
+                    'gang_member_id' => 0,
+                    'is_boss' => true,
+                ];
+                $assignment['trait_effects'] = [];
+                $assignment['member'] = $assignment;
+                continue;
+            }
+
             $traits = $this->loadTraitEffects((int) $assignment['npc_id']);
             $assignment['trait_effects'] = $traits;
             $assignment['member'] = $assignment;
@@ -2056,8 +2193,41 @@ final class DirtyJobService
             SQL
         );
         $statement->execute([$userId]);
+        $count = (int) $statement->fetchColumn();
+        $boss = $this->bossActor($userId);
 
-        return (int) $statement->fetchColumn();
+        if (($boss['status'] ?? 'active') === 'active' && (int) ($boss['health'] ?? 100) >= 30) {
+            $busyStatement = Database::pdo()->prepare(
+                <<<'SQL'
+                    SELECT COUNT(*)
+                    FROM dirty_job_assignments assignment
+                    JOIN dirty_job_runs run ON run.id = assignment.dirty_job_run_id
+                    WHERE assignment.actor_type = 'boss'
+                      AND assignment.actor_id = ?
+                      AND run.status IN ('accepted', 'preparing', 'ready', 'executing', 'awaiting_decision')
+                SQL
+            );
+            $busyStatement->execute([$userId]);
+
+            if ((int) $busyStatement->fetchColumn() === 0) {
+                $count++;
+            }
+        }
+
+        return $count;
+    }
+
+    private function bossActor(int $userId): array
+    {
+        $boss = (new BossCharacterService())->asCrewMember($userId);
+
+        return [
+            ...$boss,
+            'actor_type' => 'boss',
+            'actor_id' => $userId,
+            'gang_member_id' => 0,
+            'is_boss' => true,
+        ];
     }
 
     private function userHasItemCode(int $userId, string $itemCode): bool

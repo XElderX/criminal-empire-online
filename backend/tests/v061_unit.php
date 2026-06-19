@@ -9,12 +9,12 @@ use Tests\TestRunner;
 
 $runner = new TestRunner();
 
-$runner->test('Version is v0.6.1.1', function () use ($runner): void {
-    $runner->assertSame('0.6.1.1', GameConfig::VERSION);
+$runner->test('Version is v0.6.1.2', function () use ($runner): void {
+    $runner->assertSame('0.6.1.2', GameConfig::VERSION);
 });
 
-$runner->test('Release title identifies crimes tab sql hotfix', function () use ($runner): void {
-    $runner->assertContains('Crimes Tab SQL Hotfix', GameConfig::RELEASE_TITLE);
+$runner->test('Release title identifies dirty job boss support', function () use ($runner): void {
+    $runner->assertContains('Dirty Job Boss Support', GameConfig::RELEASE_TITLE);
 });
 
 $runner->test('Location modifiers stay inside safe bounds', function () use ($runner): void {
@@ -36,6 +36,10 @@ $runner->test('v0.6.1 migration exists', function () use ($runner): void {
 
 $runner->test('v0.6.1 seeder exists', function () use ($runner): void {
     $runner->assertTrue(is_file(dirname(__DIR__) . '/database/seeders/012_v061_map_gameplay_integration_seed.sql'));
+});
+
+$runner->test('v0.6.1.2 migration exists', function () use ($runner): void {
+    $runner->assertTrue(is_file(dirname(__DIR__) . '/database/migrations/013_v0612_dirty_job_boss_support.sql'));
 });
 
 exit($runner->finish());
