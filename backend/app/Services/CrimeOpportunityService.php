@@ -425,8 +425,8 @@ final class CrimeOpportunityService
             $insert = $pdo->prepare(
                 <<<'SQL'
                     INSERT INTO crime_opportunity_assignments (
-                        opportunity_id, user_id, gang_member_id, role_code, assigned_at
-                    ) VALUES (?, ?, ?, ?, NOW())
+                        opportunity_id, user_id, actor_type, actor_id, gang_member_id, role_code, assigned_at
+                    ) VALUES (?, ?, ?, ?, ?, ?, NOW())
                 SQL
             );
 
@@ -434,7 +434,12 @@ final class CrimeOpportunityService
                 $memberId = (int) ($assignment['gang_member_id'] ?? 0);
                 $roleCode = trim((string) ($assignment['role_code'] ?? 'helper'));
 
-                if ($memberId <= 0) {
+                if ($memberId === 0) {
+                    $insert->execute([$opportunityId, $user['id'], 'boss', (int) $user['id'], null, $roleCode ?: 'lead']);
+                    continue;
+                }
+
+                if ($memberId < 0) {
                     continue;
                 }
 
@@ -448,7 +453,7 @@ final class CrimeOpportunityService
                     throw new RuntimeException('Only active crew members can be assigned.');
                 }
 
-                $insert->execute([$opportunityId, $user['id'], $memberId, $roleCode ?: 'helper']);
+                $insert->execute([$opportunityId, $user['id'], 'crew', $memberId, $memberId, $roleCode ?: 'helper']);
             }
 
             AuditService::log((int) $user['id'], 'crime.assign_crew', [
@@ -892,11 +897,13 @@ final class CrimeOpportunityService
     {
         $statement = Database::pdo()->prepare(
             <<<'SQL'
-                SELECT member.id, member.npc_id, npc.role AS role_code, member.status,
+                SELECT member.id, member.npc_id, 'crew' AS actor_type, member.id AS actor_id,
+                       npc.role AS role_code, member.status,
                        member.strength, member.shooting, member.driving,
                        member.intelligence, member.stealth, member.intimidation,
                        member.discipline, member.street_knowledge, member.endurance,
-                       member.loyalty, member.morale, npc.first_name, npc.last_name, npc.nickname
+                       member.loyalty, member.morale, member.personal_heat,
+                       npc.first_name, npc.last_name, npc.nickname
                 FROM player_gang_members member
                 JOIN npcs npc ON npc.id = member.npc_id
                 WHERE member.user_id = ?
@@ -905,8 +912,11 @@ final class CrimeOpportunityService
             SQL
         );
         $statement->execute([$userId]);
+        $crew = $statement->fetchAll();
 
-        return $statement->fetchAll();
+        array_unshift($crew, $this->bossActor($userId));
+
+        return $crew;
     }
 
     /** @return array<int, array<string, mixed>> */
@@ -1038,9 +1048,15 @@ final class CrimeOpportunityService
             'Crime opportunity outcome: ' . $outcome
         );
 
-        $heatAssignments = Database::pdo()->prepare('SELECT gang_member_id FROM crime_run_assignments WHERE run_id = ?');
+        $heatAssignments = Database::pdo()->prepare('SELECT actor_type, actor_id, gang_member_id FROM crime_run_assignments WHERE run_id = ?');
         $heatAssignments->execute([$runId]);
         $assignments = $heatAssignments->fetchAll();
+
+        $bossInvolved = in_array(
+            'boss',
+            array_map(static fn (array $assignment): string => (string) ($assignment['actor_type'] ?? 'crew'), $assignments ?? []),
+            true
+        );
 
         (new HeatPressureService())->recordCrimeHeat(
             (int) $run['user_id'],
@@ -1048,9 +1064,10 @@ final class CrimeOpportunityService
             $runId,
             $heat,
             'Major crime heat: ' . $opportunity['title'],
-            array_map(static fn (array $assignment): int => (int) $assignment['gang_member_id'], $assignments ?? []),
+            array_values(array_filter(array_map(static fn (array $assignment): int => (int) ($assignment['gang_member_id'] ?? 0), $assignments ?? []))),
             isset($opportunity['territory_id']) ? (int) $opportunity['territory_id'] : null,
-            (string) $template['category']
+            (string) $template['category'],
+            $bossInvolved
         );
 
         $pdo->prepare(
@@ -1078,7 +1095,7 @@ final class CrimeOpportunityService
 
         $crewAssignments = Database::pdo()->prepare(
             <<<'SQL'
-                SELECT gang_member_id, role_code
+                SELECT actor_type, gang_member_id, role_code
                 FROM crime_run_assignments
                 WHERE run_id = ?
                 ORDER BY id
@@ -1087,6 +1104,10 @@ final class CrimeOpportunityService
         $crewAssignments->execute([$runId]);
 
         foreach ($crewAssignments->fetchAll() as $assignment) {
+            if (($assignment['actor_type'] ?? 'crew') === 'boss' || empty($assignment['gang_member_id'])) {
+                continue;
+            }
+
             $this->experience->grantCrew(
                 (int) $run['user_id'],
                 (int) $assignment['gang_member_id'],
@@ -1221,6 +1242,8 @@ final class CrimeOpportunityService
                 JOIN player_gang_members member ON member.id = assignment.gang_member_id
                 JOIN npcs npc ON npc.id = member.npc_id
                 WHERE assignment.run_id = ?
+                  AND assignment.actor_type = 'crew'
+                  AND assignment.gang_member_id IS NOT NULL
                 ORDER BY assignment.id
             SQL
         );
@@ -1228,6 +1251,37 @@ final class CrimeOpportunityService
         $rows = $assignments->fetchAll();
 
         if ($rows === []) {
+            $bossCheck = Database::pdo()->prepare(
+                <<<'SQL'
+                    SELECT run.user_id
+                    FROM crime_run_assignments assignment
+                    JOIN crime_runs run ON run.id = assignment.run_id
+                    WHERE assignment.run_id = ?
+                      AND assignment.actor_type = 'boss'
+                    LIMIT 1
+                SQL
+            );
+            $bossCheck->execute([$runId]);
+            $bossRun = $bossCheck->fetch();
+
+            if ($bossRun) {
+                if ($outcome === 'failed_arrest') {
+                    (new BossCharacterService())->arrestBoss((int) $bossRun['user_id'], 6, 'Boss was arrested after a failed crime opportunity.');
+                    return [[
+                        'actor_type' => 'boss',
+                        'status' => 'arrested',
+                        'description' => 'The boss was arrested after the crime went wrong.',
+                    ]];
+                }
+
+                (new BossCharacterService())->injureBoss((int) $bossRun['user_id'], 'moderate', 'crime_v04', $runId, 'Boss was injured after a failed crime opportunity.');
+                return [[
+                    'actor_type' => 'boss',
+                    'status' => 'injured',
+                    'description' => 'The boss was injured after the crime went wrong.',
+                ]];
+            }
+
             return [];
         }
 
@@ -1355,20 +1409,36 @@ final class CrimeOpportunityService
     {
         $statement = Database::pdo()->prepare(
             <<<'SQL'
-                SELECT assignment.*, member.status, member.strength, member.shooting, member.driving,
+                SELECT assignment.*,
+                       member.status, member.strength, member.shooting, member.driving,
                        member.intelligence, member.stealth, member.intimidation,
                        member.discipline, member.street_knowledge, member.endurance,
-                       member.loyalty, member.morale, npc.first_name, npc.last_name, npc.nickname
+                       member.loyalty, member.morale, member.personal_heat,
+                       npc.first_name, npc.last_name, npc.nickname
                 FROM crime_opportunity_assignments assignment
-                JOIN player_gang_members member ON member.id = assignment.gang_member_id
-                JOIN npcs npc ON npc.id = member.npc_id
+                LEFT JOIN player_gang_members member
+                    ON member.id = assignment.gang_member_id
+                    AND assignment.actor_type = 'crew'
+                LEFT JOIN npcs npc ON npc.id = member.npc_id
                 WHERE assignment.opportunity_id = ?
                 ORDER BY assignment.id
             SQL
         );
         $statement->execute([$opportunityId]);
+        $rows = $statement->fetchAll();
 
-        return $statement->fetchAll();
+        foreach ($rows as &$row) {
+            if (($row['actor_type'] ?? 'crew') === 'boss') {
+                $row = [
+                    ...$row,
+                    ...$this->bossActor((int) $row['user_id']),
+                    'gang_member_id' => null,
+                    'role_code' => $row['role_code'] ?: 'lead',
+                ];
+            }
+        }
+
+        return $rows;
     }
 
     /** @return array<int, array<string, mixed>> */
@@ -1403,11 +1473,32 @@ final class CrimeOpportunityService
     private function copyAssignmentsToRun(int $runId, array $assignments): void
     {
         $insert = Database::pdo()->prepare(
-            'INSERT INTO crime_run_assignments (run_id, gang_member_id, role_code, created_at) VALUES (?, ?, ?, NOW())'
+            <<<'SQL'
+                INSERT INTO crime_run_assignments (
+                    run_id,
+                    actor_type,
+                    actor_id,
+                    gang_member_id,
+                    role_code,
+                    created_at
+                ) VALUES (?, ?, ?, ?, ?, NOW())
+            SQL
         );
 
         foreach ($assignments as $assignment) {
-            $insert->execute([$runId, $assignment['gang_member_id'], $assignment['role_code']]);
+            $actorType = (string) ($assignment['actor_type'] ?? 'crew');
+            $actorId = $actorType === 'boss'
+                ? (int) ($assignment['actor_id'] ?? $assignment['user_id'] ?? 0)
+                : (int) ($assignment['gang_member_id'] ?? 0);
+            $gangMemberId = $actorType === 'crew' ? $actorId : null;
+
+            $insert->execute([
+                $runId,
+                $actorType,
+                $actorId,
+                $gangMemberId,
+                $assignment['role_code'] ?: ($actorType === 'boss' ? 'lead' : 'helper'),
+            ]);
         }
     }
 
@@ -1698,6 +1789,36 @@ final class CrimeOpportunityService
         }
 
         return $user;
+    }
+
+    private function bossActor(int $userId): array
+    {
+        $boss = (new BossCharacterService())->profile(['id' => $userId]);
+
+        return [
+            'id' => 0,
+            'npc_id' => 0,
+            'actor_type' => 'boss',
+            'actor_id' => $userId,
+            'role_code' => $boss['role_code'] ?? 'leader',
+            'status' => $boss['status'] ?? 'active',
+            'strength' => $boss['skills']['strength'],
+            'shooting' => $boss['skills']['shooting'],
+            'driving' => $boss['skills']['driving'],
+            'intelligence' => $boss['skills']['intelligence'],
+            'stealth' => $boss['skills']['stealth'],
+            'intimidation' => $boss['skills']['intimidation'],
+            'discipline' => $boss['skills']['discipline'],
+            'street_knowledge' => $boss['skills']['street_knowledge'],
+            'endurance' => $boss['skills']['endurance'],
+            'loyalty' => 100,
+            'morale' => 100,
+            'personal_heat' => $boss['personal_heat'],
+            'first_name' => $boss['name'],
+            'last_name' => '',
+            'nickname' => 'Boss',
+            'is_boss' => true,
+        ];
     }
 
     private function crewMember(int $userId, int $memberId): ?array

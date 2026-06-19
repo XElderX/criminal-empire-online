@@ -108,6 +108,17 @@ export function HeatPolicePage({ onChanged }: HeatPolicePageProps) {
             <div><dt>Alive</dt><dd>{overview.boss.alive ? 'Yes' : 'Dead'}</dd></div>
             <div><dt>Injury</dt><dd>{overview.boss.injury_status || 'None'}</dd></div>
           </dl>
+          {overview.boss.skills && (
+            <dl className="details-grid compact-details-grid boss-skill-grid">
+              <div><dt>Shooting</dt><dd>{overview.boss.skills.shooting}</dd></div>
+              <div><dt>Driving</dt><dd>{overview.boss.skills.driving}</dd></div>
+              <div><dt>Stealth</dt><dd>{overview.boss.skills.stealth}</dd></div>
+              <div><dt>Intimidation</dt><dd>{overview.boss.skills.intimidation}</dd></div>
+              <div><dt>Discipline</dt><dd>{overview.boss.skills.discipline}</dd></div>
+              <div><dt>Street Knowledge</dt><dd>{overview.boss.skills.street_knowledge}</dd></div>
+              <div><dt>Endurance</dt><dd>{overview.boss.skills.endurance}</dd></div>
+            </dl>
+          )}
         </article>
 
         <article className="card section-card gang-heat-card">

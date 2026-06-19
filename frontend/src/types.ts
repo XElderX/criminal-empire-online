@@ -65,6 +65,20 @@ export interface BossProfile {
   gang_heat: number;
   display_heat: number;
   successor_member_id?: number | null;
+  age?: number;
+  gender?: string | null;
+  role_code?: string;
+  skills?: {
+    strength: number;
+    shooting: number;
+    driving: number;
+    intelligence: number;
+    stealth: number;
+    intimidation: number;
+    discipline: number;
+    street_knowledge: number;
+    endurance: number;
+  };
 }
 
 export interface HeatCrewSummary {
@@ -252,6 +266,10 @@ export interface CrewRolePresentation {
 
 export interface CrewMember {
   id: number;
+  member_type?: 'boss' | 'crew';
+  is_boss?: boolean;
+  actor_type?: 'boss' | 'crew';
+  actor_id?: number;
   npc_id: number;
   first_name: string;
   last_name: string;
@@ -712,6 +730,9 @@ export interface CrimeOpportunity {
 
 export interface CrimeCrewOption {
   id: number;
+  actor_type?: 'boss' | 'crew';
+  actor_id?: number;
+  is_boss?: boolean;
   npc_id: number;
   role_code: string;
   status: string;
@@ -729,6 +750,7 @@ export interface CrimeCrewOption {
   endurance: number;
   loyalty: number;
   morale: number;
+  personal_heat?: number;
 }
 
 export interface CrimeEquipmentOption {

@@ -1,3 +1,14 @@
+## 2026-06-19 — Criminal Empire Online v0.5.1 — Boss Character Integration
+
+- Added full boss operational stats beside the older account stats: shooting, driving, stealth, intimidation, discipline, street knowledge, endurance, and age/role metadata.
+- Boss now appears in the Crew page as a real dossier card/profile with skill grid, health, personal heat, and boss status.
+- `/my-gang/0` now returns the boss profile, and `/my-gang/0/history` returns boss history in crew-history compatible format.
+- Discovered crime opportunities can assign the boss as an actor using the existing crew assignment UI. Boss participation uses boss skills in risk calculation and applies boss heat when personally involved.
+- Quick Crimes can select boss and/or crew actors. Boss skills count toward quick crime success, and disastrous boss-led quick crimes can injure the boss.
+- Added actor fields to crime assignment tables so future systems can distinguish boss and crew participation without fake crew rows.
+- Updated Heat & Police boss card to display the full boss skill grid.
+- Added a one-time update notice for v0.5.1.
+
 ## 2026-06-19 — Criminal Empire Online v0.5 — Heat & Police Pressure Expansion
 
 - Reworked heat into boss, crew, NPC, gang, and district pressure with heat logs and police investigations.

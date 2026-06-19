@@ -281,3 +281,13 @@ Admin endpoints:
 - `GET /api/admin/investigations`
 - `GET /api/admin/characters/{type}/{id}/heat`
 
+
+## v0.5.1 Boss Character Integration
+
+- `GET /api/boss` now includes a `skills` object with boss operational stats.
+- `GET /api/my-gang` includes the boss as a crew-like dossier entry with `id: 0`, `member_type: boss`, and `is_boss: true`.
+- `GET /api/my-gang/0` returns the boss profile in the same shape as a crew dossier.
+- `GET /api/my-gang/0/history` returns boss history in the same shape used by crew history timelines.
+- Crime assignment endpoints accept `gang_member_id: 0` to select the boss actor.
+- Quick crime start accepts `crew_ids: [0]` to select the boss actor.
+

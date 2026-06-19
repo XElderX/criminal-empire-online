@@ -50,6 +50,68 @@ final class BossCharacterService
         return $this->ensureProfile((int) $user['id']);
     }
 
+    public function asCrewMember(array|int $user): array
+    {
+        $userId = is_array($user) ? (int) $user['id'] : (int) $user;
+        $boss = $this->ensureProfile($userId);
+
+        return (new CrewPresentationService())->present([
+            'id' => 0,
+            'member_type' => 'boss',
+            'is_boss' => true,
+            'npc_id' => 0,
+            'first_name' => $this->firstName($boss['name']),
+            'last_name' => $this->lastName($boss['name']),
+            'nickname' => 'Boss',
+            'gender' => $boss['gender'] ?? null,
+            'age' => (int) ($boss['age'] ?? 33),
+            'portrait_set_key' => $boss['portrait_set_key'] ?? null,
+            'portrait_stage_cache' => null,
+            'portrait_focal_x' => 50,
+            'portrait_focal_y' => 40,
+            'role_code' => $boss['role_code'] ?? 'leader',
+            'occupation' => 'Player boss',
+            'territory_name' => 'Home district',
+            'biography' => 'The player-controlled boss. This character can now be selected for crimes and has operational stats like crew members.',
+            'background' => 'Player character',
+            'personal_cash' => 0,
+            'salary_weekly' => 0,
+            'unpaid_salary' => 0,
+            'health' => $boss['health'],
+            'max_health' => $boss['max_health'],
+            'morale' => 100,
+            'loyalty' => 100,
+            'personal_heat' => $boss['personal_heat'],
+            'under_investigation' => false,
+            'sent_away_until' => null,
+            'revenge_risk' => 0,
+            'revenge_status' => 'none',
+            'status' => $boss['status'],
+            'level' => $boss['level'],
+            'experience' => $boss['experience'],
+            'criminal_reputation' => $boss['reputation'],
+            'strength' => $boss['skills']['strength'],
+            'shooting' => $boss['skills']['shooting'],
+            'driving' => $boss['skills']['driving'],
+            'intelligence' => $boss['skills']['intelligence'],
+            'stealth' => $boss['skills']['stealth'],
+            'intimidation' => $boss['skills']['intimidation'],
+            'discipline' => $boss['skills']['discipline'],
+            'street_knowledge' => $boss['skills']['street_knowledge'],
+            'endurance' => $boss['skills']['endurance'],
+            'jobs_completed' => 0,
+            'jobs_failed' => 0,
+            'arrests' => $boss['arrested_until'] ? 1 : 0,
+            'injuries' => $boss['injury_status'] ? 1 : 0,
+            'total_earnings' => 0,
+            'recovery_until' => null,
+            'arrested_until' => $boss['arrested_until'],
+            'traits' => [],
+            'equipment' => [],
+            'recent_history' => $this->history($userId),
+        ]);
+    }
+
     public function history(int $userId): array
     {
         $statement = Database::pdo()->prepare(
@@ -218,6 +280,36 @@ final class BossCharacterService
                 (int) ($user['gang_heat'] ?? 0)
             ),
             'successor_member_id' => $user['boss_successor_member_id'] ?? null,
+            'age' => (int) ($user['boss_age'] ?? 33),
+            'gender' => $user['boss_gender'] ?? null,
+            'portrait_set_key' => $user['boss_portrait_set_key'] ?? null,
+            'role_code' => $user['boss_role_code'] ?? 'leader',
+            'reputation' => (int) ($user['reputation'] ?? 0),
+            'skills' => [
+                'strength' => (int) ($user['strength'] ?? 1) * 10,
+                'shooting' => (int) ($user['boss_shooting'] ?? ((int) ($user['combat'] ?? 1) * 10)),
+                'driving' => (int) ($user['boss_driving'] ?? ((int) ($user['intelligence'] ?? 1) * 8)),
+                'intelligence' => (int) ($user['intelligence'] ?? 1) * 10,
+                'stealth' => (int) ($user['boss_stealth'] ?? ((int) ($user['intelligence'] ?? 1) * 8)),
+                'intimidation' => (int) ($user['boss_intimidation'] ?? ((int) ($user['charisma'] ?? 1) * 8)),
+                'discipline' => (int) ($user['boss_discipline'] ?? ((int) ($user['leadership'] ?? 1) * 8)),
+                'street_knowledge' => (int) ($user['boss_street_knowledge'] ?? ((int) ($user['intelligence'] ?? 1) * 8)),
+                'endurance' => (int) ($user['boss_endurance'] ?? ((int) ($user['strength'] ?? 1) * 8)),
+            ],
         ];
+    }
+
+    private function firstName(string $name): string
+    {
+        $parts = preg_split('/\s+/', trim($name)) ?: [];
+
+        return $parts[0] ?? 'Boss';
+    }
+
+    private function lastName(string $name): string
+    {
+        $parts = preg_split('/\s+/', trim($name)) ?: [];
+
+        return count($parts) > 1 ? implode(' ', array_slice($parts, 1)) : 'Character';
     }
 }

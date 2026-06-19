@@ -662,6 +662,10 @@ final class QuickCrimeService
         $skillGains = [];
 
         foreach ($crew as $member) {
+            if (($member['actor_type'] ?? 'crew') === 'boss') {
+                continue;
+            }
+
             $crewXp[] = $this->experience->grantCrew(
                 (int) $freshUser['id'],
                 (int) $member['id'],
@@ -702,6 +706,18 @@ final class QuickCrimeService
             $skillGains[] = $playerSkill;
         }
 
+        $bossInvolved = in_array('boss', array_map(static fn (array $member): string => (string) ($member['actor_type'] ?? 'crew'), $crew), true);
+        $bossConsequence = null;
+        if ($bossInvolved && $outcome === 'disaster') {
+            $bossConsequence = (new BossCharacterService())->injureBoss(
+                (int) $freshUser['id'],
+                (int) $template['tier'] >= 3 ? 'serious' : 'moderate',
+                'quick_crime',
+                $runId,
+                'Boss was injured during a disastrous quick crime outcome.'
+            );
+        }
+
         $result = [
             'outcome' => $outcome,
             'title' => $this->outcomeTitle($outcome),
@@ -712,6 +728,7 @@ final class QuickCrimeService
             'xp' => $playerXp,
             'crew_xp' => $crewXp,
             'skill_gains' => $skillGains,
+            'boss_consequence' => $bossConsequence,
             'cooldown_started' => true,
         ];
 
@@ -732,9 +749,10 @@ final class QuickCrimeService
             $runId,
             $heatGained,
             'Quick crime heat: ' . $template['title'],
-            array_map(static fn (array $member): int => (int) $member['id'], $crew),
+            array_values(array_filter(array_map(static fn (array $member): int => (($member['actor_type'] ?? 'crew') === 'crew') ? (int) $member['id'] : 0, $crew))),
             null,
-            (string) $template['category']
+            (string) $template['category'],
+            in_array('boss', array_map(static fn (array $member): string => (string) ($member['actor_type'] ?? 'crew'), $crew), true)
         );
 
         $pdo->prepare(
@@ -1040,26 +1058,57 @@ final class QuickCrimeService
 
     private function validateCrew(int $userId, array $crewIds, int $requiredCrewCount): array
     {
+        $crewIds = array_values(array_unique(array_map('intval', $crewIds)));
+        $includesBoss = in_array(0, $crewIds, true);
+        $realCrewIds = array_values(array_filter($crewIds, static fn (int $id): bool => $id > 0));
+        $actors = [];
+
+        if ($includesBoss) {
+            $actors[] = $this->bossActor($userId);
+        }
+
         if (count($crewIds) < $requiredCrewCount) {
             throw new RuntimeException('More crew are required for this quick crime.');
         }
 
-        if ($crewIds === []) {
-            return [];
+        if ($realCrewIds !== []) {
+            $placeholders = implode(',', array_fill(0, count($realCrewIds), '?'));
+            $statement = Database::pdo()->prepare(
+                "SELECT *, 'crew' AS actor_type, id AS actor_id FROM player_gang_members WHERE user_id = ? AND id IN ({$placeholders}) AND status = 'active' FOR UPDATE"
+            );
+            $statement->execute(array_merge([$userId], $realCrewIds));
+            $members = $statement->fetchAll();
+
+            if (count($members) !== count($realCrewIds)) {
+                throw new RuntimeException('One selected crew member is unavailable or does not belong to you.');
+            }
+
+            $actors = array_merge($actors, $members);
         }
 
-        $placeholders = implode(',', array_fill(0, count($crewIds), '?'));
-        $statement = Database::pdo()->prepare(
-            "SELECT * FROM player_gang_members WHERE user_id = ? AND id IN ({$placeholders}) AND status = 'active' FOR UPDATE"
-        );
-        $statement->execute(array_merge([$userId], $crewIds));
-        $members = $statement->fetchAll();
+        return $actors;
+    }
 
-        if (count($members) !== count($crewIds)) {
-            throw new RuntimeException('One selected crew member is unavailable or does not belong to you.');
-        }
+    private function bossActor(int $userId): array
+    {
+        $boss = (new BossCharacterService())->profile(['id' => $userId]);
 
-        return $members;
+        return [
+            'id' => 0,
+            'actor_type' => 'boss',
+            'actor_id' => $userId,
+            'strength' => $boss['skills']['strength'],
+            'shooting' => $boss['skills']['shooting'],
+            'driving' => $boss['skills']['driving'],
+            'intelligence' => $boss['skills']['intelligence'],
+            'stealth' => $boss['skills']['stealth'],
+            'intimidation' => $boss['skills']['intimidation'],
+            'discipline' => $boss['skills']['discipline'],
+            'street_knowledge' => $boss['skills']['street_knowledge'],
+            'endurance' => $boss['skills']['endurance'],
+            'loyalty' => 100,
+            'morale' => 100,
+        ];
     }
 
     private function validateEquipmentSelection(array $equipment, array $inventory): void
@@ -1081,17 +1130,29 @@ final class QuickCrimeService
     {
         $statement = Database::pdo()->prepare(
             <<<'SQL'
-                SELECT member.*
+                SELECT run_crew.*, member.*
                 FROM quick_crime_run_crew run_crew
-                JOIN player_gang_members member ON member.id = run_crew.gang_member_id
+                LEFT JOIN player_gang_members member
+                    ON member.id = run_crew.gang_member_id
+                    AND run_crew.actor_type = 'crew'
                 WHERE run_crew.user_id = ?
                   AND run_crew.run_id = ?
                 ORDER BY run_crew.id
             SQL
         );
         $statement->execute([$userId, $runId]);
+        $rows = $statement->fetchAll();
 
-        return $statement->fetchAll();
+        foreach ($rows as &$row) {
+            if (($row['actor_type'] ?? 'crew') === 'boss') {
+                $row = [
+                    ...$row,
+                    ...$this->bossActor($userId),
+                ];
+            }
+        }
+
+        return $rows;
     }
 
     private function storeRunCrew(int $userId, int $runId, array $crew): void
@@ -1101,19 +1162,27 @@ final class QuickCrimeService
                 INSERT INTO quick_crime_run_crew (
                     run_id,
                     user_id,
+                    actor_type,
+                    actor_id,
                     gang_member_id,
                     role_code,
                     created_at
-                ) VALUES (?, ?, ?, ?, NOW())
+                ) VALUES (?, ?, ?, ?, ?, ?, NOW())
             SQL
         );
 
         foreach ($crew as $index => $member) {
+            $actorType = (string) ($member['actor_type'] ?? 'crew');
+            $actorId = $actorType === 'boss' ? $userId : (int) $member['id'];
+            $gangMemberId = $actorType === 'crew' ? (int) $member['id'] : null;
+
             $statement->execute([
                 $runId,
                 $userId,
-                $member['id'],
-                $index === 0 ? 'lead' : 'helper',
+                $actorType,
+                $actorId,
+                $gangMemberId,
+                $actorType === 'boss' ? 'lead' : ($index === 0 ? 'lead' : 'helper'),
             ]);
         }
     }

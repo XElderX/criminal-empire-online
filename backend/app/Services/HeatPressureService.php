@@ -166,13 +166,17 @@ final class HeatPressureService
         string $description,
         array $crewMemberIds = [],
         ?int $districtId = null,
-        string $category = 'police_attention'
+        string $category = 'police_attention',
+        bool $bossInvolved = false
     ): void {
         $crewMemberIds = array_values(array_unique(array_filter(array_map('intval', $crewMemberIds))));
 
-        if ($crewMemberIds === []) {
-            $this->applyHeat($userId, 'boss', null, $heat, $category, $sourceType, $sourceId, $description, true, $heat >= 5);
-        } else {
+        if ($crewMemberIds === [] || $bossInvolved) {
+            $bossHeat = $crewMemberIds === [] ? $heat : max(1, (int) floor($heat * 0.65));
+            $this->applyHeat($userId, 'boss', null, $bossHeat, $category, $sourceType, $sourceId, $description, true, $heat >= 5);
+        }
+
+        if ($crewMemberIds !== []) {
             foreach ($crewMemberIds as $crewMemberId) {
                 $this->applyHeat($userId, 'crew', $crewMemberId, max(1, (int) floor($heat * 0.85)), $category, $sourceType, $sourceId, $description, true, $heat >= 5);
             }
