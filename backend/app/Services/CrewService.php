@@ -344,31 +344,48 @@ final class CrewService
             );
             $updateMember->execute([$reason, $memberId]);
 
+            $lowLevelDismissal = (int) ($member['level'] ?? 1) <= 2;
+
             $pdo->prepare(
                 <<<'SQL'
                     UPDATE npcs
                     SET
-                        role = 'recruit',
-                        status = 'unemployed',
+                        role = ?,
+                        status = ?,
+                        is_recruitable = ?,
                         updated_at = NOW()
                     WHERE id = ?
                 SQL
-            )->execute([$member['npc_id']]);
+            )->execute([
+                $lowLevelDismissal ? 'recruit' : 'civilian',
+                $lowLevelDismissal ? 'unemployed' : 'active',
+                $lowLevelDismissal ? 1 : 0,
+                $member['npc_id'],
+            ]);
 
             if ($member['recruitment_candidate_id'] !== null) {
                 $candidateUpdate = $pdo->prepare(
                     <<<'SQL'
                         UPDATE recruitment_candidates
                         SET
-                            status = 'available',
-                            available_from = DATE_ADD(NOW(), INTERVAL 14 DAY),
-                            expires_at = DATE_ADD(NOW(), INTERVAL 44 DAY),
+                            status = ?,
+                            available_from = ?,
+                            expires_at = ?,
                             hired_by_user_id = NULL,
                             hired_at = NULL
                         WHERE id = ?
                     SQL
                 );
-                $candidateUpdate->execute([$member['recruitment_candidate_id']]);
+                $candidateUpdate->execute([
+                    $lowLevelDismissal ? 'available' : 'expired',
+                    $lowLevelDismissal
+                        ? date('Y-m-d H:i:s', strtotime('+14 days'))
+                        : date('Y-m-d H:i:s'),
+                    $lowLevelDismissal
+                        ? date('Y-m-d H:i:s', strtotime('+44 days'))
+                        : date('Y-m-d H:i:s'),
+                    $member['recruitment_candidate_id'],
+                ]);
             }
 
             $heatConsequence = (new HeatPressureService())->dismissHeatRelief($user, $member);

@@ -87,8 +87,14 @@ export function DirtyJobsPage({ onChanged }: DirtyJobsPageProps) {
   }, []);
 
   const activeCrew = useMemo(
-    () => crew.filter((member) => member.status === 'active' && !member.is_boss && member.id > 0),
+    () => crew
+      .filter((member) => member.status === 'active')
+      .sort((left, right) => Number(right.is_boss || false) - Number(left.is_boss || false)),
     [crew],
+  );
+  const assignableMemberIds = useMemo(
+    () => new Set(activeCrew.map((member) => Number(member.id))),
+    [activeCrew],
   );
 
   async function openOpportunity(opportunityId: number): Promise<void> {
@@ -160,12 +166,7 @@ export function DirtyJobsPage({ onChanged }: DirtyJobsPageProps) {
       return;
     }
 
-    const assignments = Object.entries(roleSelections)
-      .filter(([memberId, roleCode]) => roleCode !== '' && Number(memberId) > 0)
-      .map(([memberId, roleCode]) => ({
-        member_id: Number(memberId),
-        role_code: roleCode,
-      }));
+    const assignments = buildAssignments(roleSelections, assignableMemberIds);
 
     await performAction(async () => {
       const response = await api<{ message: string }>(
@@ -185,6 +186,7 @@ export function DirtyJobsPage({ onChanged }: DirtyJobsPageProps) {
       return;
     }
 
+    const assignments = buildAssignments(roleSelections, assignableMemberIds);
     const confirmed = window.confirm(
       'Begin execution? Assigned members will become busy and their current loadouts will be used.',
     );
@@ -194,6 +196,14 @@ export function DirtyJobsPage({ onChanged }: DirtyJobsPageProps) {
     }
 
     await performAction(async () => {
+      await api<{ message: string }>(
+        `/dirty-job-runs/${detail.run!.id}/assign-crew`,
+        {
+          method: 'POST',
+          body: JSON.stringify({ assignments }),
+        },
+      );
+
       const response = await api<{ message: string }>(
         `/dirty-job-runs/${detail.run!.id}/execute`,
         { method: 'POST' },
@@ -268,9 +278,10 @@ export function DirtyJobsPage({ onChanged }: DirtyJobsPageProps) {
         Math.ceil((new Date(detail.run.completes_at).getTime() - clock) / 1_000),
       )
     : detail?.run?.seconds_remaining ?? 0;
-  const assignedCrewCount = detail?.run?.assignments?.length || 0;
+  const currentSelectedRoles = Object.values(roleSelections).filter((roleCode) => roleCode !== '');
+  const assignedCrewCount = currentSelectedRoles.length;
   const requiredRoles = detail?.opportunity?.required_roles || [];
-  const assignedRoles = detail?.run?.assignments?.map((assignment) => assignment.role_code) || [];
+  const assignedRoles = currentSelectedRoles;
   const missingRequiredRoles = requiredRoles.filter(
     (role) => !assignedRoles.includes(role),
   );
@@ -515,19 +526,23 @@ function OperationWorkspace({
   const completedPreparationCodes = new Set(
     (run.preparations || []).map((entry) => String(entry.action_code || '')),
   );
-  const assignedRoles = (run.assignments || []).map(
-    (assignment) => assignment.role_code,
-  );
-  const missingRequiredRoles = detail.opportunity.required_roles.filter(
-    (role) => !assignedRoles.includes(role),
-  );
   const takenRoles = new Set(
     Object.values(roleSelections).filter((roleCode) => roleCode !== ''),
   );
+  const assignableMemberIds = new Set(crew.map((member) => Number(member.id)));
+  const assignedRoles = Object.entries(roleSelections)
+    .filter(([memberId, roleCode]) => roleCode !== '' && assignableMemberIds.has(Number(memberId)))
+    .map(([, roleCode]) => roleCode);
+  const missingRequiredRoles = detail.opportunity.required_roles.filter(
+    (role) => !assignedRoles.includes(role),
+  );
   const selectedCrewCount = Object.entries(roleSelections)
-    .filter(([memberId, roleCode]) => roleCode !== '' && Number(memberId) > 0)
+    .filter(([memberId, roleCode]) => roleCode !== '' && assignableMemberIds.has(Number(memberId)))
     .length;
   const minimumCrew = Math.max(1, detail.opportunity.min_crew_size);
+  const unassignMember = (memberId: number): void => {
+    onRoleChange(memberId, '');
+  };
 
   return (
     <>
@@ -600,21 +615,31 @@ function OperationWorkspace({
                       {member.equipment.map((item) => item.name).join(', ') || 'none'}
                     </small>
                   </div>
-                  <select
-                    value={roleSelections[member.id] || ''}
-                    onChange={(event) => onRoleChange(member.id, event.target.value)}
-                  >
-                    <option value="">Not assigned</option>
-                    {Object.entries(detail.crew_roles).map(([code, definition]) => (
-                      <option
-                        value={code}
-                        key={code}
-                        disabled={takenRoles.has(code) && roleSelections[member.id] !== code}
-                      >
-                        {definition.name} ({definition.stats.join(', ')})
-                      </option>
-                    ))}
-                  </select>
+                  <div className="assignment-row-actions">
+                    <select
+                      value={roleSelections[member.id] || ''}
+                      onChange={(event) => onRoleChange(member.id, event.target.value)}
+                    >
+                      <option value="">Not assigned</option>
+                      {Object.entries(detail.crew_roles).map(([code, definition]) => (
+                        <option
+                          value={code}
+                          key={code}
+                          disabled={takenRoles.has(code) && roleSelections[member.id] !== code}
+                        >
+                          {definition.name} ({definition.stats.join(', ')})
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      className="btn"
+                      type="button"
+                      disabled={loading || !roleSelections[member.id]}
+                      onClick={() => unassignMember(member.id)}
+                    >
+                      Unassign
+                    </button>
+                  </div>
                 </div>
               ))}
               {crew.length === 0 && (
@@ -633,8 +658,7 @@ function OperationWorkspace({
             )}
 
             <p className="muted">
-              Assigned crew: {run.assignments?.length || 0} /{' '}
-              {minimumCrew}
+              Assigned crew: {selectedCrewCount} / {minimumCrew}
             </p>
             <p className="muted">
               Each role can only be assigned once. If you need 2 crew members,
@@ -765,10 +789,25 @@ function assignmentsToSelections(run: DirtyJobRun | null): Record<number, string
   const selections: Record<number, string> = {};
 
   for (const assignment of run?.assignments || []) {
-    selections[assignment.gang_member_id] = assignment.role_code;
+    const memberId = assignment.actor_type === 'boss'
+      ? 0
+      : Number(assignment.gang_member_id || 0);
+    selections[memberId] = assignment.role_code;
   }
 
   return selections;
+}
+
+function buildAssignments(
+  roleSelections: Record<number, string>,
+  assignableMemberIds: Set<number>,
+): Array<{ member_id: number; role_code: string }> {
+  return Object.entries(roleSelections)
+    .filter(([memberId, roleCode]) => roleCode !== '' && assignableMemberIds.has(Number(memberId)))
+    .map(([memberId, roleCode]) => ({
+      member_id: Number(memberId),
+      role_code: roleCode,
+    }));
 }
 
 function humanize(value: string): string {
@@ -779,6 +818,10 @@ function humanize(value: string): string {
 }
 
 function displayCrewName(member: CrewMember): string {
+  if (member.is_boss) {
+    return `Boss: ${member.first_name} ${member.last_name}`.trim();
+  }
+
   const nickname = member.nickname ? ` “${member.nickname}”` : '';
   return `${member.first_name}${nickname} ${member.last_name}`;
 }

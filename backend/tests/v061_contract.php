@@ -8,6 +8,7 @@ $runner = new TestRunner();
 $root = dirname(__DIR__, 2);
 
 $migration = readFileOrFail($root . '/backend/database/migrations/012_v061_map_gameplay_integration.sql');
+$migrationHotfix = readFileOrFail($root . '/backend/database/migrations/013_v0612_dirty_job_boss_support.sql');
 $seed = readFileOrFail($root . '/backend/database/seeders/012_v061_map_gameplay_integration_seed.sql');
 $mapContext = readFileOrFail($root . '/backend/app/Services/MapContextService.php');
 $localActivity = readFileOrFail($root . '/backend/app/Services/LocalActivityService.php');
@@ -17,6 +18,7 @@ $quick = readFileOrFail($root . '/backend/app/Services/QuickCrimeService.php');
 $dirty = readFileOrFail($root . '/backend/app/Services/DirtyJobService.php');
 $controller = readFileOrFail($root . '/backend/app/Controllers/WorldMapController.php');
 $routes = readFileOrFail($root . '/backend/routes/api.php');
+$types = readFileOrFail($root . '/frontend/src/types.ts');
 $locationPage = readFileOrFail($root . '/frontend/src/pages/LocationMapPage.tsx');
 $crimesPage = readFileOrFail($root . '/frontend/src/pages/CrimesPage.tsx');
 $dirtyPage = readFileOrFail($root . '/frontend/src/pages/DirtyJobsPage.tsx');
@@ -26,6 +28,12 @@ $docs = readFileOrFail($root . '/docs/DEVELOPMENT_LOG.md');
 $runner->test('v0.6.1 migration adds location gameplay tables', function () use ($runner, $migration): void {
     foreach (['quick_crime_location_rules', 'dirty_job_location_rules', 'local_opportunities', 'location_exploration_logs'] as $table) {
         $runner->assertContains($table, $migration);
+    }
+});
+
+$runner->test('v0.6.1.2 migration upgrades dirty jobs for boss actors', function () use ($runner, $migrationHotfix): void {
+    foreach (['dirty_job_assignments', 'actor_type', 'actor_id', '0.6.1.2'] as $needle) {
+        $runner->assertContains($needle, $migrationHotfix);
     }
 });
 
@@ -76,6 +84,16 @@ $runner->test('Dirty jobs support region and location filters', function () use 
     }
 });
 
+$runner->test('Dirty jobs can assign the boss as an actor', function () use ($runner, $dirty, $dirtyPage, $types): void {
+    foreach (['function bossActor', "actor_type = 'boss'", 'BossCharacterService', 'The boss is already assigned to another Dirty Job.'] as $needle) {
+        $runner->assertContains($needle, $dirty);
+    }
+
+    foreach (['member.is_boss', 'assignableMemberIds', 'Boss:', 'actor_type?: \'boss\' | \'crew\''] as $needle) {
+        $runner->assertContains($needle, $dirtyPage . $types);
+    }
+});
+
 $runner->test('Location map page shows local activity panel and explore button', function () use ($runner, $locationPage, $activityPanel): void {
     $runner->assertContains('LocalActivityPanel', $locationPage);
     $runner->assertContains('exploreHotspot', $locationPage);
@@ -91,8 +109,8 @@ $runner->test('Crimes and Dirty Jobs pages read map query context', function () 
     $runner->assertContains('Dirty Jobs near', $dirtyPage);
 });
 
-$runner->test('Development log documents v0.6.1.1', function () use ($runner, $docs): void {
-    $runner->assertContains('v0.6.1.1 — Crimes Tab SQL Hotfix', $docs);
+$runner->test('Development log documents v0.6.1.2', function () use ($runner, $docs): void {
+    $runner->assertContains('v0.6.1.2 — Dirty Job Boss Support', $docs);
 });
 
 exit($runner->finish());

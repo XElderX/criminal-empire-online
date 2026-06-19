@@ -9,6 +9,57 @@ use Throwable;
 
 final class JobService
 {
+    public function refreshOpportunityList(): array
+    {
+        $pdo = Database::pdo();
+
+        $expired = $pdo->exec(
+            <<<'SQL'
+                UPDATE job_opportunities
+                SET status = 'expired'
+                WHERE status = 'available'
+                  AND expires_at IS NOT NULL
+                  AND expires_at <= NOW()
+            SQL
+        );
+
+        $refreshed = $pdo->exec(
+            <<<'SQL'
+                UPDATE job_opportunities opportunity
+                JOIN jobs job ON job.id = opportunity.job_id
+                SET
+                    opportunity.status = 'available',
+                    opportunity.available_from = NOW(),
+                    opportunity.expires_at = DATE_ADD(NOW(), INTERVAL 90 DAY)
+                WHERE job.active = 1
+                  AND opportunity.status IN ('completed', 'expired')
+            SQL
+        );
+
+        $this->restoreLegalStarterJobsIfNeeded();
+
+        $available = (int) $pdo->query(
+            <<<'SQL'
+                SELECT COUNT(*)
+                FROM job_opportunities opportunity
+                JOIN jobs job ON job.id = opportunity.job_id
+                WHERE opportunity.status = 'available'
+                  AND job.active = 1
+                  AND opportunity.available_from <= NOW()
+                  AND (
+                    opportunity.expires_at IS NULL
+                    OR opportunity.expires_at > NOW()
+                  )
+            SQL
+        )->fetchColumn();
+
+        return [
+            'expired' => (int) $expired,
+            'refreshed' => (int) $refreshed,
+            'available' => $available,
+        ];
+    }
+
     public function listForUser(array $user): array
     {
         $this->restoreLegalStarterJobsIfNeeded();

@@ -17,7 +17,7 @@ Major regions:
 
 New map gameplay connects existing systems instead of replacing them: Crimes, Quick Crimes, Dirty Jobs, Recruitment, Businesses, Drug Market, Warehouse, Heat & Police, and Territories.
 
-# Criminal Empire Online v0.6.1.1 — Crimes Tab SQL Hotfix
+# Criminal Empire Online v0.6.2.1 — Recruitment Lifecycle Split
 
 Criminal Empire Online is a browser-based, primarily single-player criminal empire simulation. The player begins with $500, performs small NPC-provided jobs, recruits a crew, equips members, plans structured Dirty Jobs, manages heat and consequences, and now discovers more complex crime opportunities through NPCs and city locations.
 
@@ -182,6 +182,8 @@ The cron block runs:
 - `php commands/world.php process-week`
 - `php commands/dirty-jobs.php expire`
 - `php commands/dirty-jobs.php refresh`
+
+`process-hour`, `process-day`, and `process-week` now also refresh expired Street Job opportunities and expired recruitment candidates that are not attached to an active crew record.
 
 ## Default development administrator
 

@@ -1,3 +1,22 @@
+## 2026-06-19 — Criminal Empire Online v0.6.2.1 — Recruitment Lifecycle Split
+
+- Low-level dismissed crew members now recycle back into the recruit pool, while higher-level dismissed crew are returned to ordinary NPC life instead of staying recruitable.
+- Recruitment candidate levels are now capped at 2, and the world refresh can generate new recruitable NPCs when the pool is short.
+- Updated player-facing version labels and release metadata to v0.6.2.1.
+
+## 2026-06-19 — Criminal Empire Online v0.6.2 — Street Job & Recruitment Refresh Cron
+
+- Added hourly, daily, and weekly world-processing refresh support for Street Job opportunities so completed or expired starter jobs return to the available list automatically.
+- Added recruitment candidate pool refresh support so expired unhired candidates become available again on cron-driven world processing.
+- Kept hired or actively attached recruits protected from accidental refresh duplication.
+- Bumped application metadata and frontend version labels to v0.6.2.
+
+## 2026-06-19 — Criminal Empire Online v0.6.1.2 — Dirty Job Boss Support
+
+- Added actor-based Dirty Job assignment support so the boss can be selected into Dirty Job roles just like in discovered crimes and quick crimes.
+- Dirty Jobs now validate boss availability, prevent the boss from being assigned into multiple active Dirty Jobs at once, and handle boss-specific arrest/injury outcomes.
+- The Dirty Jobs frontend now includes the boss in the selector again and saves only valid assignable actors for the current run.
+
 ## 2026-06-19 — Criminal Empire Online v0.6.1.1 — Crimes Tab SQL Hotfix
 
 - Fixed the Crimes tab SQL failure caused by `SELECT DISTINCT ... ORDER BY rule.sort_order` under stricter MySQL settings.
