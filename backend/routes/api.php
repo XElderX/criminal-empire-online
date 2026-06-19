@@ -19,6 +19,7 @@ use App\Controllers\ShopController;
 use App\Controllers\TerritoryController;
 use App\Controllers\TutorialController;
 use App\Controllers\UpdateNoticeController;
+use App\Controllers\WorldMapController;
 use App\Controllers\WarehouseController;
 use App\Middleware\AuthMiddleware;
 
@@ -208,6 +209,22 @@ $router->post(
     [WarehouseController::class, 'purchaseUpgrade'],
     [AuthMiddleware::class]
 );
+
+
+$router->get('/api/world-map', [WorldMapController::class, 'index'], [AuthMiddleware::class]);
+$router->get('/api/world-map/regions', [WorldMapController::class, 'regions'], [AuthMiddleware::class]);
+$router->get('/api/world-map/regions/{slug}', [WorldMapController::class, 'region'], [AuthMiddleware::class]);
+$router->get('/api/world-map/regions/{slug}/locations', [WorldMapController::class, 'regionLocations'], [AuthMiddleware::class]);
+$router->get('/api/world-map/regions/{slug}/activities', [WorldMapController::class, 'regionActivities'], [AuthMiddleware::class]);
+$router->get('/api/world-map/locations/{slug}', [WorldMapController::class, 'location'], [AuthMiddleware::class]);
+$router->get('/api/world-map/locations/{slug}/activities', [WorldMapController::class, 'locationActivities'], [AuthMiddleware::class]);
+$router->post('/api/world-map/locations/{slug}/explore', [WorldMapController::class, 'exploreLocation'], [AuthMiddleware::class]);
+$router->get('/api/world-map/current-location', [WorldMapController::class, 'currentLocation'], [AuthMiddleware::class]);
+$router->post('/api/world-map/travel', [WorldMapController::class, 'travel'], [AuthMiddleware::class]);
+$router->get('/api/world-map/territories', [WorldMapController::class, 'territories'], [AuthMiddleware::class]);
+$router->get('/api/admin/world-map', [WorldMapController::class, 'adminOverview'], [AuthMiddleware::class]);
+$router->get('/api/admin/world-map/regions', [WorldMapController::class, 'adminRegions'], [AuthMiddleware::class]);
+$router->get('/api/admin/world-map/locations', [WorldMapController::class, 'adminLocations'], [AuthMiddleware::class]);
 
 $router->get('/api/heat', [HeatController::class, 'index'], [AuthMiddleware::class]);
 $router->get('/api/heat/logs', [HeatController::class, 'logs'], [AuthMiddleware::class]);

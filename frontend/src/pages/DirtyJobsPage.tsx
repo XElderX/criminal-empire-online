@@ -19,6 +19,25 @@ interface DirtyJobsPageProps {
   onChanged: () => void;
 }
 
+function dirtyJobLocationQuery(): string {
+  const params = new URLSearchParams(window.location.search);
+  const context = new URLSearchParams();
+  const region = params.get('region');
+  const location = params.get('location');
+  if (region) context.set('region', region);
+  if (location) context.set('location', location);
+  const value = context.toString();
+  return value ? `?${value}` : '';
+}
+
+function dirtyJobLocationLabel(): string | null {
+  const params = new URLSearchParams(window.location.search);
+  const location = params.get('location');
+  const region = params.get('region');
+  if (!location && !region) return null;
+  return (location || region || '').replace(/-/g, ' ');
+}
+
 interface EventPayload {
   prompt?: string;
   title?: string;
@@ -43,7 +62,7 @@ export function DirtyJobsPage({ onChanged }: DirtyJobsPageProps) {
     try {
       const [opportunityResponse, activeResponse, historyResponse, crewResponse] =
         await Promise.all([
-          api<{ data: DirtyJobOpportunity[] }>('/dirty-jobs'),
+          api<{ data: DirtyJobOpportunity[] }>(`/dirty-jobs${dirtyJobLocationQuery()}`),
           api<{ data: DirtyJobRun[] }>('/dirty-jobs/active'),
           api<{ data: DirtyJobRun[] }>('/dirty-jobs/history'),
           api<{ data: CrewMember[] }>('/my-gang'),
@@ -262,8 +281,15 @@ export function DirtyJobsPage({ onChanged }: DirtyJobsPageProps) {
         <GameHeader
           eyebrow="Planning board"
           title="Dirty Jobs"
-          description="Cinematic NPC opportunities with preparation, crew roles, risk, heat, and aftermath."
+          description="Cinematic NPC opportunities with preparation, crew roles, risk, heat, aftermath, and v0.6.1 map location context."
         />
+        {dirtyJobLocationLabel() && (
+          <section className="card location-context-header">
+            <p className="eyebrow">Map context</p>
+            <h3>Dirty Jobs near {dirtyJobLocationLabel()}</h3>
+            <p className="muted">This list is filtered or prioritized by the selected map hotspot. Use World Map to change location.</p>
+          </section>
+        )}
       </div>
 
       <div className="full-span">
@@ -288,6 +314,9 @@ export function DirtyJobsPage({ onChanged }: DirtyJobsPageProps) {
                 <img src={getJobImage(opportunity.title || opportunity.code)} alt="" />
                 <span>Tier {opportunity.tier} · {humanize(opportunity.category)}</span>
                 <strong>{opportunity.title}</strong>
+                {opportunity.location_context?.location_name && (
+                  <small>{opportunity.location_context.region_name} / {opportunity.location_context.location_name}</small>
+                )}
                 <small>
                   ${opportunity.estimated_reward_min}–${opportunity.estimated_reward_max}
                 </small>

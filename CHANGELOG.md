@@ -1,3 +1,25 @@
+## 2026-06-19 — Criminal Empire Online v0.6.1.1 — Crimes Tab SQL Hotfix
+
+- Fixed a MySQL `DISTINCT` plus `ORDER BY` compatibility error that could break the Crimes tab when location-aware quick crimes were loaded.
+- Quick crime listing now keeps hotspot ordering while deduplicating templates safely in PHP instead of relying on a SQL pattern rejected by stricter MySQL modes.
+
+## 2026-06-19 — Criminal Empire Online v0.6.1 — Map Gameplay Integration
+
+- Added location-aware Quick Crime rules, Dirty Job rules, local activity endpoints, and hotspot exploration.
+- Updated map hotspot panels to show real activity groups, previews, territory/risk effects, and contextual action buttons.
+- Updated Crimes and Dirty Jobs pages to read region/location query context from map buttons.
+
+
+## 2026-06-19 — Criminal Empire Online v0.6 — Game Map & Territories
+
+- Added Grimwater County as the fictional world-map setting name.
+- Added interactive World Map and Location Map pages.
+- Added local WebP/SVG map assets and safe placeholder fallbacks.
+- Added world regions, hotspots, map activities, territory map links, and user current-location/travel state.
+- Added backend world-map and travel APIs plus read-only admin map overview endpoints.
+- Added map components, risk badges, tooltips, legends, travel panels, and navigation entry.
+- Added v0.6 tests and documentation.
+
 ## 2026-06-19 — Criminal Empire Online v0.5.1.3 — Dirty Job Crew Requirement Hotfix
 
 - Hotfixed Dirty Jobs so every job now requires at least one assigned crew member before execution.

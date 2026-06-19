@@ -6,6 +6,7 @@ export type PageName =
   | 'crew'
   | 'equipment'
   | 'warehouse'
+  | 'world map'
   | 'crimes'
   | 'heat'
   | 'market'
@@ -458,6 +459,14 @@ export interface DirtyJobOpportunity {
   can_accept: boolean;
   requirement_messages: string[];
   expires_at: string;
+  location_context?: {
+    region_slug?: string | null;
+    region_name?: string | null;
+    location_slug?: string | null;
+    location_name?: string | null;
+    requires_current_location?: boolean;
+    local_modifiers?: Record<string, unknown>;
+  };
 }
 
 export interface PreparationOption {
@@ -897,6 +906,13 @@ export interface QuickCrimeTemplate {
   missing_items: QuickCrimeMissingItem[];
   cooldown: QuickCrimeCooldown;
   prepared: QuickCrimePreparedAction[];
+  is_local?: boolean;
+  local_region_slug?: string | null;
+  local_region_name?: string | null;
+  local_location_slug?: string | null;
+  local_location_name?: string | null;
+  requires_current_location?: boolean;
+  local_modifiers?: Record<string, unknown> | null;
 }
 
 export interface QuickCrimeEventChoice {
@@ -926,6 +942,8 @@ export interface QuickCrimeResultPayload {
   crew_xp?: Array<Record<string, unknown>>;
   skill_gains?: Array<Record<string, unknown>>;
   cooldown_started?: boolean;
+  location?: Record<string, unknown> | null;
+  local_modifiers?: Record<string, unknown>;
 }
 
 export interface QuickCrimeRun {
@@ -951,6 +969,8 @@ export interface QuickCrimeOverview {
   active_runs: QuickCrimeRun[];
   history: QuickCrimeRun[];
   progression: Record<string, unknown>;
+  locationContext?: Record<string, unknown> | null;
+  filters?: Record<string, unknown>;
 }
 
 

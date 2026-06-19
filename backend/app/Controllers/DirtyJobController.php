@@ -12,7 +12,10 @@ final class DirtyJobController
     public function index(array $params, array $context): void
     {
         Response::json([
-            'data' => (new DirtyJobService())->opportunities($context['user']),
+            'data' => (new DirtyJobService())->opportunities($context['user'], [
+                'region' => $_GET['region'] ?? null,
+                'location' => $_GET['location'] ?? null,
+            ]),
         ]);
     }
 

@@ -291,3 +291,37 @@ Admin endpoints:
 - Crime assignment endpoints accept `gang_member_id: 0` to select the boss actor.
 - Quick crime start accepts `crew_ids: [0]` to select the boss actor.
 
+
+## v0.6 World Map API
+
+Authenticated player endpoints:
+
+- `GET /api/world-map` — world map response with regions, current location, summary, map assets, and legend.
+- `GET /api/world-map/regions` — active world regions.
+- `GET /api/world-map/regions/{slug}` — region map with hotspots, territory summary, activity summary, and risk data.
+- `GET /api/world-map/regions/{slug}/locations` — hotspots for a region.
+- `GET /api/world-map/locations/{slug}` — one hotspot with linked actions, territory, risk summary, and travel preview.
+- `GET /api/world-map/locations/{slug}/activities` — activity links for one hotspot.
+- `GET /api/world-map/current-location` — player current region/hotspot.
+- `POST /api/world-map/travel` — backend-validated travel by `region_slug` or `location_slug`.
+- `GET /api/world-map/territories` — map-linked territory summaries.
+
+Read-only admin endpoints:
+
+- `GET /api/admin/world-map`
+- `GET /api/admin/world-map/regions`
+- `GET /api/admin/world-map/locations`
+
+Travel deducts configured cash/energy costs and updates `user_location_state`. Existing users default to Main City / Slums when no location state exists.
+
+## v0.6.1 Map Gameplay Integration API
+
+Authenticated endpoints added/extended:
+
+- `GET /api/world-map/locations/{slug}/activities` — returns real local activity groups, quick-crime previews, dirty-job previews, territory summary, heat summary, and contextual route hints.
+- `GET /api/world-map/regions/{slug}/activities` — aggregates local activity groups across the region.
+- `POST /api/world-map/locations/{slug}/explore` — costs 3 energy, respects hotspot cooldown, and can reveal a local opportunity.
+- `GET /api/quick-crimes?region=&location=` — filters quick crimes by local map rules while preserving the generic no-filter list.
+- `GET /api/dirty-jobs?region=&location=` — filters/prioritizes dirty jobs by local map rules while preserving the generic no-filter list.
+
+Quick-crime start may include `region_slug` and `location_slug`. The backend validates whether the action is allowed at that hotspot and whether current-location travel is required.

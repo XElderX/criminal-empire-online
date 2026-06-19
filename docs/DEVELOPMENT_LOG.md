@@ -1,3 +1,35 @@
+## 2026-06-19 — Criminal Empire Online v0.6.1.1 — Crimes Tab SQL Hotfix
+
+- Fixed the Crimes tab SQL failure caused by `SELECT DISTINCT ... ORDER BY rule.sort_order` under stricter MySQL settings.
+- Quick crime templates now preserve location-priority ordering while being deduplicated after fetch, preventing the tab from crashing on load.
+
+## 2026-06-19 — Criminal Empire Online v0.6.1 — Map Gameplay Integration
+
+- Map hotspots now provide real local activity previews instead of static fake counts.
+- Quick Crimes can be filtered by region and hotspot using `quick_crime_location_rules`.
+- Dirty Jobs can be filtered by region and hotspot using `dirty_job_location_rules`.
+- Current map location can affect quick-crime availability, reward, heat, police pressure, danger, and result payloads.
+- Added hotspot exploration with energy cost, cooldown, local opportunity logs, and generated local rumors/leads.
+- Added `MapContextService`, `LocalActivityService`, `LocationRiskModifierService`, and `HotspotExplorationService`.
+- Location map panel now shows Quick Crimes Nearby, Dirty Jobs Nearby, leads/rumors, recruitment hints, businesses, territory control, and heat/police warnings.
+- Map buttons now pass region/location query context into Crimes, Dirty Jobs, Recruitment, Territories, and Heat pages where supported.
+- Added v0.6.1 migration, seeder, tests, docs, and API documentation.
+
+
+## 2026-06-19 — Criminal Empire Online v0.6 — Game Map & Territories
+
+- Added interactive **Grimwater County** world map.
+- Added clickable major regions: Main City, Suburbs, Industrial Zone, Docks, Rural County, Forest/Hills, Shore/Beach/Sea, Old Town, and Highway/Outskirts.
+- Added region sub-maps with clickable hotspots for crimes, jobs, businesses, recruitment, warehouses, heat/police, territory details, and future systems.
+- Added local map asset folders under `frontend/public/assets/maps/` with WebP map art, SVG overlays, and placeholder fallbacks.
+- Added `world_regions`, `world_locations`, `user_location_state`, `territory_map_links`, and `map_activity_links`.
+- Added `WorldMapService`, `TravelService`, `MapRiskService`, and `WorldMapController`.
+- Added `/api/world-map`, region/location/current-location/travel endpoints, and read-only admin map endpoints.
+- Added `WorldMapPage`, `LocationMapPage`, map components, map asset manifest, frontend world-map API client, and TypeScript map types.
+- Added territory control/risk display on hotspot cards and travel panels.
+- Added World Map navigation item without removing Territories, Heat & Police, Crimes, Quick Crimes, Dirty Jobs, or Warehouse pages.
+- Added v0.6 unit/contract tests.
+
 ## 2026-06-19 — Criminal Empire Online v0.5.1.3 — Dirty Job Crew Requirement Hotfix
 
 - Hotfixed Dirty Jobs so all runs require at least one assigned crew member, even if older template data still says `0`.

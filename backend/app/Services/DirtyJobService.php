@@ -21,7 +21,7 @@ final class DirtyJobService
         $this->experience = new ExperienceService();
     }
 
-    public function opportunities(array $user): array
+    public function opportunities(array $user, array $filters = []): array
     {
         (new DirtyJobGeneratorService())->ensureForUser($user);
 
@@ -53,7 +53,16 @@ final class DirtyJobService
                     npc.last_name AS contact_last_name,
                     npc.nickname AS contact_nickname,
                     contact.contact_type,
-                    relationship.trust AS contact_trust
+                    relationship.trust AS contact_trust,
+                    local_region.slug AS local_region_slug,
+                    local_region.name AS local_region_name,
+                    local_location.slug AS local_location_slug,
+                    local_location.name AS local_location_name,
+                    local_rule.reward_multiplier AS local_reward_multiplier,
+                    local_rule.heat_multiplier AS local_heat_multiplier,
+                    local_rule.police_risk_multiplier AS local_police_risk_multiplier,
+                    local_rule.danger_multiplier AS local_danger_multiplier,
+                    local_rule.requires_current_location AS requires_current_location
                 FROM dirty_job_opportunities opportunity
                 JOIN dirty_job_templates template
                     ON template.id = opportunity.template_id
@@ -66,6 +75,12 @@ final class DirtyJobService
                 LEFT JOIN contact_relationships relationship
                     ON relationship.contact_id = contact.id
                     AND relationship.user_id = opportunity.user_id
+                LEFT JOIN dirty_job_location_rules local_rule
+                    ON local_rule.dirty_job_template_id = template.id
+                LEFT JOIN world_regions local_region
+                    ON local_region.id = local_rule.world_region_id
+                LEFT JOIN world_locations local_location
+                    ON local_location.id = local_rule.world_location_id
                 WHERE opportunity.user_id = ?
                   AND opportunity.status = 'available'
                   AND opportunity.available_from <= NOW()
@@ -75,6 +90,18 @@ final class DirtyJobService
         );
         $statement->execute([$user['id']]);
         $opportunities = $statement->fetchAll();
+        if (!empty($filters['region']) || !empty($filters['location'])) {
+            $context = (new MapContextService())->resolve(
+                $user,
+                isset($filters['region']) ? (string) $filters['region'] : null,
+                isset($filters['location']) ? (string) $filters['location'] : null
+            );
+            $opportunities = array_values(array_filter($opportunities, static function (array $opportunity) use ($context): bool {
+                return ($opportunity['local_location_slug'] ?? null) === $context['location']['slug']
+                    || (($opportunity['local_location_slug'] ?? null) === null
+                        && ($opportunity['local_region_slug'] ?? null) === $context['region']['slug']);
+            }));
+        }
 
         $crewCount = $this->availableCrewCount((int) $user['id']);
         $hasWarehouse = (new WarehouseService())->firstWarehouseForUser(
@@ -100,6 +127,23 @@ final class DirtyJobService
                 (int) $opportunity['reward_max']
                 * (float) $opportunity['reward_multiplier']
             );
+            if (!empty($opportunity['local_reward_multiplier'])) {
+                $opportunity['estimated_reward_min'] = (int) round($opportunity['estimated_reward_min'] * (float) $opportunity['local_reward_multiplier']);
+                $opportunity['estimated_reward_max'] = (int) round($opportunity['estimated_reward_max'] * (float) $opportunity['local_reward_multiplier']);
+            }
+            $opportunity['location_context'] = [
+                'region_slug' => $opportunity['local_region_slug'] ?? null,
+                'region_name' => $opportunity['local_region_name'] ?? null,
+                'location_slug' => $opportunity['local_location_slug'] ?? null,
+                'location_name' => $opportunity['local_location_name'] ?? null,
+                'requires_current_location' => (bool) ($opportunity['requires_current_location'] ?? false),
+                'local_modifiers' => [
+                    'reward_multiplier' => (float) ($opportunity['local_reward_multiplier'] ?? 1.0),
+                    'heat_multiplier' => (float) ($opportunity['local_heat_multiplier'] ?? 1.0),
+                    'police_risk_multiplier' => (float) ($opportunity['local_police_risk_multiplier'] ?? 1.0),
+                    'danger_multiplier' => (float) ($opportunity['local_danger_multiplier'] ?? 1.0),
+                ],
+            ];
             $requiredCrew = $this->requiredCrewMinimum((int) $opportunity['min_crew_size']);
             $opportunity['min_crew_size'] = $requiredCrew;
             $opportunity['can_accept'] = (int) $user['level'] >= (int) $opportunity['min_level']

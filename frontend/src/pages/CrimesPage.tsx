@@ -29,6 +29,24 @@ interface CrimesPageProps {
 
 type CrimesSubtab = 'explore_leads' | 'quick_crimes' | 'fallback_street_actions';
 
+function locationQuery(): { region: string | null; location: string | null; tab: string | null } {
+  const params = new URLSearchParams(window.location.search);
+  return {
+    region: params.get('region'),
+    location: params.get('location'),
+    tab: params.get('tab'),
+  };
+}
+
+function locationQueryString(): string {
+  const { region, location } = locationQuery();
+  const params = new URLSearchParams();
+  if (region) params.set('region', region);
+  if (location) params.set('location', location);
+  const value = params.toString();
+  return value ? `?${value}` : '';
+}
+
 export function CrimesPage({ onChanged }: CrimesPageProps) {
   const [overview, setOverview] = useState<CrimeOverview | null>(null);
   const [quickOverview, setQuickOverview] = useState<QuickCrimeOverview | null>(null);
@@ -40,7 +58,7 @@ export function CrimesPage({ onChanged }: CrimesPageProps) {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [busyKey, setBusyKey] = useState('');
-  const [activeSubtab, setActiveSubtab] = useState<CrimesSubtab>('explore_leads');
+  const [activeSubtab, setActiveSubtab] = useState<CrimesSubtab>(() => locationQuery().tab === 'quick_crimes' ? 'quick_crimes' : 'explore_leads');
 
   useEffect(() => {
     void load();
@@ -58,7 +76,7 @@ export function CrimesPage({ onChanged }: CrimesPageProps) {
     try {
       const [response, quickResponse] = await Promise.all([
         api<CrimeOverview>('/crimes'),
-        api<QuickCrimeOverview>('/quick-crimes'),
+        api<QuickCrimeOverview>(`/quick-crimes${locationQueryString()}`),
       ]);
 
       setOverview(response);
@@ -225,6 +243,8 @@ export function CrimesPage({ onChanged }: CrimesPageProps) {
           body: JSON.stringify({
             idempotency_key: crypto.randomUUID(),
             crew_ids: selectedQuickCrewIds,
+            region_slug: locationQuery().region,
+            location_slug: locationQuery().location,
           }),
         },
       );
@@ -315,10 +335,11 @@ export function CrimesPage({ onChanged }: CrimesPageProps) {
   return (
     <section className="page-section crimes-v04-page">
       <GameHeader
-        eyebrow="v0.4.2 crime loop"
+        eyebrow="v0.6.1 location-aware crime loop"
         title="Crimes Expansion"
-        description="Explore locations, uncover rumors, investigate leads, prepare, assign crew/equipment, handle random events, and let NPCs remember the outcome."
+        description="Explore leads, quick crimes, and fallback actions with map location context. Nearby hotspots can now modify risk, rewards, and availability."
       />
+      <LocationContextHeader />
 
       {message && <Notice message={message} kind="success" />}
       {error && <Notice message={error} kind="error" />}
@@ -480,6 +501,22 @@ export function CrimesPage({ onChanged }: CrimesPageProps) {
       {activeSubtab === 'fallback_street_actions' && (
         <LegacyCrimesPanel crimes={overview.legacy_crimes} busyKey={busyKey} onCommit={commitLegacy} />
       )}
+    </section>
+  );
+}
+
+function LocationContextHeader() {
+  const { region, location } = locationQuery();
+  if (!region && !location) {
+    return null;
+  }
+
+  return (
+    <section className="card location-context-header">
+      <p className="eyebrow">Map context</p>
+      <h3>Nearby actions for {location ? location.replace(/-/g, ' ') : region?.replace(/-/g, ' ')}</h3>
+      <p className="muted">Local rules filter quick crimes and can apply heat, police, danger, reward, and territory modifiers. Use World Map to travel or change hotspot.</p>
+      <button className="btn" onClick={() => window.history.pushState({}, '', '/world-map')}>Back to map path</button>
     </section>
   );
 }
@@ -867,6 +904,12 @@ function QuickCrimeCard({
 
       <h3>{template.title}</h3>
       <p>{template.description}</p>
+      {template.local_location_name && (
+        <p className="muted local-context-line">
+          Nearby: {template.local_region_name} / {template.local_location_name}
+          {template.requires_current_location ? ' · travel required' : ''}
+        </p>
+      )}
 
       <dl className="details-grid compact-details-grid">
         <div><dt>Level</dt><dd>{template.min_level}+</dd></div>
