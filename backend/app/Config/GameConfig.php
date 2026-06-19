@@ -4,8 +4,8 @@ namespace App\Config;
 
 final class GameConfig
 {
-    public const VERSION = '0.5.1.1';
-    public const RELEASE_TITLE = 'Criminal Empire Online v0.5.1.1 — Boss Name Setup';
+    public const VERSION = '0.5.1.3';
+    public const RELEASE_TITLE = 'Criminal Empire Online v0.5.1.3 — Dirty Job Crew Requirement Hotfix';
 
     public const STARTING_CASH = 500;
     public const STARTING_BANK_CASH = 0;

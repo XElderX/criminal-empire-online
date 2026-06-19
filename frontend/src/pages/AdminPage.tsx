@@ -23,6 +23,9 @@ interface AdminUserSummary {
   bank_cash: number;
   energy: number;
   max_energy: number;
+  heat: number;
+  boss_personal_heat: number;
+  gang_heat: number;
 }
 
 type AdminAssetType = 'item' | 'weapon' | 'drug';
@@ -170,6 +173,16 @@ export function AdminPage({ currentUser, onChanged }: AdminPageProps) {
     });
   }
 
+  async function clearHeat(): Promise<void> {
+    await runAdminAction(async () => {
+      const response = await api<{ message: string; crew_members_cleared: number }>(
+        `/admin/users/${targetUserId}/heat/clear`,
+        { method: 'POST' },
+      );
+      return `${response.message} Crew members cleared: ${response.crew_members_cleared}.`;
+    });
+  }
+
   async function grantAsset(): Promise<void> {
     await runAdminAction(async () => {
       const response = await api<{ message: string; asset_name: string; new_quantity: number }>(
@@ -253,6 +266,9 @@ export function AdminPage({ currentUser, onChanged }: AdminPageProps) {
               <span>
                 Energy: {selectedUser.energy}/{selectedUser.max_energy}
               </span>
+              <span>Heat: {selectedUser.heat}</span>
+              <span>Boss heat: {selectedUser.boss_personal_heat}</span>
+              <span>Gang heat: {selectedUser.gang_heat}</span>
             </div>
           )}
 
@@ -262,6 +278,9 @@ export function AdminPage({ currentUser, onChanged }: AdminPageProps) {
             </button>
             <button className="btn" onClick={setCash}>
               Set cash
+            </button>
+            <button className="btn" onClick={clearHeat}>
+              Set heat to 0
             </button>
           </div>
         </section>

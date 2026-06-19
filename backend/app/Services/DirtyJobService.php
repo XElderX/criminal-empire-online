@@ -100,9 +100,11 @@ final class DirtyJobService
                 (int) $opportunity['reward_max']
                 * (float) $opportunity['reward_multiplier']
             );
+            $requiredCrew = $this->requiredCrewMinimum((int) $opportunity['min_crew_size']);
+            $opportunity['min_crew_size'] = $requiredCrew;
             $opportunity['can_accept'] = (int) $user['level'] >= (int) $opportunity['min_level']
                 && (int) $user['reputation'] >= (int) $opportunity['min_reputation']
-                && $crewCount >= (int) $opportunity['min_crew_size']
+                && $crewCount >= $requiredCrew
                 && (!(bool) $opportunity['requires_warehouse'] || $hasWarehouse);
             $opportunity['requirement_messages'] = $this->requirementMessages(
                 $user,
@@ -145,9 +147,10 @@ final class DirtyJobService
 
         return [
             'opportunity' => $this->formatOpportunity($opportunity) + [
+                'min_crew_size' => $this->requiredCrewMinimum((int) $opportunity['min_crew_size']),
                 'can_accept' => (int) $user['level'] >= (int) $opportunity['min_level']
                     && (int) $user['reputation'] >= (int) $opportunity['min_reputation']
-                    && $crewCount >= (int) $opportunity['min_crew_size']
+                    && $crewCount >= $this->requiredCrewMinimum((int) $opportunity['min_crew_size'])
                     && (!(bool) $opportunity['requires_warehouse'] || $hasWarehouse),
                 'requirement_messages' => $this->requirementMessages(
                     $user,
@@ -418,6 +421,11 @@ final class DirtyJobService
             }
 
             $normalized = $this->normalizeAssignments($assignments);
+
+            if (count($normalized) < $this->requiredCrewMinimum((int) $run['min_crew_size'])) {
+                throw new RuntimeException('At least one crew member must be assigned to every Dirty Job.');
+            }
+
             $seenMembers = [];
             $seenRoles = [];
 
@@ -1476,7 +1484,7 @@ final class DirtyJobService
         array $run,
         array $assignments
     ): void {
-        if (count($assignments) < (int) $run['min_crew_size']) {
+        if (count($assignments) < $this->requiredCrewMinimum((int) $run['min_crew_size'])) {
             throw new RuntimeException('Not enough crew members are assigned.');
         }
 
@@ -1546,7 +1554,7 @@ final class DirtyJobService
 
         if (
             $this->availableCrewCount((int) $user['id'])
-            < (int) $opportunity['min_crew_size']
+            < $this->requiredCrewMinimum((int) $opportunity['min_crew_size'])
         ) {
             throw new RuntimeException('This Dirty Job requires a larger available crew.');
         }
@@ -1793,6 +1801,7 @@ final class DirtyJobService
             $opportunity[$field] = $this->decodeJson($opportunity[$field] ?? null);
         }
 
+        $opportunity['min_crew_size'] = $this->requiredCrewMinimum((int) ($opportunity['min_crew_size'] ?? 0));
         $opportunity['contact_name'] = $this->contactName($opportunity);
 
         return $opportunity;
@@ -2193,6 +2202,11 @@ final class DirtyJobService
         }
 
         return $messages;
+    }
+
+    private function requiredCrewMinimum(int $configuredMinimum): int
+    {
+        return max(1, $configuredMinimum);
     }
 
     private function findDecision(array $event, string $decisionCode): ?array

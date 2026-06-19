@@ -1,4 +1,4 @@
-# Criminal Empire Online v0.5.1.1 — Boss Name Setup
+# Criminal Empire Online v0.5.1.3 — Dirty Job Crew Requirement Hotfix
 
 Criminal Empire Online is a browser-based, primarily single-player criminal empire simulation. The player begins with $500, performs small NPC-provided jobs, recruits a crew, equips members, plans structured Dirty Jobs, manages heat and consequences, and now discovers more complex crime opportunities through NPCs and city locations.
 
@@ -15,11 +15,11 @@ This project is **not Laravel**. Business logic is organized into readable contr
 
 
 
-## v0.5.1.1 highlights
+## v0.5.1.3 highlights
 
-- New registrations must provide the boss first name and surname before starting play.
-- Existing users can set the boss name once if the account still uses the original default boss identity.
-- The boss profile now exposes rename eligibility so the Heat & Police page can guide that one-time setup.
+- Every Dirty Job now requires at least `1` assigned crew member, even if an older template was configured with `0`.
+- Dirty Job execution is blocked both in the backend and UI until the minimum crew assignment is present.
+- The earlier admin heat reset and boss-name setup changes remain in place.
 
 ## v0.5 highlights
 

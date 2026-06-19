@@ -1,3 +1,15 @@
+## 2026-06-19 — Criminal Empire Online v0.5.1.3 — Dirty Job Crew Requirement Hotfix
+
+- Hotfixed Dirty Jobs so every job now requires at least one assigned crew member before execution.
+- Added backend enforcement plus frontend warnings and button disabling for zero-assignment runs.
+- Fixed a Dirty Jobs assignment bug where invalid non-crew selections could make role saves appear to fail and leave the run showing missing crew.
+- Dirty Jobs now only count real assigned crew members in the role picker and save payload.
+
+## 2026-06-19 — Criminal Empire Online v0.5.1.2 — Admin Heat Reset
+
+- Added an admin-only player tool to set a selected user's heat back to `0`.
+- Clearing heat now resets the user's legacy heat, boss personal heat, gang heat, and crew-member personal heat from the Admin panel.
+
 ## 2026-06-19 — Criminal Empire Online v0.5.1.1 — Boss Name Setup
 
 - New registrations must provide boss first name and surname, which are stored as the initial boss identity instead of falling back to the username.

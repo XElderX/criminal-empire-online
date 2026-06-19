@@ -11,15 +11,19 @@ $migration = readFileOrFail($root . '/backend/database/migrations/010_v051_boss_
 $boss = readFileOrFail($root . '/backend/app/Services/BossCharacterService.php');
 $auth = readFileOrFail($root . '/backend/app/Services/AuthService.php');
 $bossController = readFileOrFail($root . '/backend/app/Controllers/BossController.php');
+$adminController = readFileOrFail($root . '/backend/app/Controllers/AdminController.php');
 $crew = readFileOrFail($root . '/backend/app/Services/CrewService.php');
 $crime = readFileOrFail($root . '/backend/app/Services/CrimeOpportunityService.php');
 $quick = readFileOrFail($root . '/backend/app/Services/QuickCrimeService.php');
+$dirtyJobs = readFileOrFail($root . '/backend/app/Services/DirtyJobService.php');
 $routes = readFileOrFail($root . '/backend/routes/api.php');
 $types = readFileOrFail($root . '/frontend/src/types.ts');
 $authPage = readFileOrFail($root . '/frontend/src/pages/AuthPage.tsx');
 $crewPage = readFileOrFail($root . '/frontend/src/pages/CrewPage.tsx');
 $crimesPage = readFileOrFail($root . '/frontend/src/pages/CrimesPage.tsx');
+$dirtyJobsPage = readFileOrFail($root . '/frontend/src/pages/DirtyJobsPage.tsx');
 $heatPage = readFileOrFail($root . '/frontend/src/pages/HeatPolicePage.tsx');
+$adminPage = readFileOrFail($root . '/frontend/src/pages/AdminPage.tsx');
 $docs = readFileOrFail($root . '/docs/DEVELOPMENT_LOG.md');
 
 $runner->test('v0.5.1 migration adds boss operational skill fields', function () use ($runner, $migration): void {
@@ -49,6 +53,16 @@ $runner->test('Registration and boss routes require explicit boss naming', funct
     $runner->assertContains('/api/boss/rename', $routes);
 });
 
+$runner->test('Admin panel can clear a user heat profile to zero', function () use ($runner, $adminController, $adminPage, $routes): void {
+    foreach (['function clearHeat', 'boss_personal_heat = 0', 'gang_heat = 0', 'admin.heat_cleared'] as $needle) {
+        $runner->assertContains($needle, $adminController);
+    }
+
+    $runner->assertContains('/api/admin/users/{id}/heat/clear', $routes);
+    $runner->assertContains('Set heat to 0', $adminPage);
+    $runner->assertContains('Boss heat:', $adminPage);
+});
+
 $runner->test('Crew service includes boss in crew section and profile route', function () use ($runner, $crew): void {
     $runner->assertContains('array_unshift($members', $crew);
     $runner->assertContains('memberId === 0', $crew);
@@ -64,6 +78,16 @@ $runner->test('Major crime service accepts boss actors', function () use ($runne
 $runner->test('Quick crime service accepts boss actors', function () use ($runner, $quick): void {
     foreach (['bossActor', 'in_array(0, $crewIds', 'actor_type', 'boss_consequence'] as $needle) {
         $runner->assertContains($needle, $quick);
+    }
+});
+
+$runner->test('Dirty jobs now require at least one assigned crew member', function () use ($runner, $dirtyJobs, $dirtyJobsPage): void {
+    foreach (['requiredCrewMinimum', 'At least one crew member must be assigned to every Dirty Job.', 'return max(1, $configuredMinimum);'] as $needle) {
+        $runner->assertContains($needle, $dirtyJobs);
+    }
+
+    foreach (['Every Dirty Job now requires at least', 'disabled={loading || selectedCrewCount < minimumCrew}', 'Assign at least {minimumCrew} crew member'] as $needle) {
+        $runner->assertContains($needle, $dirtyJobsPage);
     }
 });
 
@@ -83,8 +107,8 @@ $runner->test('Auth, crew, crime and heat pages expose boss naming and boss stat
     $runner->assertContains('selectedQuickCrewIds', $crimesPage);
 });
 
-$runner->test('Development log documents v0.5.1.1', function () use ($runner, $docs): void {
-    $runner->assertContains('v0.5.1.1 — Boss Name Setup', $docs);
+$runner->test('Development log documents v0.5.1.3', function () use ($runner, $docs): void {
+    $runner->assertContains('v0.5.1.3 — Dirty Job Crew Requirement Hotfix', $docs);
 });
 
 exit($runner->finish());

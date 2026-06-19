@@ -48,7 +48,7 @@ final class AdminController
 
         $users = $pdo->query(
             <<<'SQL'
-                SELECT id, username, role, cash, bank_cash, energy, max_energy
+                SELECT id, username, role, cash, bank_cash, energy, max_energy, heat, boss_personal_heat, gang_heat
                 FROM users
                 ORDER BY id ASC
             SQL
@@ -290,6 +290,85 @@ final class AdminController
         }
     }
 
+    public function clearHeat(array $params, array $context): void
+    {
+        try {
+            AdminMiddleware::ensure($context['user']);
+            $targetUserId = (int) ($params['id'] ?? 0);
+
+            if ($targetUserId <= 0) {
+                throw new RuntimeException('Valid user id is required.');
+            }
+
+            $pdo = Database::pdo();
+            $target = $this->findUser($pdo, $targetUserId);
+
+            $pdo->beginTransaction();
+
+            try {
+                $crewCountStatement = $pdo->prepare(
+                    'SELECT COUNT(*) FROM player_gang_members WHERE user_id = ? AND personal_heat > 0'
+                );
+                $crewCountStatement->execute([$targetUserId]);
+                $crewMembersCleared = (int) $crewCountStatement->fetchColumn();
+
+                $pdo->prepare(
+                    <<<'SQL'
+                        UPDATE users
+                        SET heat = 0,
+                            boss_personal_heat = 0,
+                            gang_heat = 0,
+                            last_heat_generating_action_at = NULL,
+                            updated_at = NOW()
+                        WHERE id = ?
+                    SQL
+                )->execute([$targetUserId]);
+
+                $pdo->prepare(
+                    <<<'SQL'
+                        UPDATE player_gang_members
+                        SET personal_heat = 0,
+                            under_investigation = 0,
+                            updated_at = NOW()
+                        WHERE user_id = ?
+                    SQL
+                )->execute([$targetUserId]);
+
+                AuditService::log(
+                    (int) $context['user']['id'],
+                    'admin.heat_cleared',
+                    [
+                        'target_user_id' => $targetUserId,
+                        'target_username' => $target['username'],
+                        'previous_heat' => (int) $target['heat'],
+                        'previous_boss_personal_heat' => (int) ($target['boss_personal_heat'] ?? 0),
+                        'previous_gang_heat' => (int) ($target['gang_heat'] ?? 0),
+                        'crew_members_cleared' => $crewMembersCleared,
+                    ]
+                );
+
+                $pdo->commit();
+
+                Response::json([
+                    'message' => 'Heat set to 0.',
+                    'user_id' => $targetUserId,
+                    'heat' => 0,
+                    'boss_personal_heat' => 0,
+                    'gang_heat' => 0,
+                    'crew_members_cleared' => $crewMembersCleared,
+                ]);
+            } catch (Throwable $exception) {
+                if ($pdo->inTransaction()) {
+                    $pdo->rollBack();
+                }
+
+                throw $exception;
+            }
+        } catch (Throwable $exception) {
+            Response::json(['message' => $exception->getMessage()], 422);
+        }
+    }
+
     public function grantAsset(array $params, array $context): void
     {
         try {
@@ -458,7 +537,7 @@ final class AdminController
     {
         $statement = $pdo->prepare(
             <<<'SQL'
-                SELECT id, username, cash, energy, max_energy
+                SELECT id, username, cash, energy, max_energy, heat, boss_personal_heat, gang_heat
                 FROM users
                 WHERE id = ?
                 LIMIT 1
