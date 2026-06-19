@@ -65,7 +65,7 @@ $runner->test('World map controller exposes rich activities and exploration', fu
 });
 
 $runner->test('Quick crimes are location-aware and backend-enforced', function () use ($runner, $quick): void {
-    foreach (['quick_crime_location_rules', 'locationRuleForTemplate', 'Travel to', 'reward_multiplier', 'heat_multiplier', 'location_context'] as $needle) {
+    foreach (['quick_crime_location_rules', 'locationRuleForTemplate', 'Travel to', 'reward_multiplier', 'heat_multiplier', 'location_context', 'local_sort_order', '$seenTemplateIds'] as $needle) {
         $runner->assertContains($needle, $quick);
     }
 });
@@ -91,8 +91,8 @@ $runner->test('Crimes and Dirty Jobs pages read map query context', function () 
     $runner->assertContains('Dirty Jobs near', $dirtyPage);
 });
 
-$runner->test('Development log documents v0.6.1', function () use ($runner, $docs): void {
-    $runner->assertContains('v0.6.1 — Map Gameplay Integration', $docs);
+$runner->test('Development log documents v0.6.1.1', function () use ($runner, $docs): void {
+    $runner->assertContains('v0.6.1.1 — Crimes Tab SQL Hotfix', $docs);
 });
 
 exit($runner->finish());

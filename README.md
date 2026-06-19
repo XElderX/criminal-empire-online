@@ -17,7 +17,7 @@ Major regions:
 
 New map gameplay connects existing systems instead of replacing them: Crimes, Quick Crimes, Dirty Jobs, Recruitment, Businesses, Drug Market, Warehouse, Heat & Police, and Territories.
 
-# Criminal Empire Online v0.6.1 — Map Gameplay Integration
+# Criminal Empire Online v0.6.1.1 — Crimes Tab SQL Hotfix
 
 Criminal Empire Online is a browser-based, primarily single-player criminal empire simulation. The player begins with $500, performs small NPC-provided jobs, recruits a crew, equips members, plans structured Dirty Jobs, manages heat and consequences, and now discovers more complex crime opportunities through NPCs and city locations.
 

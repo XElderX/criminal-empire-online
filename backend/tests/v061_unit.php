@@ -9,12 +9,12 @@ use Tests\TestRunner;
 
 $runner = new TestRunner();
 
-$runner->test('Version is v0.6.1', function () use ($runner): void {
-    $runner->assertSame('0.6.1', GameConfig::VERSION);
+$runner->test('Version is v0.6.1.1', function () use ($runner): void {
+    $runner->assertSame('0.6.1.1', GameConfig::VERSION);
 });
 
-$runner->test('Release title identifies map gameplay integration', function () use ($runner): void {
-    $runner->assertContains('Map Gameplay Integration', GameConfig::RELEASE_TITLE);
+$runner->test('Release title identifies crimes tab sql hotfix', function () use ($runner): void {
+    $runner->assertContains('Crimes Tab SQL Hotfix', GameConfig::RELEASE_TITLE);
 });
 
 $runner->test('Location modifiers stay inside safe bounds', function () use ($runner): void {

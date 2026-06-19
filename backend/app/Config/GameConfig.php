@@ -4,8 +4,8 @@ namespace App\Config;
 
 final class GameConfig
 {
-    public const VERSION = '0.6.1';
-    public const RELEASE_TITLE = 'Criminal Empire Online v0.6.1 — Map Gameplay Integration';
+    public const VERSION = '0.6.1.1';
+    public const RELEASE_TITLE = 'Criminal Empire Online v0.6.1.1 — Crimes Tab SQL Hotfix';
 
     public const STARTING_CASH = 500;
     public const STARTING_BANK_CASH = 0;

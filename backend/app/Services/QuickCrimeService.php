@@ -25,11 +25,12 @@ final class QuickCrimeService
         $context = null;
         $params = [];
         $sql = <<<'SQL'
-                SELECT DISTINCT template.*, rule.requires_current_location,
+                SELECT template.*, rule.requires_current_location,
                        rule.reward_multiplier AS local_reward_multiplier,
                        rule.heat_multiplier AS local_heat_multiplier,
                        rule.police_risk_multiplier AS local_police_risk_multiplier,
                        rule.danger_multiplier AS local_danger_multiplier,
+                       COALESCE(rule.sort_order, 999) AS local_sort_order,
                        region.slug AS local_region_slug,
                        region.name AS local_region_name,
                        location.slug AS local_location_slug,
@@ -60,7 +61,14 @@ final class QuickCrimeService
         $inventory = $this->items->inventoryForUser((int) $user['id']);
 
         $data = [];
+        $seenTemplateIds = [];
         foreach ($templates as $template) {
+            $templateId = (int) $template['id'];
+            if (isset($seenTemplateIds[$templateId])) {
+                continue;
+            }
+
+            $seenTemplateIds[$templateId] = true;
             $data[] = $this->formatTemplate($template, $user, $inventory, $context);
         }
 

@@ -1,3 +1,8 @@
+## 2026-06-19 — Criminal Empire Online v0.6.1.1 — Crimes Tab SQL Hotfix
+
+- Fixed a MySQL `DISTINCT` plus `ORDER BY` compatibility error that could break the Crimes tab when location-aware quick crimes were loaded.
+- Quick crime listing now keeps hotspot ordering while deduplicating templates safely in PHP instead of relying on a SQL pattern rejected by stricter MySQL modes.
+
 ## 2026-06-19 — Criminal Empire Online v0.6.1 — Map Gameplay Integration
 
 - Added location-aware Quick Crime rules, Dirty Job rules, local activity endpoints, and hotspot exploration.

@@ -1,3 +1,8 @@
+## 2026-06-19 — Criminal Empire Online v0.6.1.1 — Crimes Tab SQL Hotfix
+
+- Fixed the Crimes tab SQL failure caused by `SELECT DISTINCT ... ORDER BY rule.sort_order` under stricter MySQL settings.
+- Quick crime templates now preserve location-priority ordering while being deduplicated after fetch, preventing the tab from crashing on load.
+
 ## 2026-06-19 — Criminal Empire Online v0.6.1 — Map Gameplay Integration
 
 - Map hotspots now provide real local activity previews instead of static fake counts.
