@@ -1,3 +1,9 @@
+## 2026-06-19 — Criminal Empire Online v0.6.1.2 — Dirty Job Boss Support
+
+- Added boss support to Dirty Job assignments so the boss can now take a role beside crew members in the Dirty Jobs tab.
+- Dirty Job backend assignment, validation, active-run checks, and outcome handling now recognize the boss as a real actor instead of requiring a `player_gang_members` row.
+- Updated the Dirty Jobs role picker to show the boss again and count boss assignments correctly when saving and executing a run.
+
 ## 2026-06-19 — Criminal Empire Online v0.6.1.1 — Crimes Tab SQL Hotfix
 
 - Fixed a MySQL `DISTINCT` plus `ORDER BY` compatibility error that could break the Crimes tab when location-aware quick crimes were loaded.

@@ -488,6 +488,9 @@ export interface DirtyJobRoleDefinition {
 export interface DirtyJobAssignment {
   id: number;
   gang_member_id: number;
+  actor_type?: 'boss' | 'crew';
+  actor_id?: number;
+  is_boss?: boolean;
   role_code: string;
   first_name?: string;
   last_name?: string;

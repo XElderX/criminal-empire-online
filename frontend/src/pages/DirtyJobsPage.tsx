@@ -87,8 +87,14 @@ export function DirtyJobsPage({ onChanged }: DirtyJobsPageProps) {
   }, []);
 
   const activeCrew = useMemo(
-    () => crew.filter((member) => member.status === 'active' && !member.is_boss && member.id > 0),
+    () => crew
+      .filter((member) => member.status === 'active')
+      .sort((left, right) => Number(right.is_boss || false) - Number(left.is_boss || false)),
     [crew],
+  );
+  const assignableMemberIds = useMemo(
+    () => new Set(activeCrew.map((member) => Number(member.id))),
+    [activeCrew],
   );
 
   async function openOpportunity(opportunityId: number): Promise<void> {
@@ -161,7 +167,7 @@ export function DirtyJobsPage({ onChanged }: DirtyJobsPageProps) {
     }
 
     const assignments = Object.entries(roleSelections)
-      .filter(([memberId, roleCode]) => roleCode !== '' && Number(memberId) > 0)
+      .filter(([memberId, roleCode]) => roleCode !== '' && assignableMemberIds.has(Number(memberId)))
       .map(([memberId, roleCode]) => ({
         member_id: Number(memberId),
         role_code: roleCode,
@@ -268,9 +274,10 @@ export function DirtyJobsPage({ onChanged }: DirtyJobsPageProps) {
         Math.ceil((new Date(detail.run.completes_at).getTime() - clock) / 1_000),
       )
     : detail?.run?.seconds_remaining ?? 0;
-  const assignedCrewCount = detail?.run?.assignments?.length || 0;
+  const currentSelectedRoles = Object.values(roleSelections).filter((roleCode) => roleCode !== '');
+  const assignedCrewCount = currentSelectedRoles.length;
   const requiredRoles = detail?.opportunity?.required_roles || [];
-  const assignedRoles = detail?.run?.assignments?.map((assignment) => assignment.role_code) || [];
+  const assignedRoles = currentSelectedRoles;
   const missingRequiredRoles = requiredRoles.filter(
     (role) => !assignedRoles.includes(role),
   );
@@ -515,17 +522,18 @@ function OperationWorkspace({
   const completedPreparationCodes = new Set(
     (run.preparations || []).map((entry) => String(entry.action_code || '')),
   );
-  const assignedRoles = (run.assignments || []).map(
-    (assignment) => assignment.role_code,
-  );
-  const missingRequiredRoles = detail.opportunity.required_roles.filter(
-    (role) => !assignedRoles.includes(role),
-  );
   const takenRoles = new Set(
     Object.values(roleSelections).filter((roleCode) => roleCode !== ''),
   );
+  const assignableMemberIds = new Set(crew.map((member) => Number(member.id)));
+  const assignedRoles = Object.entries(roleSelections)
+    .filter(([memberId, roleCode]) => roleCode !== '' && assignableMemberIds.has(Number(memberId)))
+    .map(([, roleCode]) => roleCode);
+  const missingRequiredRoles = detail.opportunity.required_roles.filter(
+    (role) => !assignedRoles.includes(role),
+  );
   const selectedCrewCount = Object.entries(roleSelections)
-    .filter(([memberId, roleCode]) => roleCode !== '' && Number(memberId) > 0)
+    .filter(([memberId, roleCode]) => roleCode !== '' && assignableMemberIds.has(Number(memberId)))
     .length;
   const minimumCrew = Math.max(1, detail.opportunity.min_crew_size);
 
@@ -779,6 +787,10 @@ function humanize(value: string): string {
 }
 
 function displayCrewName(member: CrewMember): string {
+  if (member.is_boss) {
+    return `Boss: ${member.first_name} ${member.last_name}`.trim();
+  }
+
   const nickname = member.nickname ? ` “${member.nickname}”` : '';
   return `${member.first_name}${nickname} ${member.last_name}`;
 }

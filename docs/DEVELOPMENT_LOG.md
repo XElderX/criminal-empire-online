@@ -1,3 +1,9 @@
+## 2026-06-19 — Criminal Empire Online v0.6.1.2 — Dirty Job Boss Support
+
+- Added actor-based Dirty Job assignment support so the boss can be selected into Dirty Job roles just like in discovered crimes and quick crimes.
+- Dirty Jobs now validate boss availability, prevent the boss from being assigned into multiple active Dirty Jobs at once, and handle boss-specific arrest/injury outcomes.
+- The Dirty Jobs frontend now includes the boss in the selector again and saves only valid assignable actors for the current run.
+
 ## 2026-06-19 — Criminal Empire Online v0.6.1.1 — Crimes Tab SQL Hotfix
 
 - Fixed the Crimes tab SQL failure caused by `SELECT DISTINCT ... ORDER BY rule.sort_order` under stricter MySQL settings.

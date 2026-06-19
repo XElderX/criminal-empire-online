@@ -1805,9 +1805,10 @@ final class DirtyJobService
                     npc.last_name,
                     npc.nickname
                 FROM dirty_job_assignments assignment
-                JOIN player_gang_members member
+                LEFT JOIN player_gang_members member
                     ON member.id = assignment.gang_member_id
-                JOIN npcs npc
+                    AND assignment.actor_type = 'crew'
+                LEFT JOIN npcs npc
                     ON npc.id = member.npc_id
                 WHERE assignment.dirty_job_run_id = ?
                 ORDER BY assignment.id
