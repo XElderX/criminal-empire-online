@@ -11,38 +11,112 @@ final class TutorialService
 {
     public function createForNewUser(int $userId): void
     {
-        $sql = <<<'SQL'
-            INSERT INTO user_tutorial_progress (
-                user_id,
-                status,
-                current_step_code,
-                completed_steps,
-                rewards_claimed,
-                started_at,
-                updated_at
-            ) VALUES (?, 'active', 'welcome', JSON_ARRAY(), JSON_ARRAY(), NOW(), NOW())
-        SQL;
+        $firstStep = GameConfig::tutorialSteps(GameConfig::TUTORIAL_KEY_FULL)[0]['code'];
 
-        Database::pdo()->prepare($sql)->execute([$userId]);
+        Database::pdo()->prepare(
+            <<<'SQL'
+                INSERT INTO user_tutorial_progress (
+                    user_id,
+                    tutorial_key,
+                    tutorial_version,
+                    status,
+                    current_step_code,
+                    completed_steps,
+                    rewards_claimed,
+                    completed_update_tutorial_versions,
+                    dismissed_update_tutorial_versions,
+                    started_at,
+                    last_seen_at,
+                    updated_at
+                ) VALUES (?, ?, ?, 'active', ?, JSON_ARRAY(), JSON_ARRAY(), JSON_ARRAY(), JSON_ARRAY(), NOW(), NOW(), NOW())
+            SQL
+        )->execute([
+            $userId,
+            GameConfig::TUTORIAL_KEY_FULL,
+            GameConfig::TUTORIAL_VERSION,
+            $firstStep,
+        ]);
     }
 
     public function state(array $user): array
     {
-        $progress = $this->findProgress((int) $user['id']);
+        $userId = (int) $user['id'];
+        $progress = $this->findProgress($userId);
 
         if ($progress === null) {
-            $this->createCompletedFallback((int) $user['id']);
-            $progress = $this->findProgress((int) $user['id']);
+            $this->createForNewUser($userId);
+            $progress = $this->findProgress($userId);
         }
+
+        (new TutorialUpdateService())->ensureCurrentProgress($userId);
+        $progress = $this->findProgress($userId);
+
+        if ($progress === null) {
+            throw new RuntimeException('Tutorial progress was not found.');
+        }
+
+        Database::pdo()->prepare(
+            'UPDATE user_tutorial_progress SET last_seen_at = NOW(), updated_at = NOW() WHERE user_id = ?'
+        )->execute([$userId]);
 
         return $this->formatState($progress);
     }
 
-    public function advance(
-        array $user,
-        string $stepCode,
-        bool $acknowledged = false
-    ): array {
+    public function current(array $user): array
+    {
+        return $this->state($user);
+    }
+
+    public function steps(array $user): array
+    {
+        $state = $this->state($user);
+
+        return [
+            'tutorial_key' => $state['tutorial_key'],
+            'tutorial_version' => $state['tutorial_version'],
+            'modules' => $state['modules'],
+            'steps' => $state['steps'],
+        ];
+    }
+
+    public function recordObjective(array $user, string $actionType, array $payload = []): array
+    {
+        $actionType = trim($actionType);
+
+        if ($actionType === '') {
+            throw new RuntimeException('Objective action type is required.');
+        }
+
+        $pageKey = isset($payload['page']) ? (string) $payload['page'] : null;
+        $relatedType = isset($payload['related_type']) ? (string) $payload['related_type'] : null;
+        $relatedId = isset($payload['related_id']) ? (int) $payload['related_id'] : null;
+
+        Database::pdo()->prepare(
+            <<<'SQL'
+                INSERT INTO tutorial_objective_events (
+                    user_id,
+                    action_type,
+                    page_key,
+                    related_type,
+                    related_id,
+                    payload,
+                    created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, NOW())
+            SQL
+        )->execute([
+            (int) $user['id'],
+            $actionType,
+            $pageKey,
+            $relatedType,
+            $relatedId,
+            json_encode($payload),
+        ]);
+
+        return $this->state($user);
+    }
+
+    public function advance(array $user, string $stepCode, bool $acknowledged = false): array
+    {
         $pdo = Database::pdo();
         $pdo->beginTransaction();
 
@@ -57,17 +131,14 @@ final class TutorialService
                 throw new RuntimeException('Complete the current tutorial step first.');
             }
 
-            $step = $this->findStep($stepCode);
+            $tutorialKey = (string) ($progress['tutorial_key'] ?? GameConfig::TUTORIAL_KEY_FULL);
+            $step = $this->findStep($tutorialKey, $stepCode);
 
             if ($step === null) {
                 throw new RuntimeException('Unknown tutorial step.');
             }
 
-            if (($step['requires_acknowledgement'] ?? false) && !$acknowledged) {
-                throw new RuntimeException('Confirm that you reviewed this tutorial step.');
-            }
-
-            if (!$this->gameplayRequirementIsMet((int) $user['id'], $stepCode)) {
+            if (!$this->objectiveIsComplete((int) $user['id'], $step, $acknowledged)) {
                 throw new RuntimeException('The gameplay objective for this step is not complete.');
             }
 
@@ -77,54 +148,46 @@ final class TutorialService
                 $completedSteps[] = $stepCode;
             }
 
-            $nextStep = $this->nextStepAfter($stepCode);
+            $this->markStep($user, $progress, $stepCode, 'completed');
+            $this->logStepEvent((int) $user['id'], $stepCode, 'completed', ['acknowledged' => $acknowledged]);
+
+            $nextStep = $this->nextStepAfter($tutorialKey, $stepCode);
             $isComplete = $nextStep === null;
-            $nextStepCode = $isComplete ? 'completed' : $nextStep['code'];
-            $status = $isComplete ? 'completed' : 'active';
-
-            $update = $pdo->prepare(
-                <<<'SQL'
-                    UPDATE user_tutorial_progress
-                    SET
-                        status = ?,
-                        current_step_code = ?,
-                        completed_steps = ?,
-                        completed_at = CASE WHEN ? = 'completed' THEN NOW() ELSE completed_at END,
-                        updated_at = NOW()
-                    WHERE user_id = ?
-                SQL
-            );
-
-            $update->execute([
-                $status,
-                $nextStepCode,
-                json_encode($completedSteps),
-                $status,
-                $user['id'],
-            ]);
-
-            $this->logEvent(
-                (int) $user['id'],
-                $stepCode,
-                'completed',
-                ['acknowledged' => $acknowledged]
-            );
-
-            $reward = 0;
+            $reward = ['cash' => 0, 'xp' => 0];
 
             if ($isComplete) {
-                $reward = $this->grantCompletionReward(
+                $rewardPayload = (array) ($step['reward_payload'] ?? []);
+                $reward = (new TutorialRewardService())->grantOnce(
                     (int) $user['id'],
-                    $progress
+                    $tutorialKey,
+                    GameConfig::TUTORIAL_VERSION,
+                    $rewardPayload
                 );
+
+                $this->completeTutorialProgress((int) $user['id'], $tutorialKey, $completedSteps);
+            } else {
+                Database::pdo()->prepare(
+                    <<<'SQL'
+                        UPDATE user_tutorial_progress
+                        SET
+                            current_step_code = ?,
+                            completed_steps = ?,
+                            updated_at = NOW()
+                        WHERE user_id = ?
+                    SQL
+                )->execute([
+                    $nextStep['code'],
+                    json_encode($completedSteps),
+                    (int) $user['id'],
+                ]);
             }
 
             $pdo->commit();
 
-            $newState = $this->state($user);
-            $newState['reward_granted'] = $reward;
+            $state = $this->state($user);
+            $state['reward_granted'] = $reward;
 
-            return $newState;
+            return $state;
         } catch (Throwable $exception) {
             if ($pdo->inTransaction()) {
                 $pdo->rollBack();
@@ -146,28 +209,38 @@ final class TutorialService
                 throw new RuntimeException('A completed tutorial cannot be skipped.');
             }
 
-            if ($progress['status'] !== 'skipped') {
-                $statement = $pdo->prepare(
+            $tutorialKey = (string) ($progress['tutorial_key'] ?? GameConfig::TUTORIAL_KEY_FULL);
+
+            Database::pdo()->prepare(
+                <<<'SQL'
+                    UPDATE user_tutorial_progress
+                    SET
+                        status = 'skipped',
+                        current_step_code = 'skipped',
+                        skipped_at = NOW(),
+                        updated_at = NOW()
+                    WHERE user_id = ?
+                SQL
+            )->execute([(int) $user['id']]);
+
+            if ($tutorialKey === GameConfig::TUTORIAL_KEY_UPDATE) {
+                $dismissed = $this->decodeList($progress['dismissed_update_tutorial_versions'] ?? '[]');
+
+                if (!in_array(GameConfig::TUTORIAL_VERSION, $dismissed, true)) {
+                    $dismissed[] = GameConfig::TUTORIAL_VERSION;
+                }
+
+                Database::pdo()->prepare(
                     <<<'SQL'
                         UPDATE user_tutorial_progress
-                        SET
-                            status = 'skipped',
-                            current_step_code = 'skipped',
-                            skipped_at = NOW(),
-                            updated_at = NOW()
+                        SET dismissed_update_tutorial_versions = ?, updated_at = NOW()
                         WHERE user_id = ?
                     SQL
-                );
-
-                $statement->execute([$user['id']]);
-
-                $this->logEvent(
-                    (int) $user['id'],
-                    (string) $progress['current_step_code'],
-                    'skipped',
-                    []
-                );
+                )->execute([json_encode($dismissed), (int) $user['id']]);
             }
+
+            $this->markStep($user, $progress, (string) $progress['current_step_code'], 'skipped');
+            $this->logStepEvent((int) $user['id'], (string) $progress['current_step_code'], 'skipped', []);
 
             $pdo->commit();
 
@@ -189,172 +262,131 @@ final class TutorialService
             throw new RuntimeException('Tutorial progress was not found.');
         }
 
-        $this->logEvent(
-            (int) $user['id'],
-            (string) $progress['current_step_code'],
-            'reopened',
-            []
-        );
+        Database::pdo()->prepare(
+            'UPDATE user_tutorial_progress SET reopened_at = NOW(), last_seen_at = NOW(), updated_at = NOW() WHERE user_id = ?'
+        )->execute([(int) $user['id']]);
 
-        $state = $this->formatState($progress);
+        $this->logStepEvent((int) $user['id'], (string) $progress['current_step_code'], 'reopened', []);
+
+        $state = $this->state($user);
         $state['help_mode'] = true;
 
         return $state;
     }
 
-    private function gameplayRequirementIsMet(int $userId, string $stepCode): bool
+    public function resetDev(array $user): array
     {
-        return match ($stepCode) {
-            'welcome',
-            'crew_overview',
-            'heat_consequences',
-            'warehouse_intro' => true,
-            'first_money' => $this->hasCompletedLegalJob($userId),
-            'first_illegal_job' => $this->hasAttemptedIllegalWork($userId),
-            'first_recruit' => $this->hasCrewMember($userId),
-            'basic_equipment' => $this->hasEquippedCrewMember($userId),
-            'prepare_dirty_job' => $this->hasPreparedDirtyJob($userId),
-            'execute_dirty_job' => $this->hasResolvedDirtyJob($userId),
-            default => false,
-        };
-    }
-
-    private function hasCompletedLegalJob(int $userId): bool
-    {
-        $sql = <<<'SQL'
-            SELECT COUNT(*)
-            FROM job_runs run
-            JOIN job_opportunities opportunity
-                ON opportunity.id = run.opportunity_id
-            JOIN jobs job
-                ON job.id = opportunity.job_id
-            WHERE run.user_id = ?
-              AND run.status = 'completed'
-              AND job.category = 'legal'
-        SQL;
-
-        return $this->count($sql, [$userId]) > 0;
-    }
-
-    private function hasAttemptedIllegalWork(int $userId): bool
-    {
-        $jobSql = <<<'SQL'
-            SELECT COUNT(*)
-            FROM job_runs run
-            JOIN job_opportunities opportunity
-                ON opportunity.id = run.opportunity_id
-            JOIN jobs job
-                ON job.id = opportunity.job_id
-            WHERE run.user_id = ?
-              AND run.status IN ('completed', 'failed')
-              AND job.category = 'criminal'
-        SQL;
-
-        if ($this->count($jobSql, [$userId]) > 0) {
-            return true;
+        if (($user['role'] ?? '') !== 'admin') {
+            throw new RuntimeException('Only admins can reset tutorial progress.');
         }
 
-        return $this->count(
-            'SELECT COUNT(*) FROM crime_logs WHERE user_id = ?',
-            [$userId]
-        ) > 0;
-    }
-
-    private function hasCrewMember(int $userId): bool
-    {
-        return $this->count(
-            <<<'SQL'
-                SELECT COUNT(*)
-                FROM player_gang_members
-                WHERE user_id = ?
-                  AND status <> 'dismissed'
-            SQL,
-            [$userId]
-        ) > 0;
-    }
-
-    private function hasEquippedCrewMember(int $userId): bool
-    {
-        return $this->count(
-            'SELECT COUNT(*) FROM crew_equipment WHERE user_id = ?',
-            [$userId]
-        ) > 0;
-    }
-
-    private function hasPreparedDirtyJob(int $userId): bool
-    {
-        $sql = <<<'SQL'
-            SELECT COUNT(*)
-            FROM dirty_job_preparations preparation
-            JOIN dirty_job_runs run
-                ON run.id = preparation.dirty_job_run_id
-            WHERE run.user_id = ?
-        SQL;
-
-        return $this->count($sql, [$userId]) > 0;
-    }
-
-    private function hasResolvedDirtyJob(int $userId): bool
-    {
-        return $this->count(
-            <<<'SQL'
-                SELECT COUNT(*)
-                FROM dirty_job_runs
-                WHERE user_id = ?
-                  AND status IN (
-                    'completed',
-                    'partially_completed',
-                    'failed'
-                  )
-            SQL,
-            [$userId]
-        ) > 0;
-    }
-
-    private function grantCompletionReward(int $userId, array $progress): int
-    {
-        $rewardsClaimed = $this->decodeList($progress['rewards_claimed']);
-        $rewardCode = 'tutorial_completion_cash';
-
-        if (in_array($rewardCode, $rewardsClaimed, true)) {
-            return 0;
-        }
-
-        $reward = GameConfig::TUTORIAL_COMPLETION_REWARD;
-        $rewardsClaimed[] = $rewardCode;
-
-        Database::pdo()->prepare(
-            'UPDATE users SET cash = cash + ?, updated_at = NOW() WHERE id = ?'
-        )->execute([$reward, $userId]);
+        $firstStep = GameConfig::tutorialSteps(GameConfig::TUTORIAL_KEY_FULL)[0]['code'];
 
         Database::pdo()->prepare(
             <<<'SQL'
                 UPDATE user_tutorial_progress
-                SET rewards_claimed = ?, updated_at = NOW()
+                SET
+                    tutorial_key = ?,
+                    tutorial_version = ?,
+                    status = 'active',
+                    current_step_code = ?,
+                    completed_steps = JSON_ARRAY(),
+                    rewards_claimed = JSON_ARRAY(),
+                    started_at = NOW(),
+                    completed_at = NULL,
+                    skipped_at = NULL,
+                    reopened_at = NOW(),
+                    updated_at = NOW()
                 WHERE user_id = ?
             SQL
-        )->execute([json_encode($rewardsClaimed), $userId]);
+        )->execute([
+            GameConfig::TUTORIAL_KEY_FULL,
+            GameConfig::TUTORIAL_VERSION,
+            $firstStep,
+            (int) $user['id'],
+        ]);
 
-        (new EconomyLedgerService())->record(
-            'tutorial_reward',
-            $reward,
-            'One-time tutorial completion reward',
-            [
-                'source_type' => 'tutorial',
-                'destination_type' => 'player',
-                'destination_id' => $userId,
-                'user_id' => $userId,
-            ]
-        );
+        return $this->state($user);
+    }
 
-        $this->logEvent(
-            $userId,
-            'warehouse_intro',
-            'reward',
-            ['cash' => $reward]
-        );
+    private function objectiveIsComplete(int $userId, array $step, bool $acknowledged): bool
+    {
+        return (new TutorialObjectiveValidator())->isComplete($userId, $step, $acknowledged);
+    }
 
-        return $reward;
+    private function completeTutorialProgress(int $userId, string $tutorialKey, array $completedSteps): void
+    {
+        if ($tutorialKey === GameConfig::TUTORIAL_KEY_UPDATE) {
+            $progress = $this->lockProgress($userId);
+            $completedUpdates = $this->decodeList($progress['completed_update_tutorial_versions'] ?? '[]');
+
+            if (!in_array(GameConfig::TUTORIAL_VERSION, $completedUpdates, true)) {
+                $completedUpdates[] = GameConfig::TUTORIAL_VERSION;
+            }
+
+            Database::pdo()->prepare(
+                <<<'SQL'
+                    UPDATE user_tutorial_progress
+                    SET
+                        status = 'completed',
+                        current_step_code = 'completed',
+                        completed_steps = ?,
+                        completed_update_tutorial_versions = ?,
+                        completed_at = NOW(),
+                        updated_at = NOW()
+                    WHERE user_id = ?
+                SQL
+            )->execute([json_encode($completedSteps), json_encode($completedUpdates), $userId]);
+
+            return;
+        }
+
+        Database::pdo()->prepare(
+            <<<'SQL'
+                UPDATE user_tutorial_progress
+                SET
+                    status = 'completed',
+                    current_step_code = 'completed',
+                    completed_steps = ?,
+                    completed_tutorial_version = ?,
+                    completed_at = NOW(),
+                    updated_at = NOW()
+                WHERE user_id = ?
+            SQL
+        )->execute([json_encode($completedSteps), GameConfig::TUTORIAL_VERSION, $userId]);
+    }
+
+    private function markStep(array $user, array $progress, string $stepCode, string $status): void
+    {
+        Database::pdo()->prepare(
+            <<<'SQL'
+                INSERT INTO user_tutorial_step_progress (
+                    user_id,
+                    tutorial_key,
+                    tutorial_version,
+                    step_key,
+                    status,
+                    completed_at,
+                    skipped_at,
+                    reward_claimed_at,
+                    created_at,
+                    updated_at
+                ) VALUES (?, ?, ?, ?, ?, CASE WHEN ? = 'completed' THEN NOW() ELSE NULL END, CASE WHEN ? = 'skipped' THEN NOW() ELSE NULL END, NULL, NOW(), NOW())
+                ON DUPLICATE KEY UPDATE
+                    status = VALUES(status),
+                    completed_at = CASE WHEN VALUES(status) = 'completed' THEN NOW() ELSE completed_at END,
+                    skipped_at = CASE WHEN VALUES(status) = 'skipped' THEN NOW() ELSE skipped_at END,
+                    updated_at = NOW()
+            SQL
+        )->execute([
+            (int) $user['id'],
+            (string) ($progress['tutorial_key'] ?? GameConfig::TUTORIAL_KEY_FULL),
+            (string) ($progress['tutorial_version'] ?? GameConfig::TUTORIAL_VERSION),
+            $stepCode,
+            $status,
+            $status,
+            $status,
+        ]);
     }
 
     private function findProgress(int $userId): ?array
@@ -383,31 +415,9 @@ final class TutorialService
         return $progress;
     }
 
-    private function createCompletedFallback(int $userId): void
+    private function findStep(string $tutorialKey, string $stepCode): ?array
     {
-        $stepCodes = array_column(GameConfig::tutorialSteps(), 'code');
-
-        $statement = Database::pdo()->prepare(
-            <<<'SQL'
-                INSERT INTO user_tutorial_progress (
-                    user_id,
-                    status,
-                    current_step_code,
-                    completed_steps,
-                    rewards_claimed,
-                    started_at,
-                    completed_at,
-                    updated_at
-                ) VALUES (?, 'completed', 'completed', ?, JSON_ARRAY(), NOW(), NOW(), NOW())
-            SQL
-        );
-
-        $statement->execute([$userId, json_encode($stepCodes)]);
-    }
-
-    private function findStep(string $stepCode): ?array
-    {
-        foreach (GameConfig::tutorialSteps() as $step) {
+        foreach (GameConfig::tutorialSteps($tutorialKey) as $step) {
             if ($step['code'] === $stepCode) {
                 return $step;
             }
@@ -416,9 +426,9 @@ final class TutorialService
         return null;
     }
 
-    private function nextStepAfter(string $stepCode): ?array
+    private function nextStepAfter(string $tutorialKey, string $stepCode): ?array
     {
-        $steps = GameConfig::tutorialSteps();
+        $steps = GameConfig::tutorialSteps($tutorialKey);
 
         foreach ($steps as $index => $step) {
             if ($step['code'] !== $stepCode) {
@@ -433,32 +443,74 @@ final class TutorialService
 
     private function formatState(array $progress): array
     {
-        $steps = GameConfig::tutorialSteps();
+        $tutorialKey = (string) ($progress['tutorial_key'] ?? GameConfig::TUTORIAL_KEY_FULL);
+        $version = (string) ($progress['tutorial_version'] ?? GameConfig::TUTORIAL_VERSION);
+        $steps = GameConfig::tutorialSteps($tutorialKey);
         $completedSteps = $this->decodeList($progress['completed_steps']);
-        $currentStep = $this->findStep((string) $progress['current_step_code']);
+        $currentStep = $this->findStep($tutorialKey, (string) $progress['current_step_code']);
 
         foreach ($steps as &$step) {
-            $step['completed'] = in_array(
-                $step['code'],
-                $completedSteps,
-                true
-            );
+            $step['completed'] = in_array($step['code'], $completedSteps, true);
+            $step['route_hint'] = $step['route_hint'] ?? $step['page'];
         }
+        unset($step);
 
         return [
+            'tutorial_key' => $tutorialKey,
+            'tutorial_version' => $version,
+            'title' => $tutorialKey === GameConfig::TUTORIAL_KEY_UPDATE
+                ? 'World Systems Update'
+                : 'New Player World Guide',
+            'is_update_tutorial' => $tutorialKey === GameConfig::TUTORIAL_KEY_UPDATE,
             'status' => $progress['status'],
             'current_step_code' => $progress['current_step_code'],
             'current_step' => $currentStep,
             'completed_steps' => $completedSteps,
             'steps' => $steps,
-            'started_at' => $progress['started_at'],
-            'completed_at' => $progress['completed_at'],
-            'skipped_at' => $progress['skipped_at'],
+            'modules' => $this->moduleProgress($steps, $completedSteps),
+            'started_at' => $progress['started_at'] ?? null,
+            'completed_at' => $progress['completed_at'] ?? null,
+            'skipped_at' => $progress['skipped_at'] ?? null,
+            'completed_tutorial_version' => $progress['completed_tutorial_version'] ?? null,
+            'completed_update_tutorial_versions' => $this->decodeList($progress['completed_update_tutorial_versions'] ?? '[]'),
+            'dismissed_update_tutorial_versions' => $this->decodeList($progress['dismissed_update_tutorial_versions'] ?? '[]'),
             'progress' => [
                 'completed' => count($completedSteps),
                 'total' => count($steps),
             ],
         ];
+    }
+
+    private function moduleProgress(array $steps, array $completedSteps): array
+    {
+        $modules = GameConfig::tutorialModules();
+        $progress = [];
+
+        foreach ($modules as $moduleKey => $module) {
+            $moduleSteps = array_values(array_filter(
+                $steps,
+                static fn (array $step): bool => ($step['module_key'] ?? '') === $moduleKey
+            ));
+
+            if ($moduleSteps === []) {
+                continue;
+            }
+
+            $completed = array_values(array_filter(
+                $moduleSteps,
+                static fn (array $step): bool => in_array($step['code'], $completedSteps, true)
+            ));
+
+            $progress[] = [
+                'module_key' => $moduleKey,
+                'title' => $module['title'],
+                'description' => $module['description'],
+                'completed' => count($completed),
+                'total' => count($moduleSteps),
+            ];
+        }
+
+        return $progress;
     }
 
     private function decodeList(mixed $json): array
@@ -476,21 +528,9 @@ final class TutorialService
         return is_array($decoded) ? array_values($decoded) : [];
     }
 
-    private function count(string $sql, array $parameters): int
+    private function logStepEvent(int $userId, string $stepCode, string $eventType, array $details): void
     {
-        $statement = Database::pdo()->prepare($sql);
-        $statement->execute($parameters);
-
-        return (int) $statement->fetchColumn();
-    }
-
-    private function logEvent(
-        int $userId,
-        string $stepCode,
-        string $eventType,
-        array $details
-    ): void {
-        $statement = Database::pdo()->prepare(
+        Database::pdo()->prepare(
             <<<'SQL'
                 INSERT IGNORE INTO tutorial_step_logs (
                     user_id,
@@ -500,13 +540,6 @@ final class TutorialService
                     created_at
                 ) VALUES (?, ?, ?, ?, NOW())
             SQL
-        );
-
-        $statement->execute([
-            $userId,
-            $stepCode,
-            $eventType,
-            json_encode($details),
-        ]);
+        )->execute([$userId, $stepCode, $eventType, json_encode($details)]);
     }
 }

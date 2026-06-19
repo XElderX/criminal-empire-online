@@ -11,6 +11,7 @@ export type PageName =
   | 'heat'
   | 'market'
   | 'territories'
+  | 'guide'
   | 'admin';
 
 export interface User {
@@ -184,25 +185,70 @@ export interface UpdateNotice {
 
 export interface TutorialStep {
   code: string;
+  step_key?: string;
+  module_key: string;
+  module_title?: string;
   title: string;
   page: PageName;
+  route_hint?: string;
   objective: string;
+  objective_type: string;
+  objective_payload?: Record<string, unknown>;
   requires_acknowledgement: boolean;
+  reward_payload?: Record<string, number>;
   completed: boolean;
 }
 
+export interface TutorialModuleProgress {
+  module_key: string;
+  title: string;
+  description: string;
+  completed: number;
+  total: number;
+}
+
 export interface TutorialState {
+  tutorial_key: string;
+  tutorial_version: string;
+  title: string;
+  is_update_tutorial: boolean;
   status: 'active' | 'completed' | 'skipped';
   current_step_code: string;
   current_step: TutorialStep | null;
   completed_steps: string[];
   steps: TutorialStep[];
+  modules: TutorialModuleProgress[];
   progress: {
     completed: number;
     total: number;
   };
-  reward_granted?: number;
+  reward_granted?: {
+    cash: number;
+    xp: number;
+  };
   help_mode?: boolean;
+}
+
+export interface HelpTip {
+  tip_key: string;
+  page_key: PageName;
+  title: string;
+  body: string;
+  guide_section_key?: string | null;
+  dismissed: boolean;
+}
+
+export interface GuideSection {
+  key: string;
+  title: string;
+  body: string;
+}
+
+export interface GuidePayload {
+  title: string;
+  version: string;
+  release_title: string;
+  sections: GuideSection[];
 }
 
 export interface CrewTrait {
@@ -373,6 +419,10 @@ export interface StarterJob {
   difficulty: number;
   heat_min: number;
   heat_max: number;
+  min_assigned_members?: number;
+  assignable_crew_count?: number;
+  requires_npc_assignment?: boolean;
+  assignment_hint?: string;
   can_start: boolean;
   requirement_messages?: string[];
 }

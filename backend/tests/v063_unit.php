@@ -9,12 +9,12 @@ use Tests\TestRunner;
 
 $runner = new TestRunner();
 
-$runner->test('Version is v0.6.3', function () use ($runner): void {
-    $runner->assertSame('0.6.3', GameConfig::VERSION);
+$runner->test('Version is v0.6.4', function () use ($runner): void {
+    $runner->assertSame('0.6.4', GameConfig::VERSION);
 });
 
 $runner->test('Release title identifies meaningful travel', function () use ($runner): void {
-    $runner->assertContains('Meaningful Travel & Local Presence', GameConfig::RELEASE_TITLE);
+    $runner->assertContains('World Tutorial & Player Guidance Update', GameConfig::RELEASE_TITLE);
 });
 
 $runner->test('Travel risk service recognizes supported route types', function () use ($runner): void {

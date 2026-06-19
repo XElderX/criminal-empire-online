@@ -25,6 +25,7 @@ const navigationIconMap: Record<string, string> = {
   messages: '/assets/icons/nav/messages.webp',
   settings: '/assets/icons/nav/settings.webp',
   tutorial: '/assets/icons/nav/dashboard.webp',
+  guide: '/assets/icons/nav/dashboard.webp',
   logout: '/assets/icons/nav/settings.webp',
   help: '/assets/icons/nav/settings.webp',
   contacts: '/assets/icons/nav/crew.webp',

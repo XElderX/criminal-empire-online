@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api, clearToken, getToken } from './api/client';
 import { GameLayout } from './components/game/GameLayout';
+import { ContextualHelpButton } from './components/ContextualHelpButton';
 import { PlayerStats } from './components/PlayerStats';
 import { TutorialPanel } from './components/TutorialPanel';
 import { UpdateNoticeModal } from './components/UpdateNoticeModal';
@@ -12,6 +13,7 @@ import { DashboardPage } from './pages/DashboardPage';
 import { DirtyJobsPage } from './pages/DirtyJobsPage';
 import { EquipmentPage } from './pages/EquipmentPage';
 import { JobsPage } from './pages/JobsPage';
+import { GuidePage } from './pages/GuidePage';
 import { HeatPolicePage } from './pages/HeatPolicePage';
 import { MarketPage } from './pages/MarketPage';
 import { RecruitmentPage } from './pages/RecruitmentPage';
@@ -44,6 +46,20 @@ export function App() {
       setPage('dashboard');
     }
   }, [page, user?.role]);
+
+  useEffect(() => {
+    if (!user) {
+      return;
+    }
+
+    void api('/tutorial/objective', {
+      method: 'POST',
+      body: JSON.stringify({
+        action_type: 'view_page',
+        payload: { page },
+      }),
+    }).catch(() => undefined);
+  }, [page, user]);
 
   async function restoreSession(): Promise<void> {
     if (!getToken()) {
@@ -145,7 +161,7 @@ export function App() {
     return (
       <main className="auth-shell">
         <section className="card auth-card">
-          <p className="eyebrow">Criminal Empire Online v 0.6.3</p>
+          <p className="eyebrow">Criminal Empire Online v 0.6.4</p>
           <h1>Loading city state…</h1>
         </section>
       </main>
@@ -165,6 +181,7 @@ export function App() {
         onLogout={logout}
         onOpenTutorial={() => setTutorialOpen(true)}
       >
+        <ContextualHelpButton page={page} onOpenGuide={() => navigate('guide')} />
         <PlayerStats user={user} />
         <PageContent
           page={page}
@@ -211,6 +228,7 @@ function loadSavedPage(): PageName {
     || savedPage === 'heat'
     || savedPage === 'market'
     || savedPage === 'territories'
+    || savedPage === 'guide'
     || savedPage === 'admin'
   ) {
     return savedPage;
@@ -255,6 +273,8 @@ function PageContent({
       return <MarketPage />;
     case 'territories':
       return <TerritoriesPage />;
+    case 'guide':
+      return <GuidePage />;
     case 'admin':
       return <AdminPage currentUser={user} onChanged={onChanged} />;
     default:

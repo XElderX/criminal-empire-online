@@ -20,6 +20,8 @@ $seedV3 = readFileOrFail(
 $routes = readFileOrFail($root . '/backend/routes/api.php');
 $auth = readFileOrFail($root . '/backend/app/Services/AuthService.php');
 $tutorial = readFileOrFail($root . '/backend/app/Services/TutorialService.php');
+$tutorialValidator = readFileOrFail($root . '/backend/app/Services/TutorialObjectiveValidator.php');
+$tutorialReward = readFileOrFail($root . '/backend/app/Services/TutorialRewardService.php');
 $dirtyJobs = readFileOrFail($root . '/backend/app/Services/DirtyJobService.php');
 $warehouse = readFileOrFail($root . '/backend/app/Services/WarehouseService.php');
 $crew = readFileOrFail($root . '/backend/app/Services/CrewService.php');
@@ -174,26 +176,26 @@ $runner->test('New registrations use centralized starting state', function () us
 
 $runner->test('Tutorial progress is validated from gameplay state', function () use (
     $runner,
-    $tutorial
+    $tutorialValidator
 ): void {
     foreach ([
-        'hasCompletedLegalJob',
-        'hasAttemptedIllegalWork',
-        'hasCrewMember',
-        'hasEquippedCrewMember',
-        'hasPreparedDirtyJob',
-        'hasResolvedDirtyJob',
+        'hasCompletedStarterJob',
+        'hasAttemptedQuickCrime',
+        'hasActiveNpcCrew',
+        'hasEquipmentAssigned',
+        'hasExploredHotspot',
+        'hasResolvedOrPreparedDirtyJob',
     ] as $method) {
-        $runner->assertContains($method, $tutorial);
+        $runner->assertContains($method, $tutorialValidator);
     }
 });
 
 $runner->test('Tutorial reward is guarded by claimed reward state', function () use (
     $runner,
-    $tutorial
+    $tutorialReward
 ): void {
-    $runner->assertContains('tutorial_completion_cash', $tutorial);
-    $runner->assertContains('in_array($rewardCode, $rewardsClaimed, true)', $tutorial);
+    $runner->assertContains(':completion_reward', $tutorialReward);
+    $runner->assertContains('in_array($rewardCode, $claimed, true)', $tutorialReward);
 });
 
 $runner->test('Dirty Job execution locks users and crew availability', function () use (

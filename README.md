@@ -1,3 +1,52 @@
+# Criminal Empire Online v0.6.4 — World Tutorial & Player Guidance Update
+
+This patch builds on **v0.6.3.1 — Street Job NPC Assignment Hotfix** and preserves the v0.6/v0.6.3 world map, travel, local presence, and Street Job NPC assignment behavior.
+
+v0.6.4 updates the new-player tutorial and help system so the game teaches the newer world systems instead of only the old starter loop.
+
+## v0.6.4 highlights
+
+- Versioned tutorial support using tutorial key/version metadata.
+- Full new-player tutorial with 20 guided steps.
+- Short **World Systems Update** tutorial for existing players who already completed the old tutorial.
+- Tutorial modules for basics, world map, travel, local actions, crew, dirty jobs, heat/police/territory, warehouse, and progression.
+- Backend objective validation for tutorial progress.
+- Tutorial rewards are modest and granted only once.
+- Contextual help tips for major pages.
+- Persistent Guide page covering beginner path, world map, travel, quick crimes, dirty jobs, crew, equipment, heat, territories, warehouse, XP, world processing, boss, and succession.
+- New tutorial/help API routes and frontend UI components.
+
+## Architecture
+
+- Custom PHP 8.2+ REST backend.
+- PDO/MySQL or MariaDB.
+- Raw SQL migrations and seeders.
+- Bearer-token auth.
+- React + TypeScript + Vite frontend.
+- This project is **not Laravel**.
+
+## Install/update
+
+```bash
+cd criminal-empire-online
+php backend/database/migrate.php
+cd frontend
+npm install
+npm run build
+```
+
+## Important retained v0.6.3.1 behavior
+
+Street Jobs still require at least one active real NPC crew member assigned before starting. Boss/fake crew id `0` is not valid for Street Jobs.
+
+
+---
+
+## Previous release notes
+
+
+This patch builds on v0.6.3 and fixes Street Jobs so they require at least one assigned active NPC crew member before starting. The boss/fake crew id `0` is not valid for Street Jobs, and the frontend now clearly tells the player to hire/select real crew before beginning starter work.
+
 
 ## v0.6 — Game Map & Territories
 

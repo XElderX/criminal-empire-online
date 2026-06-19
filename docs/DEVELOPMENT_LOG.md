@@ -1,3 +1,24 @@
+## 2026-06-19 — Criminal Empire Online v0.6.4 — World Tutorial & Player Guidance Update
+
+- Bumped backend and frontend version metadata to `0.6.4` with release title `Criminal Empire Online v0.6.4 — World Tutorial & Player Guidance Update`.
+- Reworked tutorial flow into a versioned module/step system covering dashboard basics, world map, travel, local presence, hotspot exploration, quick crimes, Dirty Jobs, recruitment, crew equipment, Heat & Police, territories, warehouse/storage, XP/skill progression, boss character, and succession.
+- Added a short `World Systems Update` tutorial for existing players who completed older tutorial versions, so they are not forced through the full new-player flow again.
+- Added backend tutorial objective validation through `TutorialObjectiveValidator`; frontend cannot simply post a fake `complete_step=true` flag.
+- Added tutorial progress/version fields, per-step progress, objective event logging, contextual help tip state, guide sections, and seeded tutorial/help content.
+- Added contextual help panels for major pages and a reopenable Guide page.
+- Added modest once-only tutorial rewards and preserved starter economy balance.
+- Added new API endpoints including `GET /api/tutorial/current`, `GET /api/tutorial/steps`, `POST /api/tutorial/objective`, `GET /api/tutorial/guide`, `GET /api/help/tips`, and help-tip dismiss/reopen routes.
+- Added v0.6.4 tests and documentation.
+- Preserved v0.6.3.1 Street Job NPC assignment hotfix: Street Jobs still require at least one assigned active real NPC crew member.
+
+## 2026-06-19 — Criminal Empire Online v0.6.3.1 — Street Job NPC Assignment Hotfix
+
+- Street Jobs now require at least one assigned active NPC crew member before they can start.
+- Backend validation rejects empty assignments and boss/fake crew ids such as `0` for Street Jobs.
+- Street Jobs list payload now exposes minimum NPC assignment requirements and assignable crew count.
+- Updated the Street Jobs page to hide the boss from the assignment picker, show required NPC crew messaging, and disable Start until enough real crew are selected.
+- Added v0.6.3.1 tests and refreshed version metadata.
+
 ## 2026-06-19 — Criminal Empire Online v0.6.3 — Meaningful Travel & Local Presence
 
 - Travel now unlocks local actions instead of only changing a stored location.

@@ -22,6 +22,7 @@ const PLAYER_PAGES: Array<{ page: PageName; label: string }> = [
   { page: 'jobs', label: 'Street Jobs' },
   { page: 'market', label: 'Drug Market' },
   { page: 'territories', label: 'Territories' },
+  { page: 'guide', label: 'Guide' },
 ];
 
 export function Navigation({
@@ -35,7 +36,7 @@ export function Navigation({
     <nav className="nav">
       <div className="brand">
         Criminal Empire
-        <span className="version-badge">v 0.6.3</span>
+        <span className="version-badge">v 0.6.4</span>
       </div>
 
       <div className="nav-links">

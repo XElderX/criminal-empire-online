@@ -4,8 +4,8 @@ namespace App\Config;
 
 final class GameConfig
 {
-    public const VERSION = '0.6.3';
-    public const RELEASE_TITLE = 'Criminal Empire Online v0.6.3 — Meaningful Travel & Local Presence';
+    public const VERSION = '0.6.4';
+    public const RELEASE_TITLE = 'Criminal Empire Online v0.6.4 — World Tutorial & Player Guidance Update';
 
     public const STARTING_CASH = 500;
     public const STARTING_BANK_CASH = 0;
@@ -17,7 +17,10 @@ final class GameConfig
 
     public const MAX_GANG_MEMBERS = 12;
     public const SALARY_INTERVAL_DAYS = 7;
-    public const TUTORIAL_COMPLETION_REWARD = 50;
+    public const TUTORIAL_COMPLETION_REWARD = 60;
+    public const TUTORIAL_VERSION = '0.6.4';
+    public const TUTORIAL_KEY_FULL = 'new_player_world_guide';
+    public const TUTORIAL_KEY_UPDATE = 'world_systems_update';
     public const DIRTY_JOB_OPPORTUNITY_TARGET = 6;
     public const RECRUITMENT_CANDIDATE_TARGET = 3;
     public const WAREHOUSE_DRUG_UNITS_PER_TEN = 1.0;
@@ -32,79 +35,152 @@ final class GameConfig
         return max(0.01, min(10.0, (float) $configuredValue));
     }
 
-    public static function tutorialSteps(): array
+    public static function tutorialModules(): array
     {
         return [
-            [
-                'code' => 'welcome',
-                'title' => 'Welcome to the City',
-                'page' => 'dashboard',
-                'objective' => 'Review cash, energy, heat, level, experience, and reputation.',
-                'requires_acknowledgement' => true,
+            'basics' => [
+                'title' => 'Welcome & Basics',
+                'description' => 'Learn the boss, money, energy, XP, rank, and first goals.',
             ],
-            [
-                'code' => 'first_money',
-                'title' => 'Earn Your First Money',
-                'page' => 'jobs',
-                'objective' => 'Complete one safe legal starter job.',
-                'requires_acknowledgement' => false,
+            'world' => [
+                'title' => 'World Map',
+                'description' => 'Regions and hotspots now control local actions, travel risk, and discovery.',
             ],
-            [
-                'code' => 'first_illegal_job',
-                'title' => 'Your First Illegal Job',
-                'page' => 'jobs',
-                'objective' => 'Attempt one criminal starter job or crime.',
-                'requires_acknowledgement' => false,
+            'local_actions' => [
+                'title' => 'Local Actions',
+                'description' => 'Use local presence for exploration, quick crimes, and starter work.',
             ],
-            [
-                'code' => 'first_recruit',
-                'title' => 'Recruit Your First Crew Member',
-                'page' => 'recruitment',
-                'objective' => 'Hire an affordable street-level recruit.',
-                'requires_acknowledgement' => false,
+            'crew' => [
+                'title' => 'Recruitment & Crew',
+                'description' => 'Meet recruits, manage crew heat, assign equipment, and build a small team.',
             ],
-            [
-                'code' => 'crew_overview',
-                'title' => 'Understand Your Crew',
-                'page' => 'crew',
-                'objective' => 'Review a member’s stats, traits, health, morale, loyalty, salary, and history.',
-                'requires_acknowledgement' => true,
+            'operations' => [
+                'title' => 'Dirty Jobs',
+                'description' => 'Prepare structured jobs, assign real NPC crew, and resolve consequences.',
             ],
-            [
-                'code' => 'basic_equipment',
-                'title' => 'Equip Basic Gear',
-                'page' => 'equipment',
-                'objective' => 'Buy an item and equip it to a crew member.',
-                'requires_acknowledgement' => false,
+            'pressure' => [
+                'title' => 'Heat, Police & Territory',
+                'description' => 'Understand investigations, district risk, territory effects, and heat reduction.',
             ],
-            [
-                'code' => 'prepare_dirty_job',
-                'title' => 'Prepare a Dirty Job',
-                'page' => 'dirty jobs',
-                'objective' => 'Accept a Dirty Job and complete at least one preparation action.',
-                'requires_acknowledgement' => false,
+            'storage' => [
+                'title' => 'Warehouse & Progression',
+                'description' => 'Use storage, XP, skills, world processing, and next goals to grow safely.',
             ],
-            [
-                'code' => 'execute_dirty_job',
-                'title' => 'Execute the Operation',
-                'page' => 'dirty jobs',
-                'objective' => 'Execute and resolve a Dirty Job. Success is not required.',
-                'requires_acknowledgement' => false,
-            ],
-            [
-                'code' => 'heat_consequences',
-                'title' => 'Heat and Consequences',
-                'page' => 'dashboard',
-                'objective' => 'Review how heat, evidence, injuries, and arrests affect future work.',
-                'requires_acknowledgement' => true,
-            ],
-            [
-                'code' => 'warehouse_intro',
-                'title' => 'The Warehouse',
-                'page' => 'warehouse',
-                'objective' => 'Review warehouse storage, security, operating costs, and future progression.',
-                'requires_acknowledgement' => true,
-            ],
+        ];
+    }
+
+    public static function tutorialSteps(?string $tutorialKey = null): array
+    {
+        $key = $tutorialKey ?: self::TUTORIAL_KEY_FULL;
+
+        if ($key === self::TUTORIAL_KEY_UPDATE) {
+            return self::worldSystemsUpdateTutorialSteps();
+        }
+
+        return self::newPlayerTutorialSteps();
+    }
+
+    public static function newPlayerTutorialSteps(): array
+    {
+        return [
+            self::tutorialStep('welcome_riverdale', 'basics', 'Welcome to Riverdale County', 'dashboard', 'Acknowledge the single-player goal: start small, learn the city, recruit NPCs, manage heat, and grow carefully.', 'acknowledge', ['message' => 'Start from the dashboard and learn the new map-driven flow.'], true),
+            self::tutorialStep('core_stats', 'basics', 'Understand Core Stats', 'dashboard', 'Review cash, bank cash, energy, heat, XP, level, boss health, and crew count.', 'acknowledge', ['message' => 'Stats explain whether you can work, travel, fight heat, and progress.'], true),
+            self::tutorialStep('open_world_map', 'world', 'Open the World Map', 'world map', 'Open the World Map and see that regions and hotspots affect gameplay.', 'view_page', ['page' => 'world map']),
+            self::tutorialStep('enter_main_city', 'world', 'Enter Main City', 'world map', 'Open the Main City region map or view a Main City hotspot.', 'view_page', ['page' => 'world map', 'context' => 'main_city']),
+            self::tutorialStep('travel_to_starter_hotspot', 'world', 'Travel to a Starter Hotspot', 'world map', 'Travel to a local starter hotspot, preferably Main City / Slums, so local actions unlock.', 'travel_to_location', ['region_slug' => 'main-city', 'location_slug' => 'slums']),
+            self::tutorialStep('explore_hotspot', 'local_actions', 'Explore the Hotspot', 'world map', 'Use Explore Area at your current hotspot to discover local rumors, leads, or action context.', 'explore_hotspot', []),
+            self::tutorialStep('safe_starter_job', 'local_actions', 'Do a Safe Starter Job', 'jobs', 'Complete one starter street job or low-risk fallback action to earn early money.', 'complete_job', []),
+            self::tutorialStep('try_quick_crime', 'local_actions', 'Try a Quick Crime', 'crimes', 'Open Quick Crimes and attempt a low-tier action. Success is not required.', 'complete_quick_crime', []),
+            self::tutorialStep('understand_results', 'local_actions', 'Understand Results', 'crimes', 'Review how results can produce cash, XP, items, cooldowns, heat, partial success, or failure.', 'acknowledge', ['message' => 'The result screen matters even when an action fails.'], true),
+            self::tutorialStep('inspect_recruitment', 'crew', 'Inspect Recruitment', 'recruitment', 'Open Recruitment and inspect a candidate source, cost, stats, traits, salary, and local origin.', 'inspect_candidate', []),
+            self::tutorialStep('hire_first_crew', 'crew', 'Hire First Crew Member', 'recruitment', 'Hire one affordable active non-boss NPC crew member when ready.', 'hire_crew', []),
+            self::tutorialStep('equip_basic_item', 'crew', 'Equip Basic Gear', 'equipment', 'Equip one basic item to the boss or a crew member.', 'equip_item', [], false, ['cash' => 20]),
+            self::tutorialStep('inspect_dirty_job', 'operations', 'Inspect a Dirty Job', 'dirty jobs', 'Open a Dirty Job and review source location, target location, crew requirements, and preparation.', 'inspect_dirty_job', []),
+            self::tutorialStep('execute_beginner_dirty_job', 'operations', 'Prepare or Execute a Beginner Dirty Job', 'dirty jobs', 'Take part in a beginner Dirty Job. Completion can be success, partial success, or failure.', 'execute_dirty_job', []),
+            self::tutorialStep('view_heat_police', 'pressure', 'Open Heat & Police', 'heat', 'Open Heat & Police and review boss heat, crew heat, gang heat, investigations, and reduction options.', 'view_heat_page', []),
+            self::tutorialStep('learn_heat_reduction', 'pressure', 'Learn Heat Reduction', 'heat', 'View heat reduction options such as lie low, bribes, lawyers, and sending crew away.', 'acknowledge', ['message' => 'You do not need to spend money to complete this lesson.'], true),
+            self::tutorialStep('view_territory', 'pressure', 'View Territory Risk', 'territories', 'Open Territories or a map-linked territory and review local police, rival, and reward effects.', 'view_territory', []),
+            self::tutorialStep('view_warehouse', 'storage', 'Understand Warehouse & Storage', 'warehouse', 'Open Warehouse or warehouse help and learn that physical loot can be stored instead of instantly sold.', 'view_warehouse', []),
+            self::tutorialStep('boss_and_succession', 'storage', 'Boss and Succession', 'crew', 'Review that the boss has health, heat, XP, rank, and succession risk if severe events happen.', 'acknowledge', ['message' => 'Keep the boss alive and build eligible crew for the future.'], true),
+            self::tutorialStep('finish_world_tutorial', 'storage', 'Finish the World Tutorial', 'guide', 'Review next goals: earn money, hire crew, buy equipment, travel locally, reduce heat, explore hotspots, and save for storage.', 'view_guide', [], true, ['cash' => self::TUTORIAL_COMPLETION_REWARD, 'xp' => 15]),
+        ];
+    }
+
+    public static function worldSystemsUpdateTutorialSteps(): array
+    {
+        return [
+            self::tutorialStep('update_open_world_map', 'world', 'Open World Map', 'world map', 'Review the world map added in recent updates.', 'view_page', ['page' => 'world map']),
+            self::tutorialStep('update_travel_hotspot', 'world', 'Travel to a Hotspot', 'world map', 'Travel to any hotspot to update current local presence.', 'travel_to_location', []),
+            self::tutorialStep('update_view_local_actions', 'local_actions', 'View Local Actions', 'world map', 'Open a hotspot panel and review which actions are available here or require travel.', 'view_page', ['page' => 'world map', 'context' => 'local_actions']),
+            self::tutorialStep('update_explore_hotspot', 'local_actions', 'Explore a Hotspot', 'world map', 'Use hotspot exploration once to see how local rumors and leads can appear.', 'explore_hotspot', []),
+            self::tutorialStep('update_heat_police', 'pressure', 'Open Heat & Police', 'heat', 'Review boss heat, crew heat, gang heat, and police investigations.', 'view_heat_page', []),
+            self::tutorialStep('update_territory_effects', 'pressure', 'View Local / Territory Effects', 'territories', 'Review how territory and district risk affect local gameplay.', 'view_territory', []),
+            self::tutorialStep('update_finish', 'storage', 'Finish World Systems Update', 'guide', 'Open the guide once; your older tutorial progress stays intact.', 'view_guide', [], true, ['cash' => 20, 'xp' => 5]),
+        ];
+    }
+
+    public static function contextualHelpTips(): array
+    {
+        return [
+            'dashboard' => ['page' => 'dashboard', 'title' => 'Dashboard', 'body' => 'Use the dashboard to check boss status, current location, heat, energy, XP, and the next safe goal.'],
+            'world_map' => ['page' => 'world map', 'title' => 'World Map', 'body' => 'Regions and hotspots are not just art. Travel changes what local actions, risks, contacts, and events are available.'],
+            'location_map' => ['page' => 'world map', 'title' => 'Location Map', 'body' => 'A hotspot can be viewed remotely, but local actions often require being physically present there.'],
+            'crimes' => ['page' => 'crimes', 'title' => 'Crimes & Quick Crimes', 'body' => 'Quick Crimes are fast actions. Some are local and require travel; risk changes with heat, location, and equipment.'],
+            'dirty_jobs' => ['page' => 'dirty jobs', 'title' => 'Dirty Jobs', 'body' => 'Dirty Jobs are structured operations with preparation, crew assignment, equipment, travel requirements, and consequences.'],
+            'recruitment' => ['page' => 'recruitment', 'title' => 'Recruitment', 'body' => 'Recruitable NPCs have stats, traits, salary, morale, loyalty, heat, and sometimes local source hotspots.'],
+            'crew' => ['page' => 'crew', 'title' => 'Crew', 'body' => 'Crew members are persistent NPCs. Watch their heat, injuries, status, equipment, history, and loyalty.'],
+            'equipment' => ['page' => 'equipment', 'title' => 'Inventory & Equipment', 'body' => 'Basic tools and protective gear improve outcomes. One item cannot be equipped by multiple crew at the same time.'],
+            'warehouse' => ['page' => 'warehouse', 'title' => 'Warehouse', 'body' => 'Storage helps keep physical loot and illegal goods off the boss while adding capacity and security choices.'],
+            'territories' => ['page' => 'territories', 'title' => 'Territories', 'body' => 'Territories connect to map areas. Police pressure and rival control can change local danger and rewards.'],
+            'heat' => ['page' => 'heat', 'title' => 'Heat & Police', 'body' => 'Heat belongs to the boss, crew, gang, NPCs, and districts. High heat can feed investigations and travel risk.'],
+            'market' => ['page' => 'market', 'title' => 'Drug Market', 'body' => 'The drug market is an abstract economy page; prices, supply, demand, and police pressure vary by region.'],
+            'jobs' => ['page' => 'jobs', 'title' => 'Street Jobs', 'body' => 'Street Jobs are starter work but still require at least one active real NPC crew member after v0.6.3.1.'],
+        ];
+    }
+
+    public static function guideSections(): array
+    {
+        return [
+            ['key' => 'beginner_path', 'title' => 'Beginner Path', 'body' => 'Start from the dashboard, open the world map, travel to a starter hotspot, explore, do small work, hire one crew member, equip basic gear, then inspect safer Dirty Jobs.'],
+            ['key' => 'world_map', 'title' => 'World Map & Hotspots', 'body' => 'Hotspots define local quick crimes, dirty job leads, contacts, business hooks, police pressure, and territory context. Viewing is remote; acting often requires local presence.'],
+            ['key' => 'travel', 'title' => 'Travel & Local Presence', 'body' => 'Travel costs small energy or cash, may trigger events, records history, and unlocks local actions. High heat or illegal carried goods increase travel risk.'],
+            ['key' => 'quick_crimes', 'title' => 'Quick Crimes', 'body' => 'Quick Crimes are fast, low-to-mid tier actions. Some are location-specific and will tell you where to travel before starting.'],
+            ['key' => 'dirty_jobs', 'title' => 'Dirty Jobs', 'body' => 'Dirty Jobs have contacts, preparation, crew roles, equipment, execution, and consequences. Some require local presence before accepting or executing.'],
+            ['key' => 'crew', 'title' => 'Crew & Recruitment', 'body' => 'Crew are named NPCs with portraits, age, stats, traits, salaries, heat, morale, loyalty, and histories. Low-level dismissed crew may return to recruitment; experienced crew return to ordinary NPC life.'],
+            ['key' => 'equipment', 'title' => 'Equipment', 'body' => 'Items like gloves, masks, tools, bags, clothing, first aid, and fictional weapons modify risks and outcomes. Use them carefully because heat and searches matter.'],
+            ['key' => 'heat_police', 'title' => 'Heat & Police Pressure', 'body' => 'Actions and travel can raise heat. Heat can exist on the boss, crew, gang, districts, and NPCs. Reduction options and quiet days help manage pressure.'],
+            ['key' => 'territories', 'title' => 'Territories', 'body' => 'Territories tie map places to risk, rewards, police presence, and rival pressure. Scout before pushing deeper.'],
+            ['key' => 'warehouse', 'title' => 'Warehouse & Storage', 'body' => 'Warehouses store physical loot and supplies. Stored items can reduce travel-carrying risk where systems support it.'],
+            ['key' => 'progression', 'title' => 'XP, Skills & World Processing', 'body' => 'XP and skills grow through actions. Hourly/daily/weekly world processing refreshes jobs, recruitment, recovery, heat decay, salaries, and map opportunities.'],
+            ['key' => 'boss_succession', 'title' => 'Boss & Succession', 'body' => 'The boss is a character with health, rank, XP, and heat. Severe outcomes can injure, arrest, or eventually kill the boss; eligible crew can become successors.'],
+        ];
+    }
+
+    private static function tutorialStep(
+        string $code,
+        string $moduleKey,
+        string $title,
+        string $page,
+        string $objective,
+        string $objectiveType,
+        array $objectivePayload = [],
+        bool $requiresAcknowledgement = false,
+        array $rewardPayload = []
+    ): array {
+        return [
+            'code' => $code,
+            'step_key' => $code,
+            'module_key' => $moduleKey,
+            'module_title' => self::tutorialModules()[$moduleKey]['title'] ?? $moduleKey,
+            'title' => $title,
+            'page' => $page,
+            'route_hint' => $page,
+            'objective' => $objective,
+            'objective_type' => $objectiveType,
+            'objective_payload' => $objectivePayload,
+            'requires_acknowledgement' => $requiresAcknowledgement,
+            'reward_payload' => $rewardPayload,
+            'is_optional' => false,
         ];
     }
 
