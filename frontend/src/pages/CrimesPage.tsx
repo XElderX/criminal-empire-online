@@ -17,6 +17,10 @@ import type {
   CrimeOpportunity,
   CrimePreparationOption,
   CrimeRun,
+  QuickCrimeEventChoice,
+  QuickCrimeOverview,
+  QuickCrimeRun,
+  QuickCrimeTemplate,
 } from '../types';
 
 interface CrimesPageProps {
@@ -25,6 +29,8 @@ interface CrimesPageProps {
 
 export function CrimesPage({ onChanged }: CrimesPageProps) {
   const [overview, setOverview] = useState<CrimeOverview | null>(null);
+  const [quickOverview, setQuickOverview] = useState<QuickCrimeOverview | null>(null);
+  const [quickResult, setQuickResult] = useState<QuickCrimeRun | null>(null);
   const [selectedOpportunityId, setSelectedOpportunityId] = useState<number | null>(null);
   const [selectedCrewIds, setSelectedCrewIds] = useState<number[]>([]);
   const [selectedEquipmentKeys, setSelectedEquipmentKeys] = useState<string[]>([]);
@@ -46,8 +52,13 @@ export function CrimesPage({ onChanged }: CrimesPageProps) {
 
   async function load(): Promise<void> {
     try {
-      const response = await api<CrimeOverview>('/crimes');
+      const [response, quickResponse] = await Promise.all([
+        api<CrimeOverview>('/crimes'),
+        api<QuickCrimeOverview>('/quick-crimes'),
+      ]);
+
       setOverview(response);
+      setQuickOverview(quickResponse);
 
       if (selectedOpportunityId === null && response.opportunities.length > 0) {
         setSelectedOpportunityId(response.opportunities[0].id);
@@ -125,7 +136,7 @@ export function CrimesPage({ onChanged }: CrimesPageProps) {
   }
 
   async function assignEquipment(opportunity: CrimeOpportunity): Promise<void> {
-    if (!overview) {
+    if (!overview || !quickOverview) {
       return;
     }
 
@@ -187,6 +198,56 @@ export function CrimesPage({ onChanged }: CrimesPageProps) {
     });
   }
 
+  async function prepareQuickCrime(template: QuickCrimeTemplate, optionCode: string): Promise<void> {
+    await runAction(`quick-prepare-${template.id}-${optionCode}`, async () => {
+      const response = await api<{ message: string }>(
+        `/quick-crimes/${template.id}/prepare`,
+        {
+          method: 'POST',
+          body: JSON.stringify({ code: optionCode }),
+        },
+      );
+
+      return response.message;
+    });
+  }
+
+  async function startQuickCrime(template: QuickCrimeTemplate): Promise<void> {
+    await runAction(`quick-start-${template.id}`, async () => {
+      const response = await api<{ message: string; run: QuickCrimeRun }>(
+        `/quick-crimes/${template.id}/start`,
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            idempotency_key: crypto.randomUUID(),
+          }),
+        },
+      );
+
+      setQuickResult(response.run);
+
+      return response.run.event
+        ? `${response.message} Choose how to handle: ${response.run.event.title}`
+        : quickResultMessage(response.run);
+    });
+  }
+
+  async function decideQuickCrime(run: QuickCrimeRun, choice: QuickCrimeEventChoice): Promise<void> {
+    await runAction(`quick-decision-${run.id}-${choice.code}`, async () => {
+      const response = await api<{ message: string; run: QuickCrimeRun }>(
+        `/quick-crimes/runs/${run.id}/decision`,
+        {
+          method: 'POST',
+          body: JSON.stringify({ decision_code: choice.code }),
+        },
+      );
+
+      setQuickResult(response.run);
+
+      return quickResultMessage(response.run);
+    });
+  }
+
   async function commitLegacy(crime: Crime): Promise<void> {
     await runAction(`legacy-${crime.id}`, async () => {
       const response = await api<{ success: boolean; reward: number; heat_gained: number }>(
@@ -217,7 +278,7 @@ export function CrimesPage({ onChanged }: CrimesPageProps) {
     ));
   }
 
-  if (!overview) {
+  if (!overview || !quickOverview) {
     return (
       <section className="page-section crimes-v04-page">
         <GameHeader
@@ -348,6 +409,15 @@ export function CrimesPage({ onChanged }: CrimesPageProps) {
         <ContactsPanel contacts={overview.contacts} />
         <HistoryPanel runs={overview.history} />
       </div>
+
+      <QuickCrimesPanel
+        overview={quickOverview}
+        result={quickResult}
+        busyKey={busyKey}
+        onPrepare={prepareQuickCrime}
+        onStart={startQuickCrime}
+        onDecision={decideQuickCrime}
+      />
 
       <LegacyCrimesPanel crimes={overview.legacy_crimes} busyKey={busyKey} onCommit={commitLegacy} />
     </section>
@@ -608,6 +678,252 @@ function HistoryPanel({ runs }: { runs: CrimeRun[] }) {
     </section>
   );
 }
+
+function QuickCrimesPanel({
+  overview,
+  result,
+  busyKey,
+  onPrepare,
+  onStart,
+  onDecision,
+}: {
+  overview: QuickCrimeOverview;
+  result: QuickCrimeRun | null;
+  busyKey: string;
+  onPrepare: (template: QuickCrimeTemplate, optionCode: string) => void;
+  onStart: (template: QuickCrimeTemplate) => void;
+  onDecision: (run: QuickCrimeRun, choice: QuickCrimeEventChoice) => void;
+}) {
+  const activeEventRuns = overview.active_runs.filter((run) => run.event);
+
+  return (
+    <section className="card section-card quick-crimes-panel">
+      <div className="card-heading">
+        <div>
+          <p className="eyebrow">v0.4.1 fallback loop</p>
+          <h2>Quick Crimes & Street Actions</h2>
+          <p className="muted">
+            Smaller cooldown-based actions for early money, XP, fallback leads, and crew practice when no major opportunity is ready.
+          </p>
+        </div>
+      </div>
+
+      {activeEventRuns.length > 0 && (
+        <div className="quick-event-stack">
+          {activeEventRuns.map((run) => (
+            <article key={run.id} className="crime-event-card quick-event-card">
+              <p className="eyebrow">Quick crime decision</p>
+              <h3>{run.event?.title}</h3>
+              <p>{run.event?.description}</p>
+              <div className="crime-action-row">
+                {run.event?.choices.map((choice) => (
+                  <button
+                    key={choice.code}
+                    className="btn"
+                    disabled={busyKey !== ''}
+                    onClick={() => onDecision(run, choice)}
+                  >
+                    {choice.label}
+                  </button>
+                ))}
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
+
+      {result?.result && (
+        <QuickCrimeResultPanel run={result} />
+      )}
+
+      <div className="quick-crime-grid">
+        {overview.data.map((template) => (
+          <QuickCrimeCard
+            key={template.id}
+            template={template}
+            busyKey={busyKey}
+            onPrepare={onPrepare}
+            onStart={onStart}
+          />
+        ))}
+      </div>
+
+      {overview.history.length > 0 && (
+        <section className="quick-history-panel">
+          <h3>Recent quick action history</h3>
+          <div className="timeline compact-timeline">
+            {overview.history.slice(0, 6).map((run) => (
+              <article key={run.id}>
+                <span>{run.outcome || run.status}</span>
+                <strong>{run.result?.title || `Quick run #${run.id}`}</strong>
+                <p className="muted">
+                  Cash ${Number(run.reward_cash || 0).toLocaleString()} · XP {run.experience_gained || 0} · heat +{run.heat_gained || 0}
+                </p>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
+    </section>
+  );
+}
+
+function QuickCrimeCard({
+  template,
+  busyKey,
+  onPrepare,
+  onStart,
+}: {
+  template: QuickCrimeTemplate;
+  busyKey: string;
+  onPrepare: (template: QuickCrimeTemplate, optionCode: string) => void;
+  onStart: (template: QuickCrimeTemplate) => void;
+}) {
+  const preparedCodes = template.prepared.map((entry) => entry.code);
+  const busy = busyKey.startsWith(`quick-start-${template.id}`)
+    || busyKey.startsWith(`quick-prepare-${template.id}`);
+
+  return (
+    <article className={`quick-crime-card ${template.can_start ? '' : 'locked'}`}>
+      <div className="quick-card-topline">
+        <RiskBadge value={template.tier >= 4 ? 'high' : template.tier >= 2 ? 'medium' : 'low'} />
+        <span className="info-pill">{template.category.replace(/_/g, ' ')}</span>
+      </div>
+
+      <h3>{template.title}</h3>
+      <p>{template.description}</p>
+
+      <dl className="details-grid compact-details-grid">
+        <div><dt>Level</dt><dd>{template.min_level}+</dd></div>
+        <div><dt>Energy</dt><dd>{template.energy_cost}</dd></div>
+        <div><dt>Reward</dt><dd>${template.reward_min}–${template.reward_max}</dd></div>
+        <div><dt>XP</dt><dd>{template.xp_min}–{template.xp_max}</dd></div>
+        <div><dt>Heat</dt><dd>{template.heat_min}–{template.heat_max}</dd></div>
+        <div><dt>Cooldown</dt><dd>{formatCooldown(template.cooldown_seconds)}</dd></div>
+      </dl>
+
+      <QuickRequirementList template={template} />
+
+      {template.preparation_options.length > 0 && (
+        <div className="quick-prep-list">
+          <h4>Light preparation</h4>
+          {template.preparation_options.map((option) => {
+            const applied = preparedCodes.includes(option.code);
+            return (
+              <button
+                key={option.code}
+                className={`prep-option-card ${applied ? 'applied' : ''}`}
+                disabled={applied || busyKey !== ''}
+                onClick={() => onPrepare(template, option.code)}
+              >
+                <strong>{option.name}</strong>
+                <span>{option.description}</span>
+                <small>${option.cash_cost} · {option.energy_cost} energy</small>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {template.locked_reasons.length > 0 && (
+        <div className="missing-item-notice">
+          <strong>Locked</strong>
+          <ul>
+            {template.locked_reasons.map((reason) => (
+              <li key={reason}>{reason}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <button
+        className="btn primary full-width"
+        disabled={!template.can_start || busy || busyKey !== ''}
+        onClick={() => onStart(template)}
+      >
+        {template.cooldown.active
+          ? `Cooldown ${template.cooldown.remaining_seconds}s`
+          : busy
+            ? 'Working…'
+            : 'Start quick crime'}
+      </button>
+    </article>
+  );
+}
+
+function QuickRequirementList({ template }: { template: QuickCrimeTemplate }) {
+  return (
+    <div className="quick-requirements">
+      <h4>Requirements</h4>
+      <div className="chip-row">
+        {template.required_all_item_tags.map((tag) => (
+          <span key={`all-${tag}`} className="requirement-chip required">Need {tag.replace(/_/g, ' ')}</span>
+        ))}
+        {template.required_any_item_tags.length > 0 && (
+          <span className="requirement-chip required">
+            Need one: {template.required_any_item_tags.map((tag) => tag.replace(/_/g, ' ')).join(', ')}
+          </span>
+        )}
+        {template.recommended_item_tags.map((tag) => (
+          <span key={`rec-${tag}`} className="requirement-chip">Recommended {tag.replace(/_/g, ' ')}</span>
+        ))}
+        {template.required_all_item_tags.length === 0 && template.required_any_item_tags.length === 0 && (
+          <span className="requirement-chip">No hard item requirement</span>
+        )}
+      </div>
+      {template.missing_items.length > 0 && (
+        <p className="muted warning-text">
+          Missing: {template.missing_items.map((item) => item.label).join('; ')}. Buy or obtain it through shop/inventory before starting.
+        </p>
+      )}
+    </div>
+  );
+}
+
+function QuickCrimeResultPanel({ run }: { run: QuickCrimeRun }) {
+  const result = run.result;
+
+  if (!result) {
+    return null;
+  }
+
+  return (
+    <article className="quick-result-panel">
+      <p className="eyebrow">Latest quick result</p>
+      <h3>{result.title || run.outcome || 'Quick action resolved'}</h3>
+      <p>{result.description}</p>
+      <dl className="details-grid compact-details-grid">
+        <div><dt>Cash</dt><dd>${Number(run.reward_cash || 0).toLocaleString()}</dd></div>
+        <div><dt>XP</dt><dd>{run.experience_gained}</dd></div>
+        <div><dt>Heat</dt><dd>+{run.heat_gained}</dd></div>
+        <div><dt>Outcome</dt><dd>{run.outcome}</dd></div>
+      </dl>
+      {result.loot && result.loot.length > 0 && (
+        <p className="muted">Loot: {result.loot.map((item) => `${item.quantity}× ${item.item_code.replace(/_/g, ' ')}`).join(', ')}</p>
+      )}
+      {result.skill_gains && result.skill_gains.length > 0 && (
+        <p className="success-text">
+          Rare skill gain: {result.skill_gains.map((gain) => `${String(gain.skill)} +${String(gain.amount)}`).join(', ')}
+        </p>
+      )}
+    </article>
+  );
+}
+
+function formatCooldown(seconds: number): string {
+  if (seconds < 60) {
+    return `${seconds}s`;
+  }
+
+  const minutes = Math.ceil(seconds / 60);
+  return `${minutes}m`;
+}
+
+function quickResultMessage(run: QuickCrimeRun): string {
+  const title = run.result?.title || run.outcome || 'Quick crime resolved';
+  return `${title}. Cash +$${Number(run.reward_cash || 0).toLocaleString()}, XP +${run.experience_gained || 0}, heat +${run.heat_gained || 0}.`;
+}
+
 
 function LegacyCrimesPanel({
   crimes,

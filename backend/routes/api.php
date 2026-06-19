@@ -11,6 +11,7 @@ use App\Controllers\HeatController;
 use App\Controllers\ItemController;
 use App\Controllers\JobController;
 use App\Controllers\MarketController;
+use App\Controllers\QuickCrimeController;
 use App\Controllers\RecruitmentController;
 use App\Controllers\ShopController;
 use App\Controllers\TerritoryController;
@@ -273,6 +274,17 @@ $router->get(
     [CrimeController::class, 'contacts'],
     [AuthMiddleware::class]
 );
+
+
+$router->get('/api/quick-crimes', [QuickCrimeController::class, 'index'], [AuthMiddleware::class]);
+$router->get('/api/quick-crimes/history', [QuickCrimeController::class, 'history'], [AuthMiddleware::class]);
+$router->get('/api/player/progression', [QuickCrimeController::class, 'progression'], [AuthMiddleware::class]);
+$router->get('/api/quick-crimes/runs/{id}', [QuickCrimeController::class, 'run'], [AuthMiddleware::class]);
+$router->post('/api/quick-crimes/runs/{id}/decision', [QuickCrimeController::class, 'decide'], [AuthMiddleware::class]);
+$router->post('/api/quick-crimes/runs/{id}/resolve', [QuickCrimeController::class, 'resolve'], [AuthMiddleware::class]);
+$router->get('/api/quick-crimes/{id}', [QuickCrimeController::class, 'show'], [AuthMiddleware::class]);
+$router->post('/api/quick-crimes/{id}/prepare', [QuickCrimeController::class, 'prepare'], [AuthMiddleware::class]);
+$router->post('/api/quick-crimes/{id}/start', [QuickCrimeController::class, 'start'], [AuthMiddleware::class]);
 
 $router->get('/api/drug-market', [MarketController::class, 'drugs'], [AuthMiddleware::class]);
 $router->get('/api/gangs', [GangController::class, 'index'], [AuthMiddleware::class]);

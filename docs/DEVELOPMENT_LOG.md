@@ -1,3 +1,15 @@
+## 2026-06-19 — Criminal Empire Online v0.4.1 — Fallback Street Actions & Quick Crimes
+
+- Built on the v0.4 Crimes Expansion without removing discovered opportunities, NPC leads, or the Admin NPC browser.
+- Added quick-crime templates for ask-around rumors, target street watching, pickpocketing, shoplifting, bicycle parts theft, car-lamp theft, parked-car break-in, warehouse sneak-in, store robbery, and low-value vehicle theft.
+- Added structured item tags/effects for requirements such as gloves, masks, lockpicks, vehicle tools, carrying bags, first aid, communication, surveillance, blade weapons, firearms, and forced-entry tools.
+- Added quick-crime cooldowns, player recent action logs, preparation records, event decisions, experience logs, skill progression logs, and run-level reward idempotency.
+- Added backend services: `QuickCrimeService`, `ItemRequirementService`, `ExperienceService`, and `SkillProgressionService`.
+- Added routes for listing, preparing, starting, resolving, deciding, and viewing quick crimes/history/progression.
+- Updated the Crimes frontend with Quick Crime cards, missing item notices, cooldown display, preparation buttons, event decisions, result panels, XP/skill-gain display, and quick action history.
+- Added v0.4.1 migration, seeder, tests, API documentation, and frontend styling.
+
+
 ## 2026-06-18 — Criminal Empire Online v0.4 — Crimes Expansion
 
 - Bumped application metadata to v0.4.0 / `Criminal Empire Online v0.4 — Crimes Expansion`.

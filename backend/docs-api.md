@@ -243,3 +243,19 @@ Authenticated admin routes:
 - `GET /api/admin/npcs/{id}` returns an NPC detail payload with portrait, life stage, stats, flags, relationships, timeline events, crime involvement, and status logs.
 
 All crime outcomes remain backend-authoritative. The frontend can submit only selected opportunity IDs, owned crew/equipment IDs, preparation codes, and backend-defined decision codes; it cannot submit a result or random outcome.
+
+## v0.4.1 Quick Crimes API
+
+Authenticated player endpoints:
+
+- `GET /api/quick-crimes` — list quick crime templates, requirement status, active quick events, history, and progression summary.
+- `GET /api/quick-crimes/{id}` — inspect one quick crime template.
+- `POST /api/quick-crimes/{id}/prepare` — apply one lightweight preparation option by `code`.
+- `POST /api/quick-crimes/{id}/start` — start a quick crime using a backend-validated idempotency key, optional crew IDs, optional equipment, district, and target key.
+- `GET /api/quick-crimes/runs/{runId}` — view a quick crime run owned by the player.
+- `POST /api/quick-crimes/runs/{runId}/decision` — submit a backend-validated event decision.
+- `POST /api/quick-crimes/runs/{runId}/resolve` — resolve a run that has no pending event.
+- `GET /api/quick-crimes/history` — recent quick crime history.
+- `GET /api/player/progression` — player XP and recent progression logs.
+
+Rewards, XP, loot, success rolls, cooldowns, and skill progression are all calculated server-side.
