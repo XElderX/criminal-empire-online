@@ -1,4 +1,4 @@
-# Criminal Empire Online v0.3.6 API
+# Criminal Empire Online v0.6.3 API
 
 All protected endpoints require:
 
@@ -301,9 +301,11 @@ Authenticated player endpoints:
 - `GET /api/world-map/regions/{slug}` — region map with hotspots, territory summary, activity summary, and risk data.
 - `GET /api/world-map/regions/{slug}/locations` — hotspots for a region.
 - `GET /api/world-map/locations/{slug}` — one hotspot with linked actions, territory, risk summary, and travel preview.
-- `GET /api/world-map/locations/{slug}/activities` — activity links for one hotspot.
-- `GET /api/world-map/current-location` — player current region/hotspot.
-- `POST /api/world-map/travel` — backend-validated travel by `region_slug` or `location_slug`.
+- `GET /api/world-map/locations/{slug}/activities` — activity links, local presence, travel purpose, nearby action counts, and previews for one hotspot.
+- `GET /api/world-map/current-location` — player current region/hotspot with recent travel state.
+- `POST /api/world-map/travel` — backend-validated travel by `region_slug` or `location_slug`, with route costs, events, history, unlocked local actions, and updated stats.
+- `POST /api/world-map/travel-and-explore` — travels first, then explores the hotspot only if travel succeeds.
+- `GET /api/world-map/travel-history` — recent travel log entries for the authenticated player.
 - `GET /api/world-map/territories` — map-linked territory summaries.
 
 Read-only admin endpoints:
@@ -325,3 +327,10 @@ Authenticated endpoints added/extended:
 - `GET /api/dirty-jobs?region=&location=` — filters/prioritizes dirty jobs by local map rules while preserving the generic no-filter list.
 
 Quick-crime start may include `region_slug` and `location_slug`. The backend validates whether the action is allowed at that hotspot and whether current-location travel is required.
+
+
+## v0.6.3 Meaningful Travel & Local Presence
+
+Travel responses include `travelResult`, `fromLocation`, `toLocation`, `routeType`, `costs`, `event`, `warnings`, `unlockedActions`, `localActivitySummary`, `heatChange`, `historyEntry`, `currentLocation`, and `updatedPlayerStats`.
+
+Local presence rules are enforced server-side. The frontend may show remote previews, but the backend decides whether a Quick Crime, Dirty Job, or hotspot exploration can actually start from the player’s current location.

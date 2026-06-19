@@ -19,17 +19,33 @@ export function LocalActivityPanel({
     );
   }
 
+  const travelPurpose = activities.travelPurpose;
+
   return (
     <section className="card local-activity-panel">
       <div className="card-heading">
         <div>
           <p className="eyebrow">Local gameplay</p>
           <h3>{activities.location.name}</h3>
-          <p className="muted">
-            {activities.playerIsHere ? 'You are here.' : 'Travel here to unlock location-required actions.'}
+          <p className={activities.playerIsHere ? 'success-text' : 'warning-text'}>
+            {activities.playerIsHere ? 'You are here. Local actions are available.' : 'Travel here to unlock location-required actions.'}
           </p>
         </div>
       </div>
+
+      {travelPurpose && (
+        <div className="local-purpose-box">
+          <strong>{travelPurpose.headline}</strong>
+          {travelPurpose.unlocks.length > 0 && (
+            <ul>
+              {travelPurpose.unlocks.map((item) => <li key={item}>{item}</li>)}
+            </ul>
+          )}
+          {travelPurpose.remote.length > 0 && (
+            <p className="muted">Remote view: {travelPurpose.remote.join(', ')}</p>
+          )}
+        </div>
+      )}
 
       <div className="location-effect-summary">
         <span className="info-pill">Heat {activities.heatSummary.heat}</span>
@@ -40,10 +56,10 @@ export function LocalActivityPanel({
         )}
       </div>
 
-      <button className="btn primary full-width" disabled={busy} onClick={onExplore}>
-        {busy ? 'Exploring…' : 'Explore Area'}
+      <button className="btn primary full-width" disabled={busy || !activities.playerIsHere} onClick={onExplore}>
+        {busy ? 'Exploring…' : activities.playerIsHere ? 'Explore Area' : 'Travel here to explore'}
       </button>
-      <p className="muted">Costs 3 energy. Can reveal local rumors, leads, contacts, or warnings. Cooldown prevents refresh farming.</p>
+      <p className="muted">Exploration is local. It costs energy and can reveal rumors, leads, contacts, or warnings.</p>
 
       <div className="local-activity-groups" aria-label="Quick Crimes Nearby and Dirty Jobs Nearby">
         {activities.activityGroups.length === 0 && (
@@ -70,6 +86,9 @@ function LocalActivityGroupCard({
         <div>
           <h4>{group.title}</h4>
           <p className="muted">{group.availableCount} available · {group.lockedCount} locked</p>
+          <p className={group.localPresenceSatisfied === false ? 'warning-text' : 'success-text'}>
+            {group.availabilityLabel || (group.localPresenceSatisfied === false ? 'Requires local presence' : 'Available here')}
+          </p>
         </div>
         {group.route_hint && (
           <button className="btn" onClick={() => onOpenRoute(group.route_hint || '')}>
@@ -79,15 +98,21 @@ function LocalActivityGroupCard({
       </div>
       {group.preview.length > 0 && (
         <ul className="local-preview-list">
-          {group.preview.slice(0, 3).map((entry, index) => (
-            <li key={index}>
-              <strong>{String(entry.title || entry.name || entry.opportunity_type || 'Local activity')}</strong>
-              {entry.description ? <span>{String(entry.description)}</span> : null}
-              {Array.isArray(entry.lockedReasons) && entry.lockedReasons.length > 0 ? (
-                <small>Locked: {entry.lockedReasons.map((reason) => String(reason)).join(', ')}</small>
-              ) : null}
-            </li>
-          ))}
+          {group.preview.slice(0, 4).map((entry, index) => {
+            const lockedReasons = Array.isArray(entry.lockedReasons) ? entry.lockedReasons : [];
+            const status = String(entry.localPresenceStatus || '');
+
+            return (
+              <li key={index}>
+                <strong>{String(entry.title || entry.name || entry.opportunity_type || 'Local activity')}</strong>
+                {entry.description ? <span>{String(entry.description)}</span> : null}
+                {status === 'travel_required' ? <small>Requires local presence. {String(entry.travelHint || '')}</small> : null}
+                {lockedReasons.length > 0 ? (
+                  <small>Locked: {lockedReasons.map((reason) => String(reason)).join(', ')}</small>
+                ) : null}
+              </li>
+            );
+          })}
         </ul>
       )}
     </article>

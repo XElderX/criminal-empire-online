@@ -145,7 +145,7 @@ export function App() {
     return (
       <main className="auth-shell">
         <section className="card auth-card">
-          <p className="eyebrow">Criminal Empire Online v 0.6.2.1</p>
+          <p className="eyebrow">Criminal Empire Online v 0.6.3</p>
           <h1>Loading city state…</h1>
         </section>
       </main>
@@ -232,7 +232,7 @@ function PageContent({
 }) {
   switch (page) {
     case 'dashboard':
-      return <DashboardPage user={user} onChanged={onChanged} />;
+      return <DashboardPage user={user} onChanged={onChanged} onNavigate={onNavigate} />;
     case 'jobs':
       return <JobsPage onChanged={onChanged} />;
     case 'dirty jobs':
@@ -258,6 +258,6 @@ function PageContent({
     case 'admin':
       return <AdminPage currentUser={user} onChanged={onChanged} />;
     default:
-      return <DashboardPage user={user} onChanged={onChanged} />;
+      return <DashboardPage user={user} onChanged={onChanged} onNavigate={onNavigate} />;
   }
 }

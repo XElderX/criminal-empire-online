@@ -1,37 +1,137 @@
-import type { LocationMapResponse, MapHotspotAction, RegionMapResponse, WorldRegion } from '../../types/worldMap';
+import type {
+  LocationMapResponse,
+  MapHotspotAction,
+  RegionMapResponse,
+  TravelResponse,
+  WorldRegion,
+} from '../../types/worldMap';
+
+function money(value: number | undefined): string {
+  return `$${Number(value || 0).toLocaleString()}`;
+}
+
+function hotspotIsCurrent(locationResponse: LocationMapResponse): boolean {
+  return locationResponse.currentLocation.location_slug === locationResponse.location.slug;
+}
+
+function unlockLabels(locationResponse: LocationMapResponse): string[] {
+  const labels = locationResponse.linkedActions.map((action) => action.label);
+
+  if (labels.length > 0) {
+    return labels.slice(0, 6);
+  }
+
+  return locationResponse.location.available_actions.slice(0, 6);
+}
 
 export function TravelPanel({
   selectedRegion,
   regionResponse,
   locationResponse,
+  travelResult,
   busy,
   onEnterRegion,
   onTravel,
+  onTravelAndExplore,
   onNavigateAction,
 }: {
   selectedRegion?: WorldRegion | null;
   regionResponse?: RegionMapResponse | null;
   locationResponse?: LocationMapResponse | null;
+  travelResult?: TravelResponse | null;
   busy: boolean;
   onEnterRegion?: (region: WorldRegion) => void;
   onTravel?: () => void;
+  onTravelAndExplore?: () => void;
   onNavigateAction?: (action: MapHotspotAction) => void;
 }) {
   if (locationResponse) {
+    const isHere = hotspotIsCurrent(locationResponse);
+    const unlocks = unlockLabels(locationResponse);
+    const routeOptions = locationResponse.travelInfo.route_options || [];
+
     return (
       <aside className="travel-panel card">
         <p className="eyebrow">Selected hotspot</p>
         <h2>{locationResponse.location.name}</h2>
         <p>{locationResponse.location.description}</p>
+        <p className={isHere ? 'success-text' : 'warning-text'}>
+          {isHere ? 'You are here. Local actions can be started from this hotspot.' : 'Not here. Travel here to act locally.'}
+        </p>
+
         {locationResponse.territory && (
           <p className="muted">Territory: {locationResponse.territory.name} · {locationResponse.territory.control_label}</p>
         )}
+
         <dl className="details-grid compact-details-grid">
-          <div><dt>Travel</dt><dd>${locationResponse.travelInfo.cash_cost} · {locationResponse.travelInfo.energy_cost} energy</dd></div>
-          <div><dt>Actions</dt><dd>{locationResponse.linkedActions.length}</dd></div>
+          <div>
+            <dt>Travel</dt>
+            <dd>{money(locationResponse.travelInfo.cash_cost)} · {locationResponse.travelInfo.energy_cost} energy</dd>
+          </div>
+          <div>
+            <dt>Route</dt>
+            <dd>{locationResponse.travelInfo.route_label || locationResponse.travelInfo.route_type || 'Cheap route'}</dd>
+          </div>
+          <div>
+            <dt>Travel risk</dt>
+            <dd>{locationResponse.travelInfo.travel_risk_score ?? locationResponse.riskSummary.score}</dd>
+          </div>
+          <div>
+            <dt>Event chance</dt>
+            <dd>{locationResponse.travelInfo.event_chance ?? 0}%</dd>
+          </div>
         </dl>
+
+        {unlocks.length > 0 ? (
+          <div className="local-purpose-box">
+            <strong>Travel here to unlock:</strong>
+            <ul>
+              {unlocks.map((label) => <li key={label}>{label}</li>)}
+            </ul>
+          </div>
+        ) : (
+          <p className="muted">No local actions are available here yet. This hotspot is currently useful for map context and travel presence.</p>
+        )}
+
+        <div className="local-purpose-box subdued">
+          <strong>Can view remotely:</strong>
+          <p className="muted">territory summary, known opportunities, police risk, and travel planning.</p>
+        </div>
+
+        {routeOptions.length > 0 && (
+          <div className="route-option-list">
+            {routeOptions.slice(0, 4).map((route) => (
+              <div key={route.type} className="mini-card">
+                <strong>{route.label}</strong>
+                <span>{money(route.cash_cost)} · {route.energy_cost} energy · {route.event_chance}% event</span>
+              </div>
+            ))}
+          </div>
+        )}
+
         {locationResponse.travelInfo.warnings.map((warning) => <p key={warning} className="warning-text">{warning}</p>)}
-        <button className="btn primary full-width" disabled={busy} onClick={onTravel}>Travel Here</button>
+
+        {travelResult && (
+          <div className="travel-result-panel">
+            <strong>{travelResult.message}</strong>
+            {travelResult.event && (
+              <p className="muted">{travelResult.event.title}: {travelResult.event.description}</p>
+            )}
+            {typeof travelResult.heatChange === 'number' && travelResult.heatChange !== 0 && (
+              <p className="warning-text">Heat changed by {travelResult.heatChange}.</p>
+            )}
+          </div>
+        )}
+
+        <div className="map-action-grid">
+          <button className="btn primary" disabled={busy || isHere} onClick={onTravel}>
+            {isHere ? 'Already Here' : 'Travel Here'}
+          </button>
+          <button className="btn" disabled={busy} onClick={onTravelAndExplore}>
+            {isHere ? 'Explore Area' : 'Travel & Explore'}
+          </button>
+        </div>
+
         {locationResponse.linkedActions.length > 0 && (
           <div className="map-action-grid">
             {locationResponse.linkedActions.map((action) => (
@@ -52,7 +152,7 @@ export function TravelPanel({
         <h2>{selectedRegion.name}</h2>
         <p>{selectedRegion.description}</p>
         <dl className="details-grid compact-details-grid">
-          <div><dt>Travel</dt><dd>${selectedRegion.travel_cost_cash} · {selectedRegion.travel_cost_energy} energy</dd></div>
+          <div><dt>Travel</dt><dd>{money(selectedRegion.travel_cost_cash)} · {selectedRegion.travel_cost_energy} energy</dd></div>
           <div><dt>Recommended</dt><dd>Level {selectedRegion.recommended_level}+</dd></div>
           <div><dt>Heat</dt><dd>{selectedRegion.base_heat}</dd></div>
           <div><dt>Police</dt><dd>{selectedRegion.police_pressure}</dd></div>
@@ -70,7 +170,7 @@ export function TravelPanel({
         <p className="eyebrow">Region</p>
         <h2>{regionResponse.region.name}</h2>
         <p>{regionResponse.region.description}</p>
-        <p className="muted">Select a hotspot to travel, inspect territory control, or jump to linked gameplay.</p>
+        <p className="muted">Select a hotspot to see why traveling matters, what local actions unlock, and what risks apply.</p>
       </aside>
     );
   }

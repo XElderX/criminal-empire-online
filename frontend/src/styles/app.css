@@ -3638,3 +3638,45 @@ small {
 .local-context-line {
   color: var(--accent-risk);
 }
+
+/* v0.6.3 — Meaningful Travel & Local Presence */
+.local-purpose-box,
+.travel-result-panel,
+.route-option-list .mini-card,
+.dashboard-location-widget {
+  border: 1px solid rgba(186, 142, 82, 0.22);
+  background: rgba(12, 13, 16, 0.55);
+  border-radius: 14px;
+  padding: 0.85rem;
+  margin: 0.85rem 0;
+}
+
+.local-purpose-box.subdued {
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.local-purpose-box ul {
+  margin: 0.55rem 0 0;
+  padding-left: 1.2rem;
+  color: var(--text-muted);
+}
+
+.route-option-list {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0.85rem 0;
+}
+
+.route-option-list .mini-card {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0;
+}
+
+.travel-result-panel {
+  border-color: rgba(72, 180, 120, 0.32);
+}
+
+.dashboard-location-widget {
+  margin: 0;
+}

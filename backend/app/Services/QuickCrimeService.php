@@ -517,6 +517,11 @@ final class QuickCrimeService
             $lockedReasons[] = 'Cooldown active for ' . $cooldown['remaining_seconds'] . ' seconds.';
         }
 
+        $requiresCurrentLocation = isset($template['requires_current_location']) ? (bool) $template['requires_current_location'] : false;
+        if ($context !== null && $requiresCurrentLocation && !$context['playerIsHere']) {
+            $lockedReasons[] = 'Travel to ' . $context['region']['name'] . ' / ' . $context['location']['name'] . ' before starting this local quick crime.';
+        }
+
         return [
             'id' => (int) $template['id'],
             'code' => $template['code'],
@@ -554,7 +559,13 @@ final class QuickCrimeService
             'local_region_name' => $template['local_region_name'] ?? ($context['region']['name'] ?? null),
             'local_location_slug' => $template['local_location_slug'] ?? ($context['location']['slug'] ?? null),
             'local_location_name' => $template['local_location_name'] ?? ($context['location']['name'] ?? null),
-            'requires_current_location' => isset($template['requires_current_location']) ? (bool) $template['requires_current_location'] : false,
+            'requires_current_location' => $requiresCurrentLocation,
+            'local_presence' => $context ? [
+                'player_is_here' => $context['playerIsHere'],
+                'status' => $context['playerIsHere'] ? 'available_here' : ($requiresCurrentLocation ? 'travel_required' : 'remote_available'),
+                'message' => $context['playerIsHere'] ? 'You are here.' : 'Travel to ' . $context['region']['name'] . ' / ' . $context['location']['name'] . ' before starting this action.',
+            ] : null,
+            'travel_hint' => $context && !$context['playerIsHere'] ? 'Travel to ' . $context['location']['name'] . ' to start this local action.' : null,
             'local_modifiers' => $context ? (new LocationRiskModifierService())->forLocation($context['location'], $context['territory'], $template) : null,
         ];
     }
@@ -1446,6 +1457,30 @@ final class QuickCrimeService
         $statement->execute([$userId]);
 
         return $statement->fetchAll();
+    }
+
+
+    private function locationRuleForTemplate(int $templateId, array $context): ?array
+    {
+        $statement = Database::pdo()->prepare(
+            <<<'SQL'
+                SELECT *
+                FROM quick_crime_location_rules
+                WHERE quick_crime_template_id = ?
+                  AND is_allowed = 1
+                  AND (world_location_id = ? OR (world_location_id IS NULL AND world_region_id = ?))
+                ORDER BY CASE WHEN world_location_id IS NULL THEN 1 ELSE 0 END, sort_order, id
+                LIMIT 1
+            SQL
+        );
+        $statement->execute([
+            $templateId,
+            $context['location']['id'],
+            $context['region']['id'],
+        ]);
+        $rule = $statement->fetch();
+
+        return $rule ?: null;
     }
 
     private function findTemplate(int $templateId): ?array

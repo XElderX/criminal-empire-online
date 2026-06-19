@@ -102,8 +102,34 @@ final class WorldMapController
             Response::json((new TravelService())->travel(
                 $context['user'],
                 isset($payload['region_slug']) ? (string) $payload['region_slug'] : null,
-                isset($payload['location_slug']) ? (string) $payload['location_slug'] : null
+                isset($payload['location_slug']) ? (string) $payload['location_slug'] : null,
+                isset($payload['route_type']) ? (string) $payload['route_type'] : null
             ));
+        } catch (Throwable $exception) {
+            Response::json(['message' => $exception->getMessage()], 422);
+        }
+    }
+
+
+    public function travelAndExplore(array $params, array $context): void
+    {
+        try {
+            $payload = Request::json();
+            Response::json((new TravelService())->travelAndExplore(
+                $context['user'],
+                isset($payload['region_slug']) ? (string) $payload['region_slug'] : null,
+                isset($payload['location_slug']) ? (string) $payload['location_slug'] : null,
+                isset($payload['route_type']) ? (string) $payload['route_type'] : null
+            ));
+        } catch (Throwable $exception) {
+            Response::json(['message' => $exception->getMessage()], 422);
+        }
+    }
+
+    public function travelHistory(array $params, array $context): void
+    {
+        try {
+            Response::json(['data' => (new TravelService())->history((int) $context['user']['id'])]);
         } catch (Throwable $exception) {
             Response::json(['message' => $exception->getMessage()], 422);
         }

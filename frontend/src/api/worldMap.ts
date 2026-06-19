@@ -4,6 +4,7 @@ import type {
   LocationActivitiesResponse,
   LocationMapResponse,
   RegionMapResponse,
+  TravelAndExploreResponse,
   TravelRequest,
   TravelResponse,
   UserLocationState,
@@ -34,6 +35,16 @@ export function travelToLocation(payload: TravelRequest): Promise<TravelResponse
   });
 }
 
+export function travelAndExplore(payload: TravelRequest): Promise<TravelAndExploreResponse> {
+  return api<TravelAndExploreResponse>('/world-map/travel-and-explore', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export function getTravelHistory(): Promise<{ history: Array<Record<string, unknown>> }> {
+  return api<{ history: Array<Record<string, unknown>> }>('/world-map/travel-history');
+}
 
 export function getLocationActivities(locationSlug: string): Promise<LocationActivitiesResponse> {
   return api<LocationActivitiesResponse>(`/world-map/locations/${locationSlug}/activities`);

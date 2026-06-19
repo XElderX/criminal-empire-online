@@ -64,6 +64,13 @@ export interface WorldLocation {
   police_pressure: number;
   danger_level: number;
   min_level: number;
+  travel_requires_level?: number;
+  travel_requires_reputation?: number;
+  travel_risk_level?: number;
+  travel_event_profile?: string | null;
+  local_presence_required_default?: boolean;
+  exploration_energy_cost?: number;
+  exploration_cooldown_seconds?: number;
   linked_feature_key?: string | null;
   available_actions: string[];
   actions: MapHotspotAction[];
@@ -75,6 +82,8 @@ export interface WorldLocation {
 export interface UserLocationState {
   region_id?: number | null;
   location_id?: number | null;
+  last_region_id?: number | null;
+  last_location_id?: number | null;
   region_slug: string;
   region_name: string;
   location_slug: string;
@@ -82,6 +91,10 @@ export interface UserLocationState {
   location_type: string;
   last_travel_at?: string | null;
   travel_cooldown_until?: string | null;
+  travel_route_type?: string | null;
+  travel_status?: string | null;
+  arrived_at?: string | null;
+  last_local_action_at?: string | null;
   riskSummary: MapRiskSummary;
 }
 
@@ -119,6 +132,18 @@ export interface RegionMapResponse {
   riskSummary: MapRiskSummary;
 }
 
+export interface TravelRouteOption {
+  type: string;
+  label: string;
+  cash_cost: number;
+  energy_cost: number;
+  event_chance: number;
+  police_stop_chance: number;
+  rival_event_chance: number;
+  travel_risk_score: number;
+  warnings: string[];
+}
+
 export interface LocationMapResponse {
   location: WorldLocation;
   region: WorldRegion;
@@ -128,6 +153,13 @@ export interface LocationMapResponse {
   travelInfo: {
     cash_cost: number;
     energy_cost: number;
+    route_type?: string;
+    route_label?: string;
+    event_chance?: number;
+    police_stop_chance?: number;
+    rival_event_chance?: number;
+    travel_risk_score?: number;
+    route_options?: TravelRouteOption[];
     warnings: string[];
     locked_reason?: string | null;
   };
@@ -137,20 +169,42 @@ export interface LocationMapResponse {
 export interface TravelRequest {
   region_slug?: string;
   location_slug?: string;
+  route_type?: string;
+}
+
+export interface TravelEventNotice {
+  type: string;
+  title: string;
+  description: string;
+  heat_delta?: number;
+  discovered_type?: string | null;
+  discovered_id?: number | null;
 }
 
 export interface TravelResponse {
   success: boolean;
+  travelResult?: string;
   message: string;
+  fromLocation?: Record<string, unknown> | null;
+  toLocation?: Record<string, unknown> | null;
+  routeType?: string;
   currentLocation: UserLocationState;
+  presence?: Record<string, unknown>;
+  event?: TravelEventNotice | null;
   costs: {
     cash: number;
     energy: number;
   };
   warnings: string[];
+  unlockedActions?: Record<string, number>;
+  localActivitySummary?: Record<string, number>;
+  heatChange?: number;
+  discoveredOpportunity?: Record<string, unknown> | null;
+  historyEntry?: Record<string, unknown> | null;
   updatedPlayerStats: {
     cash: number;
     energy: number;
+    heat?: number;
   };
   possibleActions: MapHotspotAction[];
 }
@@ -160,6 +214,8 @@ export interface LocalActivityGroup {
   title: string;
   availableCount: number;
   lockedCount: number;
+  localPresenceSatisfied?: boolean;
+  availabilityLabel?: string;
   preview: Array<Record<string, unknown>>;
   route_hint?: string | null;
 }
@@ -169,6 +225,16 @@ export interface LocationActivitiesResponse {
   region: WorldRegion;
   currentLocation: UserLocationState;
   playerIsHere: boolean;
+  presence?: Record<string, unknown>;
+  travelPurpose?: {
+    headline: string;
+    unlocks: string[];
+    remote: string[];
+    warnings: string[];
+  };
+  remoteActions?: string[];
+  localUnlocks?: string[];
+  localActivitySummary?: Record<string, number>;
   activityGroups: LocalActivityGroup[];
   quickCrimesPreview: Array<Record<string, unknown>>;
   dirtyJobsPreview: Array<Record<string, unknown>>;
@@ -191,4 +257,9 @@ export interface ExploreHotspotResponse {
     description: string;
   };
   activities: LocationActivitiesResponse;
+}
+
+export interface TravelAndExploreResponse {
+  travel: TravelResponse;
+  exploration: ExploreHotspotResponse | null;
 }

@@ -53,21 +53,40 @@ final class LocalActivityService
             'description' => 'Local heat, police pressure, and danger modify actions here.',
             'riskSummary' => $context['riskSummary'],
         ]] : [];
+        $presence = (new LocalPresenceService())->presenceFor(
+            (int) $user['id'],
+            $context['region'],
+            $context['location']
+        );
+        $travelPurpose = $this->travelPurpose($context, $quick, $dirty, $recruitment, $business, $local);
+        $activityGroups = array_values(array_filter([
+            $this->group('quick_crimes', 'Quick Crimes Nearby', $quick['available'], $quick['locked'], $quick['preview'], 'crimes?tab=quick_crimes', $context['playerIsHere']),
+            $this->group('dirty_jobs', 'Dirty Jobs Nearby', $dirty['available'], $dirty['locked'], $dirty['preview'], 'dirty jobs', $context['playerIsHere']),
+            $this->group('crime_leads', 'Crime Leads / Rumors', count($local), 0, $local, 'crimes?tab=explore_leads', true),
+            $this->group('recruitment', 'Recruitment Nearby', $context['playerIsHere'] ? count($recruitment) : 0, $context['playerIsHere'] ? 0 : count($recruitment), $recruitment, 'recruitment', $context['playerIsHere']),
+            $this->group('businesses', 'Businesses Nearby', $context['playerIsHere'] ? count($business) : 0, $context['playerIsHere'] ? 0 : count($business), $business, 'territories', $context['playerIsHere']),
+            $territory ? $this->group('territory', 'Territory Control', 1, 0, [$territory], 'territories', true) : null,
+            $this->group('heat_police', 'Heat & Police', count($heatWarnings), 0, $heatWarnings, 'heat', true),
+        ]));
 
         return [
             'location' => $context['location'],
             'region' => $context['region'],
             'currentLocation' => $context['currentLocation'],
             'playerIsHere' => $context['playerIsHere'],
-            'activityGroups' => array_values(array_filter([
-                $this->group('quick_crimes', 'Quick Crimes Nearby', $quick['available'], $quick['locked'], $quick['preview'], 'crimes?tab=quick_crimes'),
-                $this->group('dirty_jobs', 'Dirty Jobs Nearby', $dirty['available'], $dirty['locked'], $dirty['preview'], 'dirty jobs'),
-                $this->group('crime_leads', 'Crime Leads / Rumors', count($local), 0, $local, 'crimes?tab=explore_leads'),
-                $this->group('recruitment', 'Recruitment Nearby', count($recruitment), 0, $recruitment, 'recruitment'),
-                $this->group('businesses', 'Businesses Nearby', count($business), 0, $business, 'territories'),
-                $territory ? $this->group('territory', 'Territory Control', 1, 0, [$territory], 'territories') : null,
-                $this->group('heat_police', 'Heat & Police', count($heatWarnings), 0, $heatWarnings, 'heat'),
-            ])),
+            'presence' => $presence,
+            'travelPurpose' => $travelPurpose,
+            'remoteActions' => $travelPurpose['remote'],
+            'localUnlocks' => $travelPurpose['unlocks'],
+            'activityGroups' => $activityGroups,
+            'localActivitySummary' => [
+                'available_here' => array_sum(array_map(static fn (array $group): int => (int) $group['availableCount'], $activityGroups)),
+                'travel_required' => array_sum(array_map(static fn (array $group): int => (int) $group['lockedCount'], $activityGroups)),
+                'quick_crimes_available' => $quick['available'],
+                'dirty_jobs_available' => $dirty['available'],
+                'known_local_leads' => count($local),
+                'player_is_here' => $context['playerIsHere'],
+            ],
             'quickCrimesPreview' => $quick['preview'],
             'dirtyJobsPreview' => $dirty['preview'],
             'crimeLeadsPreview' => $local,
@@ -120,6 +139,9 @@ final class LocalActivityService
                 'title' => $row['title'],
                 'category' => $row['category'],
                 'available' => $lockedReasons === [],
+                'requiresCurrentLocation' => (bool) $row['requires_current_location'],
+                'localPresenceStatus' => $context['playerIsHere'] ? 'available_here' : ((int) $row['requires_current_location'] === 1 ? 'travel_required' : 'remote_available'),
+                'travelHint' => $context['playerIsHere'] ? null : 'Travel to ' . $context['region']['name'] . ' / ' . $context['location']['name'] . ' to start this.',
                 'lockedReasons' => $lockedReasons,
                 'rewardRange' => [
                     (int) round((int) $row['reward_min'] * (float) $row['reward_multiplier']),
@@ -166,6 +188,9 @@ final class LocalActivityService
                 'title' => $row['title'],
                 'category' => $row['category'],
                 'available' => $lockedReasons === [],
+                'requiresCurrentLocation' => (bool) $row['requires_current_location'],
+                'localPresenceStatus' => $context['playerIsHere'] ? 'available_here' : ((int) $row['requires_current_location'] === 1 ? 'travel_required' : 'remote_available'),
+                'travelHint' => $context['playerIsHere'] ? null : 'Travel to ' . $context['region']['name'] . ' / ' . $context['location']['name'] . ' to start this.',
                 'lockedReasons' => $lockedReasons,
                 'rewardRange' => [
                     (int) round((int) $row['reward_min'] * (float) $row['reward_multiplier']),
@@ -222,6 +247,52 @@ final class LocalActivityService
         ]];
     }
 
+
+    private function travelPurpose(array $context, array $quick, array $dirty, array $recruitment, array $business, array $local): array
+    {
+        $items = [];
+        if ($quick['available'] + $quick['locked'] > 0) {
+            $items[] = $quick['available'] + $quick['locked'] . ' local quick crime(s)';
+        }
+        if ($dirty['available'] + $dirty['locked'] > 0) {
+            $items[] = $dirty['available'] + $dirty['locked'] . ' dirty job lead(s)';
+        }
+        if ($recruitment !== []) {
+            $items[] = 'nearby recruitment flavor';
+        }
+        if ($business !== []) {
+            $items[] = 'business scouting';
+        }
+        if ($local !== []) {
+            $items[] = count($local) . ' discovered local lead(s)';
+        }
+        if ($context['territory']) {
+            $items[] = 'territory scouting context';
+        }
+
+        return [
+            'headline' => $context['playerIsHere'] ? 'You are here. Local actions are unlocked.' : 'Travel here to unlock local actions.',
+            'unlocks' => $items,
+            'remote' => $this->remoteActions($context),
+            'warnings' => array_values(array_filter([
+                ((int) $context['riskSummary']['police_pressure'] >= 60) ? 'High police pressure affects travel and local action risk.' : null,
+                ((int) $context['riskSummary']['danger_level'] >= 60) ? 'Dangerous hotspot: rival or street trouble is more likely.' : null,
+            ])),
+            'remote_view_allowed' => true,
+            'local_presence_required' => !$context['playerIsHere'],
+        ];
+    }
+
+    private function remoteActions(array $context): array
+    {
+        return [
+            'View territory summary',
+            'Inspect known opportunities',
+            'Check police and danger risk',
+            'Plan travel route',
+        ];
+    }
+
     private function roleHints(string $slug): array
     {
         return match ($slug) {
@@ -234,7 +305,7 @@ final class LocalActivityService
         };
     }
 
-    private function group(string $key, string $title, int $available, int $locked, array $preview, string $route): ?array
+    private function group(string $key, string $title, int $available, int $locked, array $preview, string $route, bool $localPresenceSatisfied = true): ?array
     {
         if ($available === 0 && $locked === 0 && $preview === []) {
             return null;
@@ -247,17 +318,19 @@ final class LocalActivityService
             'lockedCount' => $locked,
             'preview' => $preview,
             'route_hint' => $route,
+            'localPresenceSatisfied' => $localPresenceSatisfied,
+            'availabilityLabel' => $localPresenceSatisfied ? 'Available here' : 'Requires local presence',
         ];
     }
 
     private function actionsForContext(array $context): array
     {
-        $query = '?region=' . $context['region']['slug'] . '&location=' . $context['location']['slug'];
+        $locationQuery = 'region=' . $context['region']['slug'] . '&location=' . $context['location']['slug'];
         return [
-            ['label' => 'View Nearby Quick Crimes', 'route_hint' => 'crimes?tab=quick_crimes' . $query],
-            ['label' => 'View Local Dirty Jobs', 'route_hint' => 'dirty jobs' . $query],
-            ['label' => 'Search Recruits Here', 'route_hint' => 'recruitment' . $query],
-            ['label' => 'View Businesses Here', 'route_hint' => 'territories' . $query],
+            ['label' => 'View Nearby Quick Crimes', 'route_hint' => 'crimes?tab=quick_crimes&' . $locationQuery],
+            ['label' => 'View Local Dirty Jobs', 'route_hint' => 'dirty jobs?' . $locationQuery],
+            ['label' => 'Search Recruits Here', 'route_hint' => 'recruitment?' . $locationQuery],
+            ['label' => 'View Businesses Here', 'route_hint' => 'territories?' . $locationQuery],
             ['label' => 'Open Heat Warnings', 'route_hint' => 'heat'],
         ];
     }

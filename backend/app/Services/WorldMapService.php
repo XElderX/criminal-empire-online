@@ -97,7 +97,7 @@ final class WorldMapService
             'territory' => $territory ? $this->formatTerritory($territory) : null,
             'linkedActions' => $this->activityLinks((int) $location['id']),
             'riskSummary' => $this->risk->summarize($location, $territory),
-            'travelInfo' => $this->travelPreview($region, $location),
+            'travelInfo' => $this->travelPreview($region, $location, $user),
             'currentLocation' => $this->currentLocation((int) $user['id']),
         ];
     }
@@ -138,6 +138,12 @@ final class WorldMapService
             'location_type' => $row['location_type'] ?? 'district',
             'last_travel_at' => $row['last_travel_at'] ?? null,
             'travel_cooldown_until' => $row['travel_cooldown_until'] ?? null,
+            'last_region_id' => isset($row['last_region_id']) ? (int) $row['last_region_id'] : null,
+            'last_location_id' => isset($row['last_location_id']) ? (int) $row['last_location_id'] : null,
+            'travel_route_type' => $row['travel_route_type'] ?? null,
+            'travel_status' => $row['travel_status'] ?? 'stationary',
+            'arrived_at' => $row['arrived_at'] ?? null,
+            'last_local_action_at' => $row['last_local_action_at'] ?? null,
             'riskSummary' => $this->risk->summarize($row ?: []),
         ];
     }
@@ -334,6 +340,13 @@ final class WorldMapService
             'police_pressure' => (int) $location['police_pressure'],
             'danger_level' => (int) $location['danger_level'],
             'min_level' => (int) $location['min_level'],
+            'travel_requires_level' => (int) ($location['travel_requires_level'] ?? $location['min_level'] ?? 1),
+            'travel_requires_reputation' => (int) ($location['travel_requires_reputation'] ?? 0),
+            'travel_risk_level' => (int) ($location['travel_risk_level'] ?? $location['danger_level'] ?? 0),
+            'travel_event_profile' => $location['travel_event_profile'] ?? null,
+            'local_presence_required_default' => (bool) ($location['local_presence_required_default'] ?? true),
+            'exploration_energy_cost' => (int) ($location['exploration_energy_cost'] ?? 3),
+            'exploration_cooldown_seconds' => (int) ($location['exploration_cooldown_seconds'] ?? 600),
             'linked_feature_key' => $location['linked_feature_key'] ?? null,
             'available_actions' => $available,
             'actions' => $actions,
@@ -413,17 +426,29 @@ final class WorldMapService
         ];
     }
 
-    public function travelPreview(array $region, array $location): array
+    public function travelPreview(array $region, array $location, array $user = [], ?string $routeType = null): array
     {
-        $energy = max(0, (int) $region['travel_cost_energy'] + (int) floor(((int) $location['danger_level']) / 25));
-        $cash = max(0, (int) $region['travel_cost_cash']);
+        if ($user === []) {
+            $route = (new TravelRiskService())->routeByType($region, $location, ['id' => 0], $routeType);
+            return [
+                'route_type' => $route['type'],
+                'route_label' => $route['label'],
+                'cash_cost' => (int) $route['cash_cost'],
+                'energy_cost' => (int) $route['energy_cost'],
+                'event_chance' => 0,
+                'police_stop_chance' => 0,
+                'rival_event_chance' => 0,
+                'travel_risk_score' => $this->risk->summarize($location)['score'],
+                'warnings' => $this->travelWarnings($location),
+                'locked_reason' => null,
+                'route_options' => (new TravelRiskService())->routeOptions($region, $location, ['id' => 0]),
+            ];
+        }
 
-        return [
-            'cash_cost' => $cash,
-            'energy_cost' => $energy,
-            'warnings' => $this->travelWarnings($location),
-            'locked_reason' => null,
-        ];
+        $preview = (new TravelRiskService())->preview($region, $location, $user, $routeType ?? 'cheap');
+        $preview['route_options'] = (new TravelRiskService())->routeOptions($region, $location, $user);
+
+        return $preview;
     }
 
     private function travelWarnings(array $location): array
