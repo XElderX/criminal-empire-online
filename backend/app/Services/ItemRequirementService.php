@@ -30,6 +30,7 @@ final class ItemRequirementService
                     'tag' => $tag,
                     'label' => $this->labelForTag((string) $tag),
                     'type' => 'required_all',
+                    'source_hints' => $this->sourceHintsForTag((string) $tag),
                 ];
             }
         }
@@ -49,6 +50,7 @@ final class ItemRequirementService
                     'tag' => implode('|', $requiredAnyTags),
                     'label' => 'One of: ' . implode(', ', array_map([$this, 'labelForTag'], $requiredAnyTags)),
                     'type' => 'required_any',
+                    'source_hints' => $this->sourceHintsForTags(array_map('strval', $requiredAnyTags)),
                 ];
             }
         }
@@ -201,6 +203,50 @@ final class ItemRequirementService
         }
 
         return array_values(array_unique($tags));
+    }
+
+
+    private function sourceHintsForTags(array $tags): array
+    {
+        $hints = [];
+
+        foreach ($tags as $tag) {
+            foreach ($this->sourceHintsForTag($tag) as $hint) {
+                $hints[$hint['item_key'] . ':' . $hint['shop_slug']] = $hint;
+            }
+        }
+
+        return array_values($hints);
+    }
+
+    private function sourceHintsForTag(string $tag): array
+    {
+        $itemKeysByTag = [
+            'gloves' => ['work_gloves'],
+            'mask' => ['face_covering'],
+            'lockpick' => ['lockpick_set'],
+            'forced_entry_tool' => ['crowbar', 'screwdriver_set', 'glass_breaker'],
+            'vehicle_tool' => ['vehicle_tools'],
+            'carrying_bag' => ['duffel_bag', 'backpack'],
+            'dark_clothing' => ['dark_clothing'],
+            'stealth_clothing' => ['dark_clothing', 'work_uniform'],
+            'first_aid' => ['first_aid_kit', 'bandages'],
+            'communication' => ['burner_phone'],
+            'surveillance' => ['flashlight'],
+            'blade_weapon' => ['cheap_knife'],
+            'firearm' => ['basic_pistol'],
+        ];
+
+        $catalog = new ShopCatalogService();
+        $hints = [];
+
+        foreach ($itemKeysByTag[$tag] ?? [] as $itemKey) {
+            foreach ($catalog->possibleSources($itemKey) as $source) {
+                $hints[] = $source;
+            }
+        }
+
+        return $hints;
     }
 
     private function labelForTag(string $tag): string

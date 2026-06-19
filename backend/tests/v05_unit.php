@@ -9,12 +9,12 @@ use Tests\TestRunner;
 
 $runner = new TestRunner();
 
-$runner->test('Version is v0.6.4', function () use ($runner): void {
-    $runner->assertSame('0.6.4', GameConfig::VERSION);
+$runner->test('Version is v0.6.5', function () use ($runner): void {
+    $runner->assertSame('0.6.5', GameConfig::VERSION);
 });
 
 $runner->test('Release title identifies meaningful travel', function () use ($runner): void {
-    $runner->assertContains('World Tutorial & Player Guidance Update', GameConfig::RELEASE_TITLE);
+    $runner->assertContains('Map Shops & Item Availability Expansion', GameConfig::RELEASE_TITLE);
 });
 
 $runner->test('Boss rank labels scale with level', function () use ($runner): void {

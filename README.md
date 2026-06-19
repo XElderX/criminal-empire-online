@@ -1,3 +1,37 @@
+# Criminal Empire Online v0.6.5 — Map Shops & Item Availability Expansion
+
+This patch builds on **v0.6.4 — World Tutorial & Player Guidance Update** and preserves the v0.6.3.1 Street Job NPC assignment hotfix. It moves gear buying/selling into the world map so Inventory is mainly for owned-item management.
+
+## v0.6.5 highlights
+
+- Added map-based shops and dealers linked to real world-map hotspots.
+- Inventory is now focused on owned items, crew loadouts, equipment effects, contraband awareness, and links to shops/map.
+- Added config-driven shop catalogs and item availability in `backend/app/Config/ShopConfig.php`.
+- Added legal, restricted, black-market-only, and future-only item availability states.
+- Added shop buy/sell endpoints with backend validation for local presence, stock, cash, level, reputation, item enablement, and shop category rules.
+- Added stock/restock support and transaction logging through `shop_transactions`.
+- Added shop previews to local hotspot activity panels.
+- Added missing-item source hints so Quick Crimes and Dirty Jobs can point players toward useful shops.
+- Added Shops page and reusable shop components in the frontend.
+- Added tutorial/help guidance explaining that shops are found on the map and Inventory is no longer a global store.
+- Added v0.6.5 migration, seeder, tests, and documentation.
+
+## Install/update
+
+```bash
+cd criminal-empire-online
+php backend/database/migrate.php
+cd frontend
+npm install
+npm run build
+```
+
+## Shop configuration
+
+Edit `backend/app/Config/ShopConfig.php` to enable or disable item sales without changing controllers. The config controls global item sale enablement, allowed shop types, black-market/future-only flags, prices, stock, restock intervals, level/reputation requirements, heat risk, and source hints.
+
+---
+
 # Criminal Empire Online v0.6.4 — World Tutorial & Player Guidance Update
 
 This patch builds on **v0.6.3.1 — Street Job NPC Assignment Hotfix** and preserves the v0.6/v0.6.3 world map, travel, local presence, and Street Job NPC assignment behavior.

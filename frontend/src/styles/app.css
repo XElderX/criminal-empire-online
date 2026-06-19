@@ -3759,3 +3759,29 @@ small {
     margin-top: 0.5rem;
   }
 }
+
+/* v0.6.5 — Map Shops & Item Availability Expansion */
+.shops-page .shop-card {
+  cursor: pointer;
+}
+
+.shop-card.selected,
+.shop-detail-card {
+  border-color: var(--border-strong);
+}
+
+.shop-item-card {
+  align-items: flex-start;
+}
+
+.shop-badge.warning {
+  border-color: rgba(245, 158, 11, 0.4);
+}
+
+.shop-badge.success {
+  border-color: rgba(34, 197, 94, 0.4);
+}
+
+.shop-badge.danger {
+  border-color: rgba(248, 113, 113, 0.5);
+}

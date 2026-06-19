@@ -1,4 +1,32 @@
-# Criminal Empire Online v0.6.4 API
+# Criminal Empire Online v0.6.5 API
+
+
+
+## v0.6.5 Map Shops & Item Availability Expansion
+
+Inventory is now owned-item management. Buying and selling equipment happens through map-linked shops and dealers. Most transactions require the boss to be physically present at the shop hotspot.
+
+### Shop endpoints
+
+```text
+GET  /api/shops
+GET  /api/shops/{slug}
+GET  /api/shops/{slug}/items
+POST /api/shops/{slug}/buy
+POST /api/shops/{slug}/sell
+GET  /api/shops/{slug}/transactions
+GET  /api/world-map/locations/{slug}/shops
+```
+
+Buy/sell requests are backend validated. The backend ignores frontend prices and checks the shop catalog, `ShopConfig`, local presence, player cash, stock, level/reputation requirements, disabled item flags, legal/black-market availability, and inventory ownership.
+
+### Shop configuration
+
+`backend/app/Config/ShopConfig.php` controls global item availability, allowed shop types, buy/sell status, stock, restock timing, level/reputation gates, black-market/future-only states, and source hints for missing item requirements.
+
+### Inventory change
+
+`GET /api/items` is now a legacy source-hint endpoint. Global buying through `POST /api/items/{id}/buy` is blocked for normal players. Use map shops instead.
 
 
 ## v0.6.4 World Tutorial & Player Guidance Update

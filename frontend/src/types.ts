@@ -5,6 +5,7 @@ export type PageName =
   | 'recruitment'
   | 'crew'
   | 'equipment'
+  | 'shops'
   | 'warehouse'
   | 'world map'
   | 'crimes'
@@ -924,10 +925,23 @@ export interface QuickCrimeCooldown {
   available_at?: string | null;
 }
 
+export interface ItemSourceHint {
+  item_key: string;
+  item_name?: string;
+  shop_slug: string;
+  shop_name: string;
+  location_slug?: string;
+  location_label?: string;
+  availability_status?: string;
+  enabled?: boolean;
+  travel_hint?: string;
+}
+
 export interface QuickCrimeMissingItem {
   tag: string;
   label: string;
   type: string;
+  source_hints?: ItemSourceHint[];
 }
 
 export interface QuickCrimeTemplate {

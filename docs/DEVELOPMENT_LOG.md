@@ -1,3 +1,18 @@
+## 2026-06-19 — Criminal Empire Online v0.6.5 — Map Shops & Item Availability Expansion
+
+- Bumped backend and frontend version metadata to `0.6.5` with release title `Criminal Empire Online v0.6.5 — Map Shops & Item Availability Expansion`.
+- Added map-based shops/dealers tied to real world-map hotspots such as Pawn Row, Market District, Suburban Garage, Scrapyard, Shopping Plaza, Smuggler Pier, and Basement Bars.
+- Inventory now focuses on owned items, crew loadouts, equipment effects, contraband awareness, and shop/map links instead of direct global buying.
+- Added `ShopConfig` for enabling/disabling item sales, legal/restricted/black-market/future-only availability, shop-type restrictions, prices, stock, restock intervals, requirements, heat risk, and missing-item source hints.
+- Added shop DB tables for shops, shop items, and shop transactions plus v0.6.5 seed data.
+- Added shop buy/sell API endpoints with backend validation for local presence, cash, stock, disabled items, level/reputation gates, and shop buy categories.
+- Added stock/restock support and transaction/economy/audit logging.
+- Added map hotspot shop previews and a Shops Nearby local activity group.
+- Added missing-item source hints for Quick Crimes and Dirty Jobs.
+- Added frontend Shops page and reusable shop UI components.
+- Updated tutorial/help guidance and persistent Guide copy to explain shops and Inventory separation.
+- Added v0.6.5 tests and documentation.
+
 ## 2026-06-19 — Criminal Empire Online v0.6.4 — World Tutorial & Player Guidance Update
 
 - Bumped backend and frontend version metadata to `0.6.4` with release title `Criminal Empire Online v0.6.4 — World Tutorial & Player Guidance Update`.

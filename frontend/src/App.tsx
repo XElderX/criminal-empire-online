@@ -17,6 +17,7 @@ import { GuidePage } from './pages/GuidePage';
 import { HeatPolicePage } from './pages/HeatPolicePage';
 import { MarketPage } from './pages/MarketPage';
 import { RecruitmentPage } from './pages/RecruitmentPage';
+import { ShopsPage } from './pages/ShopsPage';
 import { TerritoriesPage } from './pages/TerritoriesPage';
 import { WarehousePage } from './pages/WarehousePage';
 import { WorldMapPage } from './pages/WorldMapPage';
@@ -161,7 +162,7 @@ export function App() {
     return (
       <main className="auth-shell">
         <section className="card auth-card">
-          <p className="eyebrow">Criminal Empire Online v 0.6.4</p>
+          <p className="eyebrow">Criminal Empire Online v 0.6.5</p>
           <h1>Loading city state…</h1>
         </section>
       </main>
@@ -222,6 +223,7 @@ function loadSavedPage(): PageName {
     || savedPage === 'recruitment'
     || savedPage === 'crew'
     || savedPage === 'equipment'
+    || savedPage === 'shops'
     || savedPage === 'warehouse'
     || savedPage === 'world map'
     || savedPage === 'crimes'
@@ -260,7 +262,9 @@ function PageContent({
     case 'crew':
       return <CrewPage onChanged={onChanged} />;
     case 'equipment':
-      return <EquipmentPage onChanged={onChanged} />;
+      return <EquipmentPage onChanged={onChanged} onNavigate={onNavigate} />;
+    case 'shops':
+      return <ShopsPage onChanged={onChanged} onNavigate={onNavigate} />;
     case 'warehouse':
       return <WarehousePage onChanged={onChanged} />;
     case 'world map':

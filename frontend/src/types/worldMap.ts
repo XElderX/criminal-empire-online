@@ -241,6 +241,7 @@ export interface LocationActivitiesResponse {
   crimeLeadsPreview: Array<Record<string, unknown>>;
   recruitmentPreview: Array<Record<string, unknown>>;
   businessesPreview: Array<Record<string, unknown>>;
+  shopsPreview?: Array<Record<string, unknown>>;
   territorySummary?: TerritoryMapSummary | null;
   heatSummary: MapRiskSummary;
   actions: Array<{ label: string; route_hint: string }>;

@@ -147,6 +147,15 @@ $router->post(
     [AuthMiddleware::class]
 );
 
+
+$router->get('/api/shops', [ShopController::class, 'index'], [AuthMiddleware::class]);
+$router->get('/api/shops/{slug}', [ShopController::class, 'show'], [AuthMiddleware::class]);
+$router->get('/api/shops/{slug}/items', [ShopController::class, 'items'], [AuthMiddleware::class]);
+$router->post('/api/shops/{slug}/buy', [ShopController::class, 'buy'], [AuthMiddleware::class]);
+$router->post('/api/shops/{slug}/sell', [ShopController::class, 'sell'], [AuthMiddleware::class]);
+$router->get('/api/shops/{slug}/transactions', [ShopController::class, 'transactions'], [AuthMiddleware::class]);
+$router->get('/api/world-map/locations/{slug}/shops', [ShopController::class, 'locationShops'], [AuthMiddleware::class]);
+
 $router->get('/api/items', [ItemController::class, 'shop'], [AuthMiddleware::class]);
 $router->post(
     '/api/items/{id}/buy',

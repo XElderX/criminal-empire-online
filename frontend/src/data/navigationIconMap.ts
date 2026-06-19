@@ -13,6 +13,7 @@ const navigationIconMap: Record<string, string> = {
   recruitment: '/assets/icons/nav/crew.webp',
   equipment: '/assets/icons/nav/inventory.webp',
   inventory: '/assets/icons/nav/inventory.webp',
+  shops: '/assets/icons/nav/businesses.webp',
   warehouse: '/assets/icons/nav/inventory.webp',
   market: '/assets/icons/nav/drug_market.webp',
   drug_market: '/assets/icons/nav/drug_market.webp',

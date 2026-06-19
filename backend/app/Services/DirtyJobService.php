@@ -1662,7 +1662,19 @@ final class DirtyJobService
 
         foreach ($requiredItems as $itemCode) {
             if (!$this->userHasItemCode((int) $user['id'], (string) $itemCode)) {
-                throw new RuntimeException("Required item is missing: {$itemCode}.");
+                $sources = (new ShopCatalogService())->possibleSources((string) $itemCode);
+                $sourceText = '';
+
+                if ($sources !== []) {
+                    $firstSource = $sources[0];
+                    $sourceText = sprintf(
+                        ' Possible source: %s at %s.',
+                        $firstSource['shop_name'],
+                        $firstSource['location_label'] ?? $firstSource['location_slug']
+                    );
+                }
+
+                throw new RuntimeException("Required item is missing: {$itemCode}.{$sourceText}");
             }
         }
 
