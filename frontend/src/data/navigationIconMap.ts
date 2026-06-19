@@ -20,6 +20,7 @@ const navigationIconMap: Record<string, string> = {
   gangs: '/assets/icons/nav/gangs.webp',
   territories: '/assets/icons/nav/territories.webp',
   map: '/assets/icons/nav/territories.webp',
+  world_map: '/assets/icons/nav/territories.webp',
   admin: '/assets/icons/nav/admin.webp',
   messages: '/assets/icons/nav/messages.webp',
   settings: '/assets/icons/nav/settings.webp',

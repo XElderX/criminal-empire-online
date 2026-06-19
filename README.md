@@ -1,4 +1,23 @@
-# Criminal Empire Online v0.5.1.3 — Dirty Job Crew Requirement Hotfix
+
+## v0.6 — Game Map & Territories
+
+Criminal Empire Online now uses **Grimwater County** as its fictional world name. The v0.6 update adds an interactive world map with major regions, local sub-maps, clickable hotspots, travel/current-location state, territory links, map risk summaries, and local map assets.
+
+Major regions:
+
+- Main City
+- Suburbs
+- Industrial Zone
+- Docks
+- Rural County
+- Forest / Hills
+- Shore / Beach / Sea
+- Old Town
+- Highway / Outskirts
+
+New map gameplay connects existing systems instead of replacing them: Crimes, Quick Crimes, Dirty Jobs, Recruitment, Businesses, Drug Market, Warehouse, Heat & Police, and Territories.
+
+# Criminal Empire Online v0.6 — Game Map & Territories
 
 Criminal Empire Online is a browser-based, primarily single-player criminal empire simulation. The player begins with $500, performs small NPC-provided jobs, recruits a crew, equips members, plans structured Dirty Jobs, manages heat and consequences, and now discovers more complex crime opportunities through NPCs and city locations.
 

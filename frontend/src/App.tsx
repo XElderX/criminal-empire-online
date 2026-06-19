@@ -17,13 +17,14 @@ import { MarketPage } from './pages/MarketPage';
 import { RecruitmentPage } from './pages/RecruitmentPage';
 import { TerritoriesPage } from './pages/TerritoriesPage';
 import { WarehousePage } from './pages/WarehousePage';
+import { WorldMapPage } from './pages/WorldMapPage';
 import type { PageName, TutorialState, UpdateNotice, User } from './types';
 
 const ACTIVE_PAGE_STORAGE_KEY = 'criminal-empire-online-active-page';
 
 export function App() {
   const [user, setUser] = useState<User | null>(null);
-  const [page, setPage] = useState<PageName>(() => loadSavedPage());
+  const [page, setPage] = useState<PageName>(() => window.location.pathname.startsWith('/world-map') ? 'world map' : loadSavedPage());
   const [tutorialOpen, setTutorialOpen] = useState(false);
   const [updateNotice, setUpdateNotice] = useState<UpdateNotice | null>(null);
   const [updateNoticeBusy, setUpdateNoticeBusy] = useState(false);
@@ -131,6 +132,12 @@ export function App() {
   }
 
   function navigate(nextPage: PageName): void {
+    if (nextPage === 'world map') {
+      window.history.pushState({}, '', '/world-map');
+    } else if (window.location.pathname.startsWith('/world-map')) {
+      window.history.pushState({}, '', '/');
+    }
+
     setPage(nextPage);
   }
 
@@ -138,7 +145,7 @@ export function App() {
     return (
       <main className="auth-shell">
         <section className="card auth-card">
-          <p className="eyebrow">Criminal Empire Online v 0.5.1.3</p>
+          <p className="eyebrow">Criminal Empire Online v 0.6.0</p>
           <h1>Loading city state…</h1>
         </section>
       </main>
@@ -163,6 +170,7 @@ export function App() {
           page={page}
           user={user}
           onChanged={refreshUser}
+          onNavigate={navigate}
         />
       </GameLayout>
 
@@ -198,6 +206,7 @@ function loadSavedPage(): PageName {
     || savedPage === 'crew'
     || savedPage === 'equipment'
     || savedPage === 'warehouse'
+    || savedPage === 'world map'
     || savedPage === 'crimes'
     || savedPage === 'heat'
     || savedPage === 'market'
@@ -214,10 +223,12 @@ function PageContent({
   page,
   user,
   onChanged,
+  onNavigate,
 }: {
   page: PageName;
   user: User;
   onChanged: () => void;
+  onNavigate: (page: PageName) => void;
 }) {
   switch (page) {
     case 'dashboard':
@@ -234,6 +245,8 @@ function PageContent({
       return <EquipmentPage onChanged={onChanged} />;
     case 'warehouse':
       return <WarehousePage onChanged={onChanged} />;
+    case 'world map':
+      return <WorldMapPage onNavigate={onNavigate} onChanged={onChanged} />;
     case 'crimes':
       return <CrimesPage onChanged={onChanged} />;
     case 'heat':

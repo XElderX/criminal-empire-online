@@ -1,3 +1,17 @@
+## 2026-06-19 — Criminal Empire Online v0.6 — Game Map & Territories
+
+- Added interactive **Grimwater County** world map.
+- Added clickable major regions: Main City, Suburbs, Industrial Zone, Docks, Rural County, Forest/Hills, Shore/Beach/Sea, Old Town, and Highway/Outskirts.
+- Added region sub-maps with clickable hotspots for crimes, jobs, businesses, recruitment, warehouses, heat/police, territory details, and future systems.
+- Added local map asset folders under `frontend/public/assets/maps/` with WebP map art, SVG overlays, and placeholder fallbacks.
+- Added `world_regions`, `world_locations`, `user_location_state`, `territory_map_links`, and `map_activity_links`.
+- Added `WorldMapService`, `TravelService`, `MapRiskService`, and `WorldMapController`.
+- Added `/api/world-map`, region/location/current-location/travel endpoints, and read-only admin map endpoints.
+- Added `WorldMapPage`, `LocationMapPage`, map components, map asset manifest, frontend world-map API client, and TypeScript map types.
+- Added territory control/risk display on hotspot cards and travel panels.
+- Added World Map navigation item without removing Territories, Heat & Police, Crimes, Quick Crimes, Dirty Jobs, or Warehouse pages.
+- Added v0.6 unit/contract tests.
+
 ## 2026-06-19 — Criminal Empire Online v0.5.1.3 — Dirty Job Crew Requirement Hotfix
 
 - Hotfixed Dirty Jobs so all runs require at least one assigned crew member, even if older template data still says `0`.

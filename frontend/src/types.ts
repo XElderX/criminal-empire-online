@@ -6,6 +6,7 @@ export type PageName =
   | 'crew'
   | 'equipment'
   | 'warehouse'
+  | 'world map'
   | 'crimes'
   | 'heat'
   | 'market'

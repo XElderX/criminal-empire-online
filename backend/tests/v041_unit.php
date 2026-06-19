@@ -9,12 +9,12 @@ use Tests\TestRunner;
 
 $runner = new TestRunner();
 
-$runner->test('Version is v0.5.1.3', function () use ($runner): void {
-    $runner->assertSame('0.5.1.3', GameConfig::VERSION);
+$runner->test('Version is v0.6.0', function () use ($runner): void {
+    $runner->assertSame('0.6.0', GameConfig::VERSION);
 });
 
-$runner->test('Release title identifies dirty job crew hotfix', function () use ($runner): void {
-    $runner->assertContains('Dirty Job Crew Requirement Hotfix', GameConfig::RELEASE_TITLE);
+$runner->test('Release title identifies Game Map update', function () use ($runner): void {
+    $runner->assertContains('Game Map', GameConfig::RELEASE_TITLE);
 });
 
 $runner->test('Experience level curve increases predictably', function () use ($runner): void {
