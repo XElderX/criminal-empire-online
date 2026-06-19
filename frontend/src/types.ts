@@ -465,6 +465,9 @@ export interface DirtyJobOpportunity {
     location_slug?: string | null;
     location_name?: string | null;
     requires_current_location?: boolean;
+    player_is_here?: boolean;
+    presence_status?: string;
+    travel_hint?: string | null;
     local_modifiers?: Record<string, unknown>;
   };
 }
@@ -915,6 +918,12 @@ export interface QuickCrimeTemplate {
   local_location_slug?: string | null;
   local_location_name?: string | null;
   requires_current_location?: boolean;
+  local_presence?: {
+    player_is_here?: boolean;
+    status?: string;
+    message?: string;
+  };
+  travel_hint?: string | null;
   local_modifiers?: Record<string, unknown> | null;
 }
 

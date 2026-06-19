@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { exploreHotspot, getLocationActivities, getLocationMap, getRegionMap, travelToLocation } from '../api/worldMap';
+import { exploreHotspot, getLocationActivities, getLocationMap, getRegionMap, travelAndExplore, travelToLocation } from '../api/worldMap';
 import { LocationMap } from '../components/map/LocationMap';
 import { LocalActivityPanel } from '../components/map/LocalActivityPanel';
 import { MapLegend } from '../components/map/MapLegend';
@@ -9,7 +9,7 @@ import { Notice } from '../components/Notice';
 import { EmptyState } from '../components/game/EmptyState';
 import { GameHeader } from '../components/game/GameHeader';
 import type { PageName } from '../types';
-import type { LocationActivitiesResponse, LocationMapResponse, MapHotspotAction, RegionMapResponse, WorldLocation } from '../types/worldMap';
+import type { LocationActivitiesResponse, LocationMapResponse, MapHotspotAction, RegionMapResponse, TravelResponse } from '../types/worldMap';
 
 export function LocationMapPage({
   regionSlug,
@@ -28,6 +28,7 @@ export function LocationMapPage({
   const [activities, setActivities] = useState<LocationActivitiesResponse | null>(null);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [travelResult, setTravelResult] = useState<TravelResponse | null>(null);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -69,6 +70,13 @@ export function LocationMapPage({
     }
   }
 
+  async function refreshSelectedLocation(locationSlug: string): Promise<void> {
+    const response = await getRegionMap(regionSlug);
+    setRegion(response);
+    setSelectedSlug(locationSlug);
+    await loadLocation(locationSlug);
+  }
+
   async function travel(): Promise<void> {
     if (!selectedLocation) return;
     setBusy(true);
@@ -76,8 +84,10 @@ export function LocationMapPage({
     setError('');
     try {
       const response = await travelToLocation({ location_slug: selectedLocation.slug });
-      setMessage(`${response.message} Current location: ${response.currentLocation.location_name}.`);
-      await load();
+      setTravelResult(response);
+      const eventText = response.event ? ` ${response.event.title}: ${response.event.description}` : '';
+      setMessage(`${response.message} Current location: ${response.currentLocation.location_name}.${eventText}`);
+      await refreshSelectedLocation(selectedLocation.slug);
       onChanged();
     } catch (requestError) {
       setError((requestError as Error).message);
@@ -95,6 +105,29 @@ export function LocationMapPage({
       const response = await exploreHotspot(selectedLocation.slug);
       setMessage(`${response.message} ${response.opportunity.title}`);
       setActivities(response.activities);
+      onChanged();
+    } catch (requestError) {
+      setError((requestError as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function travelAndExploreSelectedHotspot(): Promise<void> {
+    if (!selectedLocation) return;
+    setBusy(true);
+    setMessage('');
+    setError('');
+    try {
+      const response = await travelAndExplore({ location_slug: selectedLocation.slug });
+      setTravelResult(response.travel);
+      if (response.exploration) {
+        setActivities(response.exploration.activities);
+        setMessage(`${response.travel.message} ${response.exploration.message} ${response.exploration.opportunity.title}`);
+      } else {
+        setMessage(response.travel.message);
+      }
+      await refreshSelectedLocation(selectedLocation.slug);
       onChanged();
     } catch (requestError) {
       setError((requestError as Error).message);
@@ -161,8 +194,10 @@ export function LocationMapPage({
           <TravelPanel
             regionResponse={region}
             locationResponse={locationDetail}
+            travelResult={travelResult}
             busy={busy}
             onTravel={travel}
+            onTravelAndExplore={travelAndExploreSelectedHotspot}
             onNavigateAction={navigateAction}
           />
           <LocalActivityPanel

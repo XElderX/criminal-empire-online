@@ -17,9 +17,18 @@ Major regions:
 
 New map gameplay connects existing systems instead of replacing them: Crimes, Quick Crimes, Dirty Jobs, Recruitment, Businesses, Drug Market, Warehouse, Heat & Police, and Territories.
 
-# Criminal Empire Online v0.6.2.1 — Recruitment Lifecycle Split
+# Criminal Empire Online v0.6.3 — Meaningful Travel & Local Presence
 
 Criminal Empire Online is a browser-based, primarily single-player criminal empire simulation. The player begins with $500, performs small NPC-provided jobs, recruits a crew, equips members, plans structured Dirty Jobs, manages heat and consequences, and now discovers more complex crime opportunities through NPCs and city locations.
+
+## v0.6.3 highlights
+
+- Travel has real gameplay value: it unlocks local quick crimes, dirty jobs, recruitment flavor, business scouting, territory scouting, and hotspot exploration.
+- Travel now returns arrival results with cost, route type, local warnings, unlocked action counts, optional events, heat changes, and updated player stats.
+- Local presence is enforced by the backend for selected quick crimes, dirty jobs, and hotspot exploration.
+- Added Travel & Explore to move to a hotspot and immediately explore it when travel succeeds.
+- Added travel history and local presence tracking for future police, NPC, and territory systems.
+- Dashboard and map panels now show the current location and explain why traveling matters.
 
 ## Technology
 

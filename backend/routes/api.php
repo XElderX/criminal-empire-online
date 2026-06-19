@@ -221,6 +221,8 @@ $router->get('/api/world-map/locations/{slug}/activities', [WorldMapController::
 $router->post('/api/world-map/locations/{slug}/explore', [WorldMapController::class, 'exploreLocation'], [AuthMiddleware::class]);
 $router->get('/api/world-map/current-location', [WorldMapController::class, 'currentLocation'], [AuthMiddleware::class]);
 $router->post('/api/world-map/travel', [WorldMapController::class, 'travel'], [AuthMiddleware::class]);
+$router->post('/api/world-map/travel-and-explore', [WorldMapController::class, 'travelAndExplore'], [AuthMiddleware::class]);
+$router->get('/api/world-map/travel-history', [WorldMapController::class, 'travelHistory'], [AuthMiddleware::class]);
 $router->get('/api/world-map/territories', [WorldMapController::class, 'territories'], [AuthMiddleware::class]);
 $router->get('/api/admin/world-map', [WorldMapController::class, 'adminOverview'], [AuthMiddleware::class]);
 $router->get('/api/admin/world-map/regions', [WorldMapController::class, 'adminRegions'], [AuthMiddleware::class]);

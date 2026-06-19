@@ -90,6 +90,7 @@ final class DirtyJobService
         );
         $statement->execute([$user['id']]);
         $opportunities = $statement->fetchAll();
+        $context = null;
         if (!empty($filters['region']) || !empty($filters['location'])) {
             $context = (new MapContextService())->resolve(
                 $user,
@@ -146,10 +147,20 @@ final class DirtyJobService
             ];
             $requiredCrew = $this->requiredCrewMinimum((int) $opportunity['min_crew_size']);
             $opportunity['min_crew_size'] = $requiredCrew;
+            $presenceRequired = (bool) ($opportunity['requires_current_location'] ?? false);
+            $isHere = $presenceRequired
+                ? $this->opportunityLocationIsCurrent((int) $user['id'], $opportunity)
+                : true;
+            $opportunity['location_context']['player_is_here'] = $isHere;
+            $opportunity['location_context']['presence_status'] = $isHere ? 'available_here' : 'travel_required';
+            $opportunity['location_context']['travel_hint'] = $isHere || empty($opportunity['local_location_name'])
+                ? null
+                : 'Travel to ' . $opportunity['local_region_name'] . ' / ' . $opportunity['local_location_name'] . ' before accepting this Dirty Job.';
             $opportunity['can_accept'] = (int) $user['level'] >= (int) $opportunity['min_level']
                 && (int) $user['reputation'] >= (int) $opportunity['min_reputation']
                 && $crewCount >= $requiredCrew
-                && (!(bool) $opportunity['requires_warehouse'] || $hasWarehouse);
+                && (!(bool) $opportunity['requires_warehouse'] || $hasWarehouse)
+                && (!$presenceRequired || $isHere);
             $opportunity['requirement_messages'] = $this->requirementMessages(
                 $user,
                 $opportunity,
@@ -254,6 +265,7 @@ final class DirtyJobService
 
             $freshUser = $this->lockUser((int) $user['id']);
             $this->validateUnlockRequirements($freshUser, $opportunity);
+            $this->validateLocalPresenceForOpportunity((int) $freshUser['id'], $opportunity, 'accepting this Dirty Job');
 
             $insert = $pdo->prepare(
                 <<<'SQL'
@@ -558,6 +570,7 @@ final class DirtyJobService
             $freshUser = $this->lockUser((int) $user['id']);
             $assignments = $this->loadAssignments($runId, true);
             $this->validateExecutionRequirements($freshUser, $run, $assignments);
+            $this->validateLocalPresenceForRun((int) $freshUser['id'], $run, 'executing this Dirty Job');
 
             if ((int) $freshUser['energy'] < (int) $run['energy_cost']) {
                 throw new RuntimeException('Not enough energy to execute this Dirty Job.');
@@ -1607,7 +1620,7 @@ final class DirtyJobService
         array $assignments
     ): void {
         if (count($assignments) < $this->requiredCrewMinimum((int) $run['min_crew_size'])) {
-            throw new RuntimeException('Not enough crew members are assigned.');
+            throw new RuntimeException('At least one crew member must be assigned to every Dirty Job.');
         }
 
         $requiredRoles = $this->decodeJson($run['required_roles']);
@@ -2388,6 +2401,93 @@ final class DirtyJobService
         ]);
     }
 
+
+    private function validateLocalPresenceForOpportunity(int $userId, array $opportunity, string $actionLabel): void
+    {
+        $rule = $this->localRuleForDirtyJobTemplate((int) $opportunity['template_id']);
+        $requiresPresence = $rule
+            && (
+                (int) ($rule['requires_current_location'] ?? 0) === 1
+                || (int) ($rule['requires_presence_at_source'] ?? 0) === 1
+                || (int) ($rule['travel_required_before_accept'] ?? 0) === 1
+            );
+
+        if (!$requiresPresence) {
+            return;
+        }
+
+        $this->validatePresenceAgainstRule($userId, $rule, $actionLabel);
+    }
+
+    private function validateLocalPresenceForRun(int $userId, array $run, string $actionLabel): void
+    {
+        $rule = $this->localRuleForDirtyJobTemplate((int) $run['template_id']);
+        $requiresPresence = $rule
+            && (
+                (int) ($rule['requires_current_location'] ?? 0) === 1
+                || (int) ($rule['requires_presence_at_target'] ?? 0) === 1
+                || (int) ($rule['travel_required_before_execute'] ?? 0) === 1
+            );
+
+        if (!$requiresPresence) {
+            return;
+        }
+
+        $this->validatePresenceAgainstRule($userId, $rule, $actionLabel);
+    }
+
+    private function validatePresenceAgainstRule(int $userId, array $rule, string $actionLabel): void
+    {
+        if (empty($rule['world_region_id']) && empty($rule['world_location_id'])) {
+            return;
+        }
+
+        $map = new WorldMapService();
+        $region = $map->findRegionById((int) $rule['world_region_id']);
+        $location = null;
+        if (!empty($rule['world_location_id'])) {
+            $statement = Database::pdo()->prepare('SELECT * FROM world_locations WHERE id = ? LIMIT 1');
+            $statement->execute([(int) $rule['world_location_id']]);
+            $location = $statement->fetch() ?: null;
+        }
+
+        (new LocalPresenceService())->assertAt($userId, $region, $location, $actionLabel);
+    }
+
+    private function localRuleForDirtyJobTemplate(int $templateId): ?array
+    {
+        $statement = Database::pdo()->prepare(
+            <<<'SQL'
+                SELECT rule.*, region.name AS local_region_name, location.name AS local_location_name
+                FROM dirty_job_location_rules rule
+                LEFT JOIN world_regions region ON region.id = rule.world_region_id
+                LEFT JOIN world_locations location ON location.id = rule.world_location_id
+                WHERE rule.dirty_job_template_id = ?
+                ORDER BY rule.requires_current_location DESC, CASE WHEN rule.world_location_id IS NULL THEN 1 ELSE 0 END, rule.sort_order, rule.id
+                LIMIT 1
+            SQL
+        );
+        $statement->execute([$templateId]);
+        $rule = $statement->fetch();
+
+        return $rule ?: null;
+    }
+
+    private function opportunityLocationIsCurrent(int $userId, array $opportunity): bool
+    {
+        if (empty($opportunity['local_region_slug']) && empty($opportunity['local_location_slug'])) {
+            return true;
+        }
+
+        $current = (new WorldMapService())->currentLocation($userId);
+
+        if (!empty($opportunity['local_location_slug'])) {
+            return $current['location_slug'] === $opportunity['local_location_slug'];
+        }
+
+        return $current['region_slug'] === ($opportunity['local_region_slug'] ?? null);
+    }
+
     private function requirementMessages(
         array $user,
         array $opportunity,
@@ -2410,6 +2510,11 @@ final class DirtyJobService
 
         if ((bool) $opportunity['requires_warehouse'] && !$hasWarehouse) {
             $messages[] = 'Requires an owned warehouse';
+        }
+
+        if ((bool) ($opportunity['requires_current_location'] ?? false)
+            && !$this->opportunityLocationIsCurrent((int) $user['id'], $opportunity)) {
+            $messages[] = 'Travel to ' . ($opportunity['local_location_name'] ?? 'the source hotspot') . ' before accepting';
         }
 
         return $messages;

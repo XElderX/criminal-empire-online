@@ -326,7 +326,13 @@ export function DirtyJobsPage({ onChanged }: DirtyJobsPageProps) {
                 <span>Tier {opportunity.tier} · {humanize(opportunity.category)}</span>
                 <strong>{opportunity.title}</strong>
                 {opportunity.location_context?.location_name && (
-                  <small>{opportunity.location_context.region_name} / {opportunity.location_context.location_name}</small>
+                  <small>
+                    {opportunity.location_context.region_name} / {opportunity.location_context.location_name}
+                    {opportunity.location_context.requires_current_location ? ' · Requires local presence' : ''}
+                  </small>
+                )}
+                {opportunity.location_context?.presence_status === 'travel_required' && (
+                  <small className="warning-text">Travel Here required: {opportunity.location_context.travel_hint}</small>
                 )}
                 <small>
                   ${opportunity.estimated_reward_min}–${opportunity.estimated_reward_max}

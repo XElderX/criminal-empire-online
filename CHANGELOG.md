@@ -1,3 +1,13 @@
+## 2026-06-19 — Criminal Empire Online v0.6.3 — Meaningful Travel & Local Presence
+
+- Travel now unlocks local actions instead of only changing a stored location.
+- Added travel costs, route risk previews, arrival events, travel history, and local presence tracking.
+- Added `Travel & Explore`, which travels first and only explores after a successful local arrival.
+- Backend local presence checks now protect selected Quick Crimes, Dirty Jobs, and hotspot exploration.
+- Hotspot panels and local activity panels now explain what travel unlocks, what can be viewed remotely, and what requires being there.
+- Dashboard now shows the player’s current region/hotspot and local risk context.
+- Added v0.6.3 migration, seed data, API routes, service logic, frontend UI updates, tests, and documentation.
+
 ## 2026-06-19 — Criminal Empire Online v0.6.1.2 — Dirty Job Boss Support
 
 - Added boss support to Dirty Job assignments so the boss can now take a role beside crew members in the Dirty Jobs tab.

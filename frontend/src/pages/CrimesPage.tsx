@@ -907,8 +907,11 @@ function QuickCrimeCard({
       {template.local_location_name && (
         <p className="muted local-context-line">
           Nearby: {template.local_region_name} / {template.local_location_name}
-          {template.requires_current_location ? ' · travel required' : ''}
+          {template.requires_current_location ? ' · Requires local presence' : ''}
         </p>
+      )}
+      {template.local_presence?.status === 'travel_required' && (
+        <p className="warning-text">Travel Here required: {template.local_presence.message || template.travel_hint}</p>
       )}
 
       <dl className="details-grid compact-details-grid">

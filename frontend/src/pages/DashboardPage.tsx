@@ -1,16 +1,19 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api } from '../api/client';
+import { getCurrentLocation } from '../api/worldMap';
 import { Notice } from '../components/Notice';
 import { GameHeader } from '../components/game/GameHeader';
 import { HeatBadge } from '../components/game/HeatBadge';
 import { ProgressBar } from '../components/game/ProgressBar';
 import { SectionCard } from '../components/game/SectionCard';
 import { getJobImage, getTerritoryImage } from '../data/assetManifest';
-import type { CrewMember, DirtyJobRun, User } from '../types';
+import type { CrewMember, DirtyJobRun, PageName, User } from '../types';
+import type { UserLocationState } from '../types/worldMap';
 
 interface DashboardPageProps {
   user: User;
   onChanged: () => void;
+  onNavigate: (page: PageName) => void;
 }
 
 interface TerritorySummary {
@@ -29,11 +32,12 @@ interface ActivityLog {
   created_at?: string;
 }
 
-export function DashboardPage({ user, onChanged }: DashboardPageProps) {
+export function DashboardPage({ user, onChanged, onNavigate }: DashboardPageProps) {
   const [activeRuns, setActiveRuns] = useState<DirtyJobRun[]>([]);
   const [crew, setCrew] = useState<CrewMember[]>([]);
   const [territories, setTerritories] = useState<TerritorySummary[]>([]);
   const [activity, setActivity] = useState<ActivityLog[]>([]);
+  const [currentLocation, setCurrentLocation] = useState<UserLocationState | null>(null);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
@@ -42,11 +46,12 @@ export function DashboardPage({ user, onChanged }: DashboardPageProps) {
   }, []);
 
   async function loadDashboardPanels(): Promise<void> {
-    const [dirtyJobs, crewResponse, territoryResponse, activityResponse] = await Promise.allSettled([
+    const [dirtyJobs, crewResponse, territoryResponse, activityResponse, locationResponse] = await Promise.allSettled([
       api<{ data: DirtyJobRun[] }>('/dirty-jobs/active'),
       api<{ data: CrewMember[] }>('/my-gang'),
       api<{ data: TerritorySummary[] }>('/territories'),
       api<{ data: ActivityLog[] }>('/crime-logs'),
+      getCurrentLocation(),
     ]);
 
     if (dirtyJobs.status === 'fulfilled') {
@@ -63,6 +68,10 @@ export function DashboardPage({ user, onChanged }: DashboardPageProps) {
 
     if (activityResponse.status === 'fulfilled') {
       setActivity(activityResponse.value.data.slice(0, 5));
+    }
+
+    if (locationResponse.status === 'fulfilled') {
+      setCurrentLocation(locationResponse.value);
     }
   }
 
@@ -168,6 +177,27 @@ export function DashboardPage({ user, onChanged }: DashboardPageProps) {
             </div>
           ) : (
             <p className="muted">No district data loaded yet.</p>
+          )}
+        </SectionCard>
+
+        <SectionCard
+          title="Current Location"
+          eyebrow="Local presence"
+          actions={<button className="btn" onClick={() => onNavigate('world map')}>Open Map</button>}
+        >
+          {currentLocation ? (
+            <div className="dashboard-location-widget">
+              <h3>{currentLocation.region_name} / {currentLocation.location_name}</h3>
+              <p className="muted">Status: {currentLocation.travel_status || 'stationary'} · Route: {currentLocation.travel_route_type || 'none yet'}</p>
+              <div className="location-effect-summary">
+                <span className="info-pill">Heat {currentLocation.riskSummary.heat}</span>
+                <span className="info-pill">Police {currentLocation.riskSummary.police_pressure}</span>
+                <span className="info-pill">Danger {currentLocation.riskSummary.danger_level}</span>
+              </div>
+              <p className="muted">Travel affects which quick crimes, dirty jobs, contacts, recruitment leads, and exploration actions are available nearby.</p>
+            </div>
+          ) : (
+            <p className="muted">Current location will appear after the world map state loads.</p>
           )}
         </SectionCard>
 

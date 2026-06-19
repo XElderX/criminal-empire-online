@@ -24,6 +24,10 @@ final class HotspotExplorationService
                 throw new RuntimeException('This location is not available.');
             }
 
+            if (!$context['playerIsHere']) {
+                throw new RuntimeException('Travel to ' . $context['region']['name'] . ' / ' . $context['location']['name'] . ' before exploring this hotspot.');
+            }
+
             if ((int) $freshUser['energy'] < self::ENERGY_COST) {
                 throw new RuntimeException('Not enough energy to explore this hotspot.');
             }
@@ -68,6 +72,15 @@ final class HotspotExplorationService
                 $opportunityId,
                 self::ENERGY_COST,
             ]);
+
+            (new LocalPresenceService())->markExplored(
+                (int) $freshUser['id'],
+                (int) $context['region']['id'],
+                (int) $context['location']['id']
+            );
+
+            $pdo->prepare('UPDATE user_location_state SET last_local_action_at = NOW(), updated_at = NOW() WHERE user_id = ?')
+                ->execute([$freshUser['id']]);
 
             AuditService::log((int) $freshUser['id'], 'world_map.explore_hotspot', [
                 'region' => $context['region']['slug'],
