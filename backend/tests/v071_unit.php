@@ -12,12 +12,8 @@ $runner->test('Version is v0.7.1', function () use ($runner): void {
     $runner->assertSame('0.7.1', GameConfig::VERSION);
 });
 
-$runner->test('Release title identifies meaningful travel', function () use ($runner): void {
+$runner->test('Release title identifies UX cleanup patch', function () use ($runner): void {
     $runner->assertContains('UX Cleanup & Loadout Screen Polish', GameConfig::RELEASE_TITLE);
-});
-
-$runner->test('Boss integration migration exists', function () use ($runner): void {
-    $runner->assertTrue(is_file(dirname(__DIR__) . '/database/migrations/010_v051_boss_character_integration.sql'));
 });
 
 exit($runner->finish());

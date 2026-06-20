@@ -255,6 +255,7 @@ export function WarehousePage({ onChanged }: WarehousePageProps) {
               loading={loading}
               onTransfer={transfer}
               onInstallUpgrade={installUpgrade}
+              activeTab={activeTab}
             />
           )}
 
@@ -286,6 +287,7 @@ function WarehouseWorkspace({
   loading,
   onTransfer,
   onInstallUpgrade,
+  activeTab,
 }: {
   warehouse: Warehouse;
   inventory: InventoryResponse;
@@ -298,166 +300,145 @@ function WarehouseWorkspace({
     quantity: number,
   ) => void;
   onInstallUpgrade: (upgrade: WarehouseUpgrade) => void;
+  activeTab: 'overview' | 'stored' | 'contraband' | 'vehicles' | 'transfers' | 'security' | 'logs';
 }) {
   const installedIds = new Set(warehouse.upgrades.map((upgrade) => upgrade.id));
+  const contrabandStorage = warehouse.storage.filter((row) => ['drug', 'contraband', 'stolen_good'].includes(row.asset_type));
+  const generalStorage = warehouse.storage.filter((row) => !['drug', 'contraband', 'stolen_good'].includes(row.asset_type));
 
   return (
-    <>
-      <section className="card warehouse-summary">
-        <div className="card-heading">
-          <div>
-            <p className="eyebrow">{warehouse.territory_name}</p>
-            <h2>{warehouse.name}</h2>
+    <div className="warehouse-tab-workspace">
+      {activeTab === 'overview' && (
+        <section className="card warehouse-summary">
+          <div className="card-heading">
+            <div>
+              <p className="eyebrow">{warehouse.territory_name}</p>
+              <h2>{warehouse.name}</h2>
+              <p className="muted">Storage, security, vehicle capacity, and operating cost summary.</p>
+            </div>
+            <span className={`status-badge status-${warehouse.status}`}>{warehouse.status}</span>
           </div>
-          <span className={`status-badge status-${warehouse.status}`}>
-            {warehouse.status}
-          </span>
-        </div>
 
-        <div className="meter-grid">
-          <CapacityMeter
-            label="General storage"
-            used={warehouse.used_storage_capacity}
-            maximum={warehouse.storage_capacity}
-          />
-          <CapacityMeter
-            label="Vehicle slots"
-            used={warehouse.used_vehicle_slots}
-            maximum={warehouse.vehicle_capacity}
-          />
-          <CapacityMeter
-            label="Security"
-            used={warehouse.security_rating}
-            maximum={100}
-          />
-        </div>
+          <div className="meter-grid">
+            <CapacityMeter label="General storage" used={warehouse.used_storage_capacity} maximum={warehouse.storage_capacity} />
+            <CapacityMeter label="Vehicle slots" used={warehouse.used_vehicle_slots} maximum={warehouse.vehicle_capacity} />
+            <CapacityMeter label="Security" used={warehouse.security_rating} maximum={100} />
+          </div>
 
-        <dl className="details-grid">
-          <div><dt>Weekly operating cost</dt><dd>${warehouse.weekly_operating_cost}</dd></div>
-          <div><dt>Operating debt</dt><dd>${warehouse.operating_debt}</dd></div>
-          <div><dt>Condition</dt><dd>{warehouse.condition_rating}/100</dd></div>
-          <div><dt>Heat visibility</dt><dd>{warehouse.heat_visibility}/100</dd></div>
-        </dl>
-      </section>
+          <dl className="details-grid">
+            <div><dt>Weekly operating cost</dt><dd>${warehouse.weekly_operating_cost}</dd></div>
+            <div><dt>Operating debt</dt><dd>${warehouse.operating_debt}</dd></div>
+            <div><dt>Condition</dt><dd>{warehouse.condition_rating}/100</dd></div>
+            <div><dt>Heat visibility</dt><dd>{warehouse.heat_visibility}/100</dd></div>
+          </dl>
+        </section>
+      )}
 
-      <section className="card section-card">
-        <h2>Deposit personal inventory</h2>
-        <p className="muted">
-          Warehouse-stored gear cannot be used in crew loadouts until withdrawn.
-        </p>
-        <div className="storage-table">
-          {(['items', 'weapons', 'drugs'] as const).flatMap((group) =>
-            inventory[group].map((asset) => {
-              const assetType = group === 'items'
-                ? 'item'
-                : group === 'weapons'
-                  ? 'weapon'
-                  : 'drug';
-              const available = asset.available_quantity ?? asset.quantity;
+      {activeTab === 'transfers' && (
+        <section className="card section-card">
+          <h2>Deposit personal inventory</h2>
+          <p className="muted">Warehouse-stored gear cannot be used in crew loadouts until withdrawn.</p>
+          <div className="storage-table">
+            {(['items', 'weapons', 'drugs'] as const).flatMap((group) =>
+              inventory[group].map((asset) => {
+                const assetType = group === 'items' ? 'item' : group === 'weapons' ? 'weapon' : 'drug';
+                const available = asset.available_quantity ?? asset.quantity;
+                return (
+                  <StorageTransferRow
+                    key={`${assetType}-${asset.id}`}
+                    name={asset.name}
+                    subtitle={`${humanize(assetType)} · available ${available}`}
+                    icon={getItemIcon(asset.name, asset.category || asset.class || assetType)}
+                    disabled={loading || available < 1}
+                    buttonLabel="Deposit one"
+                    onClick={() => onTransfer('deposit', assetType, asset.id, 1)}
+                  />
+                );
+              }),
+            )}
+            {inventory.items.length + inventory.weapons.length + inventory.drugs.length === 0 && <p className="muted">Personal inventory is empty.</p>}
+          </div>
+        </section>
+      )}
 
-              return (
-                <StorageTransferRow
-                  key={`${assetType}-${asset.id}`}
-                  name={asset.name}
-                  subtitle={`${humanize(assetType)} · available ${available}`}
-                  icon={getItemIcon(asset.name, asset.category || asset.class || assetType)}
-                  disabled={loading || available < 1}
-                  buttonLabel="Deposit one"
-                  onClick={() => onTransfer('deposit', assetType, asset.id, 1)}
-                />
-              );
-            }),
-          )}
-          {inventory.items.length + inventory.weapons.length + inventory.drugs.length === 0 && (
-            <p className="muted">Personal inventory is empty.</p>
-          )}
-        </div>
-      </section>
+      {activeTab === 'stored' && (
+        <section className="card section-card">
+          <h2>Stored items</h2>
+          <p className="muted">General equipment, tools, clothing, weapons, and practical goods stored here.</p>
+          <div className="storage-table">
+            {generalStorage.map((row) => (
+              <StoredAssetRow row={row} loading={loading} onWithdraw={() => onTransfer('withdraw', row.asset_type, row.asset_id, 1)} key={row.id} />
+            ))}
+            {generalStorage.length === 0 && <p className="muted">No general stored items.</p>}
+          </div>
+        </section>
+      )}
 
-      <section className="card section-card">
-        <h2>Stored assets</h2>
-        <div className="storage-table">
-          {warehouse.storage.map((row) => (
-            <StoredAssetRow
-              row={row}
-              loading={loading}
-              onWithdraw={() =>
-                onTransfer('withdraw', row.asset_type, row.asset_id, 1)
-              }
-              key={row.id}
-            />
-          ))}
-          {warehouse.storage.length === 0 && (
-            <p className="muted">The warehouse is empty.</p>
-          )}
-        </div>
-      </section>
+      {activeTab === 'contraband' && (
+        <section className="card section-card">
+          <h2>Contraband storage</h2>
+          <p className="muted">Illegal goods and drugs stay separated so police risk and capacity are easier to read.</p>
+          <div className="storage-table">
+            {contrabandStorage.map((row) => (
+              <StoredAssetRow row={row} loading={loading} onWithdraw={() => onTransfer('withdraw', row.asset_type, row.asset_id, 1)} key={row.id} />
+            ))}
+            {contrabandStorage.length === 0 && <p className="muted">No contraband stored in this warehouse.</p>}
+          </div>
+        </section>
+      )}
 
-      <section className="card section-card">
-        <h2>Stored vehicles</h2>
-        {warehouse.vehicles.length === 0 && (
-          <p className="muted">
-            No vehicles are stored. Vehicle Dirty Jobs can create persistent
-            stolen vehicle records.
-          </p>
-        )}
-        <div className="card-grid compact-grid">
-          {warehouse.vehicles.map((vehicle) => (
-            <article className="sub-card" key={vehicle.id}>
-              <h3>{vehicle.name}</h3>
-              <p>
-                Condition {vehicle.condition_rating}/100 · evidence{' '}
-                {vehicle.evidence_level}/100
-              </p>
-              <p className="muted">
-                Estimated value ${vehicle.estimated_value} ·{' '}
-                {vehicle.stolen ? 'stolen' : 'legal'}
-              </p>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="card section-card">
-        <h2>Security and capacity upgrades</h2>
-        <div className="card-grid compact-grid">
-          {upgradeCatalog.map((upgrade) => {
-            const installed = installedIds.has(upgrade.id);
-
-            return (
-              <article className="sub-card" key={upgrade.id}>
-                <h3>{upgrade.name}</h3>
-                <p>{upgrade.description}</p>
-                <p className="muted">${upgrade.price}</p>
-                <button
-                  className="btn"
-                  disabled={loading || installed}
-                  onClick={() => onInstallUpgrade(upgrade)}
-                >
-                  {installed ? 'Installed' : 'Install upgrade'}
-                </button>
+      {activeTab === 'vehicles' && (
+        <section className="card section-card">
+          <h2>Vehicles / parts</h2>
+          {warehouse.vehicles.length === 0 && <p className="muted">No vehicles are stored. Vehicle Dirty Jobs can create persistent stolen vehicle records.</p>}
+          <div className="card-grid compact-grid">
+            {warehouse.vehicles.map((vehicle) => (
+              <article className="sub-card" key={vehicle.id}>
+                <h3>{vehicle.name}</h3>
+                <p>Condition {vehicle.condition_rating}/100 · evidence {vehicle.evidence_level}/100</p>
+                <p className="muted">Estimated value ${vehicle.estimated_value} · {vehicle.stolen ? 'stolen' : 'legal'}</p>
               </article>
-            );
-          })}
-        </div>
-      </section>
+            ))}
+          </div>
+        </section>
+      )}
 
-      <section className="card section-card">
-        <h2>Recent storage log</h2>
-        <div className="timeline compact-timeline">
-          {warehouse.recent_logs.map((entry) => (
-            <article key={entry.id}>
-              <span>{new Date(entry.created_at).toLocaleString()}</span>
-              <strong>{humanize(entry.direction)}</strong>
-              <p>{entry.description}</p>
-            </article>
-          ))}
-          {warehouse.recent_logs.length === 0 && (
-            <p className="muted">No storage movements recorded.</p>
-          )}
-        </div>
-      </section>
-    </>
+      {activeTab === 'security' && (
+        <section className="card section-card">
+          <h2>Security and capacity upgrades</h2>
+          <div className="card-grid compact-grid">
+            {upgradeCatalog.map((upgrade) => {
+              const installed = installedIds.has(upgrade.id);
+              return (
+                <article className="sub-card" key={upgrade.id}>
+                  <h3>{upgrade.name}</h3>
+                  <p>{upgrade.description}</p>
+                  <p className="muted">${upgrade.price}</p>
+                  <button className="btn" disabled={loading || installed} onClick={() => onInstallUpgrade(upgrade)}>{installed ? 'Installed' : 'Install upgrade'}</button>
+                </article>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {activeTab === 'logs' && (
+        <section className="card section-card">
+          <h2>Storage logs</h2>
+          <p className="muted">Only shown inside this subtab, so the main warehouse view stays clean.</p>
+          <div className="timeline compact-timeline">
+            {warehouse.recent_logs.map((entry) => (
+              <article key={entry.id}>
+                <span>{new Date(entry.created_at).toLocaleString()}</span>
+                <strong>{humanize(entry.direction)}</strong>
+                <p>{entry.description}</p>
+              </article>
+            ))}
+            {warehouse.recent_logs.length === 0 && <p className="muted">No storage movements recorded.</p>}
+          </div>
+        </section>
+      )}
+    </div>
   );
 }
 

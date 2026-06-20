@@ -1,3 +1,13 @@
+## 2026-06-20 — Criminal Empire Online v0.7.1 — UX Cleanup & Loadout Screen Polish
+
+- Bumped backend/frontend version metadata to `0.7.1` with release title `Criminal Empire Online v0.7.1 — UX Cleanup & Loadout Screen Polish`.
+- Reworked categorized navigation so dropdown groups no longer render as always-open inline rows.
+- Added v0.7.1 CSS/markup polish for the Inventory / Loadouts page, including a noir equipment-board layout, cleaner slot cards, carried inventory cards, and readable loadout sliders.
+- Fixed `WarehousePage` so overview, stored items, contraband, vehicles/parts, transfers, security/upgrades, and storage logs render only inside their selected subtabs.
+- Reworked the World Map page so region cards use a compact region dock instead of a long awkward side stack.
+- Preserved all v0.7 loadout APIs, dirty-money shop payment support, map-first shops, tutorial behavior, and Street Job NPC assignment validation.
+- Added v0.7.1 unit/contract tests and refreshed documentation.
+
 ## 2026-06-20 — Criminal Empire Online v0.7 — UX Navigation & Inventory Loadout Expansion
 
 - Treated the former v0.6.6 scope as the larger v0.7 milestone and bumped backend/frontend version metadata to `0.7.0` with release title `Criminal Empire Online v0.7 — UX Navigation & Inventory Loadout Expansion`.

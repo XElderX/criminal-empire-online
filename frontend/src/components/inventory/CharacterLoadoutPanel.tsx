@@ -17,24 +17,28 @@ interface CharacterLoadoutPanelProps {
 }
 
 export function CharacterLoadoutPanel({ title, loadout }: CharacterLoadoutPanelProps) {
+  const usedCarry = Number(loadout?.used_carry_units ?? 0);
+  const maxCarry = Number(loadout?.carry_capacity_units ?? 5);
+
   return (
-    <section className="card section-card character-loadout-panel">
-      <div className="card-heading">
+    <section className="character-loadout-panel">
+      <div className="loadout-header-card">
         <div>
           <p className="eyebrow">Character loadout</p>
           <h2>{title}</h2>
-          <p className="muted">
-            Gear slots, carried inventory, carry capacity, and risk scores now matter for local actions.
-          </p>
+          <p className="muted">Equip body slots, tools, weapons, utility gear, bags, and carried items. The board shows what this character is actually taking into the streets.</p>
         </div>
-        <span className="version-badge">
-          {Number(loadout?.used_carry_units ?? 0).toFixed(1)} / {Number(loadout?.carry_capacity_units ?? 5).toFixed(1)} units
-        </span>
+        <span className="loadout-capacity-badge">{usedCarry.toFixed(1)} / {maxCarry.toFixed(1)} carry units</span>
       </div>
-      <EquipmentSlotGrid slots={loadout?.slots ?? []} equipped={loadout?.equipped ?? []} />
-      <CarryInventoryGrid carried={loadout?.carried ?? []} />
-      <LoadoutSliders scores={loadout?.scores} />
-      <LoadoutWarningList warnings={loadout?.warnings} />
+
+      <div className="loadout-workspace">
+        <EquipmentSlotGrid slots={loadout?.slots ?? []} equipped={loadout?.equipped ?? []} />
+        <aside className="loadout-side-panel">
+          <CarryInventoryGrid carried={loadout?.carried ?? []} />
+          <LoadoutSliders scores={loadout?.scores} />
+          <LoadoutWarningList warnings={loadout?.warnings} />
+        </aside>
+      </div>
     </section>
   );
 }
