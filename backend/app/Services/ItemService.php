@@ -282,9 +282,17 @@ final class ItemService
 
     private function tableExists(string $tableName): bool
     {
-        $statement = Database::pdo()->prepare('SHOW TABLES LIKE ?');
+        $statement = Database::pdo()->prepare(
+            <<<'SQL'
+                SELECT COUNT(*)
+                FROM information_schema.tables
+                WHERE table_schema = DATABASE()
+                  AND table_name = ?
+            SQL
+        );
         $statement->execute([$tableName]);
-        return (bool) $statement->fetchColumn();
+
+        return (int) $statement->fetchColumn() > 0;
     }
 
     private function requirementsMet(array $user, array $requirements): bool

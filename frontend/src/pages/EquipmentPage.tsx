@@ -18,6 +18,10 @@ interface CrewLoadoutsResponse {
   data: Array<CrewMember & { loadout?: LoadoutSummary }>;
 }
 
+type LoadoutTarget =
+  | { type: 'boss'; id: 0 }
+  | { type: 'crew'; id: number };
+
 interface LogResponse {
   data: Array<Record<string, unknown>>;
   pagination?: {
@@ -35,7 +39,7 @@ export function EquipmentPage({ onChanged, onNavigate }: EquipmentPageProps) {
   const [inventory, setInventory] = useState<InventoryResponse>({ items: [], weapons: [], drugs: [] });
   const [crew, setCrew] = useState<Array<CrewMember & { loadout?: LoadoutSummary }>>([]);
   const [bossLoadout, setBossLoadout] = useState<LoadoutSummary | null>(null);
-  const [selectedMemberId, setSelectedMemberId] = useState<number | null>(null);
+  const [selectedTarget, setSelectedTarget] = useState<LoadoutTarget>({ type: 'boss', id: 0 });
   const [activeTab, setActiveTab] = useState<InventoryTab>('overview');
   const [logs, setLogs] = useState<LogResponse>({ data: [] });
   const [logPage, setLogPage] = useState(1);
@@ -55,10 +59,8 @@ export function EquipmentPage({ onChanged, onNavigate }: EquipmentPageProps) {
       setInventory(inventoryResponse);
       setCrew(crewResponse.data);
       setBossLoadout(bossResponse);
+      setLogs(logsResponse);
 
-      if (!selectedMemberId && crewResponse.data.length > 0) {
-        setSelectedMemberId(crewResponse.data[0].id);
-      }
     } catch (requestError) {
       setError((requestError as Error).message);
     }
@@ -69,23 +71,30 @@ export function EquipmentPage({ onChanged, onNavigate }: EquipmentPageProps) {
   }, [logPage]);
 
   const selectedMember = useMemo(
-    () => crew.find((member) => member.id === selectedMemberId) || null,
-    [crew, selectedMemberId],
+    () => selectedTarget.type === 'crew'
+      ? crew.find((member) => member.id === selectedTarget.id) || null
+      : null,
+    [crew, selectedTarget],
   );
+
+  const selectedLoadout = selectedTarget.type === 'boss'
+    ? bossLoadout
+    : selectedMember?.loadout ?? null;
+
+  const selectedTargetName = selectedTarget.type === 'boss'
+    ? 'Boss'
+    : selectedMember
+      ? displayName(selectedMember)
+      : '';
 
   async function refreshAfterLoadoutChange(responseMessage: string): Promise<void> {
     setMessage(responseMessage);
     await load();
-    setActiveTab('crew');
+    setActiveTab(selectedTarget.type === 'boss' ? 'boss' : 'crew');
     onChanged();
   }
 
   async function equip(asset: InventoryAsset): Promise<void> {
-    if (!selectedMember) {
-      setError('Choose a crew member first, then equip the item.');
-      return;
-    }
-
     const assetType = getAssetType(asset);
     const recommendedSlot = getRecommendedSlot(asset, assetType);
 
@@ -94,7 +103,7 @@ export function EquipmentPage({ onChanged, onNavigate }: EquipmentPageProps) {
     setError('');
 
     try {
-      const response = await api<{ message: string }>(`/loadouts/crew/${selectedMember.id}/equip`, {
+      const response = await api<{ message: string }>(`/loadouts/${selectedTarget.type}/${selectedTarget.id}/equip`, {
         method: 'POST',
         body: JSON.stringify({
           asset_type: assetType,
@@ -104,7 +113,7 @@ export function EquipmentPage({ onChanged, onNavigate }: EquipmentPageProps) {
         }),
       });
 
-      await refreshAfterLoadoutChange(response.message || `${asset.name} equipped to ${displayName(selectedMember)}.`);
+      await refreshAfterLoadoutChange(response.message || `${asset.name} equipped to ${selectedTargetName || 'target loadout'}.`);
     } catch (requestError) {
       setError((requestError as Error).message);
     } finally {
@@ -113,19 +122,15 @@ export function EquipmentPage({ onChanged, onNavigate }: EquipmentPageProps) {
   }
 
   async function carry(asset: InventoryAsset): Promise<void> {
-    if (!selectedMember) {
-      setError('Choose a crew member first, then carry the item.');
-      return;
-    }
     setLoading(true);
     setMessage('');
     setError('');
     try {
-      const response = await api<{ message: string }>(`/loadouts/crew/${selectedMember.id}/carry`, {
+      const response = await api<{ message: string }>(`/loadouts/${selectedTarget.type}/${selectedTarget.id}/carry`, {
         method: 'POST',
         body: JSON.stringify({ item_id: asset.id, quantity: 1 }),
       });
-      await refreshAfterLoadoutChange(response.message || `${asset.name} assigned to ${displayName(selectedMember)}.`);
+      await refreshAfterLoadoutChange(response.message || `${asset.name} assigned to ${selectedTargetName || 'target loadout'}.`);
     } catch (requestError) {
       setError((requestError as Error).message);
     } finally {
@@ -134,8 +139,6 @@ export function EquipmentPage({ onChanged, onNavigate }: EquipmentPageProps) {
   }
 
   const ownedAssets = useMemo(() => [...inventory.items, ...inventory.weapons], [inventory.items, inventory.weapons]);
-  const selectedLoadout = selectedMember?.loadout ?? null;
-  const selectedMemberName = selectedMember ? displayName(selectedMember) : '';
 
   return (
     <section className="page-section inventory-loadout-page">
@@ -180,12 +183,12 @@ export function EquipmentPage({ onChanged, onNavigate }: EquipmentPageProps) {
       {activeTab === 'crew' && (
         <SectionCard>
           <h2>Crew loadouts</h2>
-          <CrewTargetSelector
+          <CharacterTargetSelector
             crew={crew}
-            selectedMemberId={selectedMemberId}
-            onSelect={setSelectedMemberId}
+            selectedTarget={selectedTarget}
+            onSelect={setSelectedTarget}
           />
-          <CharacterLoadoutPanel title={selectedMember ? displayName(selectedMember) : 'Choose a crew member'} loadout={selectedLoadout} />
+          <CharacterLoadoutPanel title={selectedTarget.type === 'boss' ? 'Boss loadout' : selectedMember ? displayName(selectedMember) : 'Choose a crew member'} loadout={selectedLoadout} />
         </SectionCard>
       )}
 
@@ -194,27 +197,27 @@ export function EquipmentPage({ onChanged, onNavigate }: EquipmentPageProps) {
           <div className="owned-items-header">
             <div>
               <h2>Owned gear</h2>
-              <p className="muted">Choose a crew member, then equip gear into slots or assign useful items to carried inventory.</p>
+              <p className="muted">Choose the boss or a crew member, then equip gear into slots or assign useful items to carried inventory.</p>
             </div>
-            <CrewTargetSelector
+            <CharacterTargetSelector
               compact
               crew={crew}
-              selectedMemberId={selectedMemberId}
-              onSelect={setSelectedMemberId}
+              selectedTarget={selectedTarget}
+              onSelect={setSelectedTarget}
             />
           </div>
 
-          <div className={`selected-crew-banner ${selectedMember ? 'ready' : 'missing'}`}>
+          <div className="selected-crew-banner ready">
             <div>
               <p className="eyebrow">Current action target</p>
-              <strong>{selectedMember ? selectedMemberName : 'No crew member selected'}</strong>
+              <strong>{selectedTargetName}</strong>
               <p className="muted">
-                {selectedMember
-                  ? `Equip and carry buttons below will modify ${selectedMemberName}'s loadout.`
-                  : 'Select a crew member from the dropdown before using equip or carry actions.'}
+                {`Equip and carry buttons below will modify ${selectedTargetName}'s loadout.`}
               </p>
             </div>
-            {selectedMember && <button className="btn" onClick={() => setActiveTab('crew')}>View {selectedMember.first_name}'s loadout</button>}
+            <button className="btn" onClick={() => setActiveTab(selectedTarget.type === 'boss' ? 'boss' : 'crew')}>
+              {selectedTarget.type === 'boss' ? 'View boss loadout' : `View ${selectedMember?.first_name || 'crew'}'s loadout`}
+            </button>
           </div>
 
           {ownedAssets.length === 0 ? (
@@ -225,8 +228,8 @@ export function EquipmentPage({ onChanged, onNavigate }: EquipmentPageProps) {
                 <OwnedGearCard
                   asset={asset}
                   key={`${getAssetType(asset)}-${asset.id}`}
-                  selectedMemberName={selectedMemberName}
-                  canUse={Boolean(selectedMember) && Number(asset.available_quantity ?? asset.quantity ?? 0) > 0}
+                  selectedTargetName={selectedTargetName}
+                  canUse={Number(asset.available_quantity ?? asset.quantity ?? 0) > 0}
                   loading={loading}
                   onEquip={() => equip(asset)}
                   onCarry={() => carry(asset)}
@@ -276,29 +279,39 @@ export function EquipmentPage({ onChanged, onNavigate }: EquipmentPageProps) {
   );
 }
 
-function CrewTargetSelector({ crew, selectedMemberId, onSelect, compact = false }: {
+function CharacterTargetSelector({ crew, selectedTarget, onSelect, compact = false }: {
   crew: Array<CrewMember & { loadout?: LoadoutSummary }>;
-  selectedMemberId: number | null;
-  onSelect: (id: number | null) => void;
+  selectedTarget: LoadoutTarget;
+  onSelect: (target: LoadoutTarget) => void;
   compact?: boolean;
 }) {
   return (
     <div className={`crew-target-selector ${compact ? 'compact' : ''}`}>
       <div>
-        <p className="eyebrow">Crew target</p>
-        <strong>{crew.length > 0 ? 'Select loadout owner' : 'No crew available'}</strong>
+        <p className="eyebrow">Loadout target</p>
+        <strong>{crew.length > 0 ? 'Select loadout owner' : 'Boss or crew loadout'}</strong>
       </div>
-      <select value={selectedMemberId || ''} onChange={(event) => onSelect(event.target.value ? Number(event.target.value) : null)}>
-        <option value="">Choose crew member…</option>
-        {crew.map((member) => <option value={member.id} key={member.id}>{displayName(member)} — {member.status}</option>)}
+      <select
+        value={selectedTarget.type === 'boss' ? 'boss:0' : `crew:${selectedTarget.id}`}
+        onChange={(event) => {
+          const [type, id] = event.target.value.split(':');
+          if (type === 'boss') {
+            onSelect({ type: 'boss', id: 0 });
+            return;
+          }
+          onSelect({ type: 'crew', id: Number(id) });
+        }}
+      >
+        <option value="boss:0">Boss</option>
+        {crew.map((member) => <option value={`crew:${member.id}`} key={member.id}>{displayName(member)} — {member.status}</option>)}
       </select>
     </div>
   );
 }
 
-function OwnedGearCard({ asset, selectedMemberName, canUse, loading, onEquip, onCarry }: {
+function OwnedGearCard({ asset, selectedTargetName, canUse, loading, onEquip, onCarry }: {
   asset: InventoryAsset;
-  selectedMemberName: string;
+  selectedTargetName: string;
   canUse: boolean;
   loading: boolean;
   onEquip: () => void;
@@ -311,7 +324,7 @@ function OwnedGearCard({ asset, selectedMemberName, canUse, loading, onEquip, on
   const recommendedSlot = getRecommendedSlot(asset, assetType);
   const canCarry = assetType === 'item' && asset.is_carryable !== 0 && asset.is_carryable !== false;
   const canEquip = assetType === 'weapon' || asset.is_equippable !== 0 && asset.is_equippable !== false;
-  const actionLabel = selectedMemberName || 'selected crew';
+  const actionLabel = selectedTargetName || 'selected loadout';
 
   return (
     <article className="owned-gear-card">
@@ -338,11 +351,11 @@ function OwnedGearCard({ asset, selectedMemberName, canUse, loading, onEquip, on
       <div className="owned-gear-actions">
         <span className="gear-slot-hint">Recommended slot: <strong>{humanize(recommendedSlot)}</strong></span>
         <button className="btn primary full-width" disabled={loading || !canUse || !canEquip} onClick={onEquip}>
-          {selectedMemberName ? `Equip to ${actionLabel}` : 'Select crew to equip'}
+          {selectedTargetName ? `Equip to ${actionLabel}` : 'Select target to equip'}
         </button>
         {canCarry && (
           <button className="btn full-width" disabled={loading || !canUse} onClick={onCarry}>
-            {selectedMemberName ? `Carry with ${actionLabel}` : 'Select crew to carry'}
+            {selectedTargetName ? `Carry with ${actionLabel}` : 'Select target to carry'}
           </button>
         )}
       </div>

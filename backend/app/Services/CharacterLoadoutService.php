@@ -103,14 +103,19 @@ final class CharacterLoadoutService
                 throw new RuntimeException('No available copy of this gear is left to equip.');
             }
 
-            if ($characterType === 'crew') {
-                $pdo->prepare(
-                    <<<'SQL'
-                        INSERT INTO crew_equipment (user_id, gang_member_id, asset_type, asset_id, equipment_slot, durability, equipped_at)
-                        VALUES (?, ?, ?, ?, ?, COALESCE(?, 100), NOW())
-                    SQL
-                )->execute([$user['id'], $characterId, $assetType, $definitionId, $slot, $asset['durability'] ?? $asset['base_durability'] ?? 100]);
-            }
+            $pdo->prepare(
+                <<<'SQL'
+                    INSERT INTO crew_equipment (user_id, gang_member_id, asset_type, asset_id, equipment_slot, durability, equipped_at)
+                    VALUES (?, ?, ?, ?, ?, COALESCE(?, 100), NOW())
+                SQL
+            )->execute([
+                $user['id'],
+                $characterType === 'crew' ? $characterId : null,
+                $assetType,
+                $definitionId,
+                $slot,
+                $asset['durability'] ?? $asset['base_durability'] ?? 100,
+            ]);
 
             if ($assetType === 'item') {
                 $pdo->prepare('UPDATE user_items SET current_location_type = \'equipped\', holder_type = ?, holder_id = ?, equipped_slot = ?, updated_at = NOW() WHERE user_id = ? AND item_definition_id = ?')
@@ -139,6 +144,9 @@ final class CharacterLoadoutService
         if ($characterType === 'crew') {
             Database::pdo()->prepare('DELETE FROM crew_equipment WHERE user_id = ? AND gang_member_id = ? AND equipment_slot = ?')
                 ->execute([$user['id'], $characterId, $slot]);
+        } else {
+            Database::pdo()->prepare('DELETE FROM crew_equipment WHERE user_id = ? AND gang_member_id IS NULL AND equipment_slot = ?')
+                ->execute([$user['id'], $slot]);
         }
         Database::pdo()->prepare('UPDATE user_items SET current_location_type = \'owned\', holder_type = \'user\', holder_id = NULL, equipped_slot = NULL, updated_at = NOW() WHERE user_id = ? AND holder_type = ? AND holder_id = ? AND equipped_slot = ?')
             ->execute([$user['id'], $characterType, $characterId, $slot]);
@@ -188,7 +196,6 @@ final class CharacterLoadoutService
 
     private function equippedItems(int $userId, string $characterType, int $characterId): array
     {
-        if ($characterType !== 'crew') return [];
         $statement = Database::pdo()->prepare(
             <<<'SQL'
                 SELECT
@@ -211,11 +218,15 @@ final class CharacterLoadoutService
                 FROM crew_equipment equipment
                 LEFT JOIN item_definitions item ON equipment.asset_type = 'item' AND item.id = equipment.asset_id
                 LEFT JOIN weapons weapon ON equipment.asset_type = 'weapon' AND weapon.id = equipment.asset_id
-                WHERE equipment.user_id = ? AND equipment.gang_member_id = ?
+                WHERE equipment.user_id = ?
+                  AND (
+                    (? = 'crew' AND equipment.gang_member_id = ?)
+                    OR (? = 'boss' AND equipment.gang_member_id IS NULL)
+                  )
                 ORDER BY equipment.equipment_slot
             SQL
         );
-        $statement->execute([$userId, $characterId]);
+        $statement->execute([$userId, $characterType, $characterId, $characterType]);
         return array_map([$this, 'normalizeAssetRow'], $statement->fetchAll());
     }
 
@@ -282,9 +293,13 @@ final class CharacterLoadoutService
 
     private function equipmentInSlot(int $userId, string $characterType, int $characterId, string $slot): ?array
     {
-        if ($characterType !== 'crew') return null;
-        $statement = Database::pdo()->prepare('SELECT * FROM crew_equipment WHERE user_id = ? AND gang_member_id = ? AND equipment_slot = ? FOR UPDATE');
-        $statement->execute([$userId, $characterId, $slot]);
+        if ($characterType === 'crew') {
+            $statement = Database::pdo()->prepare('SELECT * FROM crew_equipment WHERE user_id = ? AND gang_member_id = ? AND equipment_slot = ? FOR UPDATE');
+            $statement->execute([$userId, $characterId, $slot]);
+        } else {
+            $statement = Database::pdo()->prepare('SELECT * FROM crew_equipment WHERE user_id = ? AND gang_member_id IS NULL AND equipment_slot = ? FOR UPDATE');
+            $statement->execute([$userId, $slot]);
+        }
         $row = $statement->fetch();
         return $row ?: null;
     }
