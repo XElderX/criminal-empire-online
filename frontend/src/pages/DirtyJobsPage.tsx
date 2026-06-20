@@ -57,6 +57,7 @@ export function DirtyJobsPage({ onChanged }: DirtyJobsPageProps) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [clock, setClock] = useState(Date.now());
+  const [activeTab, setActiveTab] = useState<'available' | 'active' | 'preparing' | 'decision' | 'history' | 'assignments' | 'local'>('available');
 
   async function loadLists(): Promise<void> {
     try {
@@ -306,6 +307,20 @@ export function DirtyJobsPage({ onChanged }: DirtyJobsPageProps) {
       <div className="full-span">
         {message && <Notice message={message} kind="success" />}
         {error && <Notice message={error} kind="error" />}
+        <div className="page-tabs" role="tablist" aria-label="Dirty job sections">
+          {([
+            ['available', 'Available Jobs'],
+            ['active', 'Active Jobs'],
+            ['preparing', 'Preparing'],
+            ['decision', 'Awaiting Decision'],
+            ['history', 'History'],
+            ['assignments', 'Crew Assignments'],
+            ['local', 'Local / Map Jobs'],
+          ] as Array<[typeof activeTab, string]>).map(([tab, label]) => (
+            <button key={tab} className={activeTab === tab ? 'active' : ''} onClick={() => setActiveTab(tab)}>{label}</button>
+          ))}
+        </div>
+        <p className="muted">Dirty Job section: {activeTab.replace('_', ' ')}.</p>
       </div>
 
       <aside className="operation-sidebar">

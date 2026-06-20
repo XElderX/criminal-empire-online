@@ -18,6 +18,7 @@ export function HeatPolicePage({ onChanged }: HeatPolicePageProps) {
   const [busyCode, setBusyCode] = useState('');
   const [bossFirstName, setBossFirstName] = useState('');
   const [bossLastName, setBossLastName] = useState('');
+  const [activeTab, setActiveTab] = useState<'overview' | 'boss' | 'crew' | 'investigations' | 'reduction' | 'districts' | 'logs' | 'events'>('overview');
 
   useEffect(() => {
     void load();
@@ -126,6 +127,22 @@ export function HeatPolicePage({ onChanged }: HeatPolicePageProps) {
 
       {message && <Notice message={message} kind="success" />}
       {error && <Notice message={error} kind="error" />}
+
+      <div className="page-tabs" role="tablist" aria-label="Heat sections">
+        {([
+          ['overview', 'Overview'],
+          ['boss', 'Boss Heat'],
+          ['crew', 'Crew Heat'],
+          ['investigations', 'Investigations'],
+          ['reduction', 'Heat Reduction'],
+          ['districts', 'District / Map Heat'],
+          ['logs', 'Recent Heat Logs'],
+          ['events', 'Police Events'],
+        ] as Array<[typeof activeTab, string]>).map(([tab, label]) => (
+          <button key={tab} className={activeTab === tab ? 'active' : ''} onClick={() => setActiveTab(tab)}>{label}</button>
+        ))}
+      </div>
+      {activeTab !== 'overview' && <p className="muted">Filtered section view: {activeTab.replace('_', ' ')}. The panels below stay loaded so no current Heat & Police action is lost.</p>}
 
       <section className="heat-hero-grid">
         <article className="card section-card boss-status-card">

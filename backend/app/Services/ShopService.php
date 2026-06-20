@@ -192,6 +192,7 @@ final class ShopService
                 'warnings' => $availability['warnings'],
                 'owned_quantity' => (int) $row['owned_quantity'],
                 'is_illegal' => (bool) ($row['definition_illegal'] ?? ($row['availability_status'] !== 'legal')),
+                'allowed_payment_types' => (new ShopPaymentService())->options($shop, $row),
             ];
         }, $rows);
     }
@@ -301,6 +302,10 @@ final class ShopService
             'min_reputation' => (int) $shop['min_reputation'],
             'catalog_count' => isset($shop['catalog_count']) ? (int) $shop['catalog_count'] : null,
             'travel_hint' => $isHere ? null : 'Travel here to buy or sell.',
+            'accepted_payment_types' => (new ShopPaymentService())->options($shop),
+            'accepts_dirty_money' => (bool) ($shop['accepts_dirty_money'] ?? false),
+            'accepts_clean_cash' => (bool) ($shop['accepts_clean_cash'] ?? true),
+            'accepts_bank' => (bool) ($shop['accepts_bank'] ?? false),
         ];
     }
 

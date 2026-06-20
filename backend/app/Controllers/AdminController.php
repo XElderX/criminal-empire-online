@@ -8,6 +8,7 @@ use App\Core\Response;
 use App\Middleware\AdminMiddleware;
 use App\Services\AuditService;
 use App\Services\NpcAdminService;
+use App\Services\AdminLogService;
 use RuntimeException;
 use Throwable;
 
@@ -34,11 +35,7 @@ final class AdminController
     {
         AdminMiddleware::ensure($context['user']);
 
-        $logs = Database::pdo()->query(
-            'SELECT * FROM audit_logs ORDER BY id DESC LIMIT 100'
-        )->fetchAll();
-
-        Response::json(['data' => $logs]);
+        Response::json((new AdminLogService())->list(['type' => 'audit', 'limit' => 30]));
     }
 
     public function itemCatalog(array $params, array $context): void
@@ -179,6 +176,17 @@ final class AdminController
             'users' => $users,
             'assets' => array_merge($items, $weapons, $drugs),
         ]);
+    }
+
+
+    public function logs(array $params, array $context): void
+    {
+        try {
+            AdminMiddleware::ensure($context['user']);
+            Response::json((new AdminLogService())->list($_GET));
+        } catch (Throwable $exception) {
+            Response::json(['message' => $exception->getMessage()], 422);
+        }
     }
 
 

@@ -4,7 +4,7 @@ namespace App\Config;
 
 final class ShopConfig
 {
-    public const VERSION = '0.6.5';
+    public const VERSION = '0.7.0';
 
     /**
      * Config is the source of truth for what can be sold where.
@@ -24,6 +24,9 @@ final class ShopConfig
                 'is_legal' => false,
                 'heat_risk' => 2,
                 'buys_categories' => ['stolen_good', 'vehicle_part', 'tool', 'utility'],
+                'accepted_payment_types' => ['cash', 'dirty_money'],
+                'accepts_dirty_money' => true,
+                'sale_visibility' => 'shady',
                 'description' => 'A cramped second-hand counter that buys small loot and sells used starter tools.',
             ],
             'market_tool_shop' => [
@@ -37,6 +40,9 @@ final class ShopConfig
                 'is_legal' => true,
                 'heat_risk' => 0,
                 'buys_categories' => ['tool', 'utility'],
+                'accepted_payment_types' => ['cash'],
+                'accepts_dirty_money' => false,
+                'sale_visibility' => 'legal',
                 'description' => 'A legal market stall for basic tools, bags, and practical street supplies.',
             ],
             'market_workwear_store' => [
@@ -50,6 +56,9 @@ final class ShopConfig
                 'is_legal' => true,
                 'heat_risk' => 0,
                 'buys_categories' => ['clothing'],
+                'accepted_payment_types' => ['cash'],
+                'accepts_dirty_money' => false,
+                'sale_visibility' => 'legal',
                 'description' => 'A plain clothing shop for gloves, work uniforms, and low-profile clothing.',
             ],
             'suburban_garage' => [
@@ -63,6 +72,9 @@ final class ShopConfig
                 'is_legal' => true,
                 'heat_risk' => 1,
                 'buys_categories' => ['vehicle_part', 'tool'],
+                'accepted_payment_types' => ['cash'],
+                'accepts_dirty_money' => false,
+                'sale_visibility' => 'legal',
                 'description' => 'A local garage counter with vehicle tools, repair basics, and parts buyers.',
             ],
             'rural_scrapyard_buyer' => [
@@ -76,6 +88,9 @@ final class ShopConfig
                 'is_legal' => false,
                 'heat_risk' => 2,
                 'buys_categories' => ['vehicle_part', 'stolen_good', 'tool'],
+                'accepted_payment_types' => ['cash', 'dirty_money'],
+                'accepts_dirty_money' => true,
+                'sale_visibility' => 'shady',
                 'description' => 'A muddy yard that buys vehicle parts and sometimes sells used tools.',
             ],
             'medical_supply_counter' => [
@@ -89,6 +104,9 @@ final class ShopConfig
                 'is_legal' => true,
                 'heat_risk' => 0,
                 'buys_categories' => ['utility'],
+                'accepted_payment_types' => ['cash'],
+                'accepts_dirty_money' => false,
+                'sale_visibility' => 'legal',
                 'description' => 'A clean counter for bandages and basic first-aid supplies.',
             ],
             'smuggler_pier_dealer' => [
@@ -103,6 +121,11 @@ final class ShopConfig
                 'heat_risk' => 8,
                 'min_reputation' => 6,
                 'buys_categories' => ['stolen_good', 'vehicle_part'],
+                'accepted_payment_types' => ['dirty_money', 'cash'],
+                'accepts_dirty_money' => true,
+                'dirty_money_discount_or_markup' => 0.95,
+                'clean_cash_markup' => 1.15,
+                'sale_visibility' => 'black_market',
                 'description' => 'A risky pier contact. Most powerful inventory is intentionally disabled until a future dark-market update.',
             ],
             'basement_bar_contact' => [
@@ -117,6 +140,11 @@ final class ShopConfig
                 'heat_risk' => 5,
                 'min_reputation' => 3,
                 'buys_categories' => ['stolen_good'],
+                'accepted_payment_types' => ['dirty_money', 'cash'],
+                'accepts_dirty_money' => true,
+                'dirty_money_discount_or_markup' => 0.95,
+                'clean_cash_markup' => 1.10,
+                'sale_visibility' => 'black_market_contact',
                 'description' => 'A social contact for future dealer introductions. Current stock is intentionally limited.',
             ],
         ];
@@ -196,6 +224,13 @@ final class ShopConfig
             'min_reputation' => $minReputation,
             'heat_risk' => $heatRisk,
             'disabled_reason' => $reason,
+            'allowed_payment_types' => ['cash', 'dirty_money'],
+            'dirty_money_only' => false,
+            'clean_cash_allowed' => true,
+            'bank_allowed' => false,
+            'black_market_only' => $availability === 'black_market_only',
+            'illegal_purchase_heat' => $heatRisk,
+            'required_contact' => null,
         ];
     }
 }

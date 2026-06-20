@@ -99,7 +99,8 @@ $runner->test('Frontend includes shops page and API client while primary navigat
     foreach (['/shops', '/buy', '/sell'] as $needle) {
         $runner->assertContains($needle, $shopsApi);
     }
-    $runner->assertFalse(str_contains($navigation, "{ page: 'shops', label: 'Shops' }"));
+    $runner->assertContains("{ page: 'shops', label: 'Shops' }", $navigation);
+    $runner->assertContains('NAVIGATION_GROUPS', $navigation);
 });
 
 $runner->test('Documentation records v0.6.5 shops update', function () use ($runner, $docs, $apiDocs): void {

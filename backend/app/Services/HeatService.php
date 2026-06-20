@@ -13,9 +13,14 @@ final class HeatService
         return (new HeatPressureService())->overview($user);
     }
 
-    public function logs(array $user): array
+    public function logs(array $user, array $query = []): array
     {
-        return ['data' => (new HeatPressureService())->logs((int) $user['id'], 100)];
+        return (new PaginationService())->query(
+            'SELECT * FROM heat_logs WHERE user_id = ? ORDER BY id DESC',
+            'SELECT COUNT(*) FROM heat_logs WHERE user_id = ?',
+            [(int) $user['id']],
+            $query
+        );
     }
 
     public function reductionOptions(array $user): array

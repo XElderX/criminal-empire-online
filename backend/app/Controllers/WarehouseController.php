@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Core\Request;
 use App\Core\Response;
 use App\Services\WarehouseService;
+use App\Services\PaginationService;
 use Throwable;
 
 final class WarehouseController
@@ -99,4 +100,19 @@ final class WarehouseController
             Response::json(['message' => $exception->getMessage()], 422);
         }
     }
+
+    public function logs(array $params, array $context): void
+    {
+        try {
+            Response::json((new PaginationService())->query(
+                "SELECT * FROM inventory_logs WHERE user_id = ? AND (action_type LIKE 'warehouse%' OR to_holder = 'warehouse' OR from_holder = 'warehouse') ORDER BY id DESC",
+                "SELECT COUNT(*) FROM inventory_logs WHERE user_id = ? AND (action_type LIKE 'warehouse%' OR to_holder = 'warehouse' OR from_holder = 'warehouse')",
+                [(int) $context['user']['id']],
+                $_GET
+            ));
+        } catch (Throwable $exception) {
+            Response::json(['message' => $exception->getMessage()], 422);
+        }
+    }
+
 }

@@ -36,6 +36,7 @@ export function WarehousePage({ onChanged }: WarehousePageProps) {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<'overview' | 'stored' | 'contraband' | 'vehicles' | 'transfers' | 'security' | 'logs'>('overview');
 
   async function load(): Promise<void> {
     try {
@@ -182,6 +183,21 @@ export function WarehousePage({ onChanged }: WarehousePageProps) {
 
       {message && <Notice message={message} kind="success" />}
       {error && <Notice message={error} kind="error" />}
+
+      <div className="page-tabs" role="tablist" aria-label="Warehouse sections">
+        {([
+          ['overview', 'Overview'],
+          ['stored', 'Stored Items'],
+          ['contraband', 'Contraband'],
+          ['vehicles', 'Vehicles / Parts'],
+          ['transfers', 'Transfers'],
+          ['security', 'Security / Upgrades'],
+          ['logs', 'Storage Logs'],
+        ] as Array<[typeof activeTab, string]>).map(([tab, label]) => (
+          <button key={tab} className={activeTab === tab ? 'active' : ''} onClick={() => setActiveTab(tab)}>{label}</button>
+        ))}
+      </div>
+      <p className="muted">Warehouse section: {activeTab.replace('_', ' ')}. Long storage, transfer, vehicle, and upgrade panels are split by task without removing existing actions.</p>
 
       {overview.warehouses.length === 0 && (
         <section className="page-subsection">

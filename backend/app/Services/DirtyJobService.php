@@ -9,6 +9,8 @@ use DateTimeImmutable;
 use RuntimeException;
 use Throwable;
 
+// v0.7: Quick crime calculation uses loadout effects; Dirty job calculation uses loadout effects; bulky/suspicious loadout increases risk; missing equipment requirement still reports correctly.
+// ItemEffectService, LoadoutScoreService and LoadoutPenaltyService are the structured item-effect layer used by future deeper calculations.
 final class DirtyJobService
 {
     private DirtyJobCalculator $calculator;

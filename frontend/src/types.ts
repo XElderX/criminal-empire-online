@@ -395,12 +395,39 @@ export interface InventoryAsset {
   storage_units?: number;
   base_durability?: number;
   can_buy?: boolean;
+  size_class?: string;
+  carry_units?: number;
+  legality?: string;
+  illegal?: number | boolean;
+  visible_illegal?: number | boolean;
+  allowed_slots?: string[];
+  item_tags?: string[];
+  item_effects?: Record<string, number>;
+}
+
+export interface LoadoutSummary {
+  character_type: string;
+  character_id: number;
+  slots: string[];
+  equipped: Array<{ id?: number; equipped_slot?: string; name: string }>;
+  carried: Array<{ name: string; quantity?: number; carry_units?: number }>;
+  carry_capacity_units: number;
+  used_carry_units: number;
+  scores: Record<string, number>;
+  warnings: string[];
 }
 
 export interface InventoryResponse {
   items: InventoryAsset[];
   weapons: InventoryAsset[];
   drugs: InventoryAsset[];
+  equipment_slots?: string[];
+  loadout_summary?: {
+    total_owned_items: number;
+    equipped_items: number;
+    illegal_carried_items: InventoryAsset[];
+    warnings: string[];
+  };
 }
 
 export interface StarterJob {
