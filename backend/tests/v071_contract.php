@@ -40,8 +40,8 @@ $runner->test('World map uses compact region dock', function () use ($runner, $w
     }
 });
 
-$runner->test('Documentation records v0.7.1 cleanup', function () use ($runner, $docs): void {
-    foreach (['v0.7.1 — UX Cleanup & Loadout Screen Polish', 'Inventory / Loadouts page', 'WarehousePage', 'World Map page'] as $needle) {
+$runner->test('Documentation records v0.7.2 cleanup', function () use ($runner, $docs): void {
+    foreach (['v0.7.2 — Inventory Loadout UX & Equipment Visibility Hotfix', 'Inventory / Loadouts page', 'WarehousePage', 'World Map page'] as $needle) {
         $runner->assertContains($needle, $docs);
     }
 });

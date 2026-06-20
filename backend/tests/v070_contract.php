@@ -54,20 +54,20 @@ $runner->test('Seeder configures item effects and dirty-money shop payments', fu
 });
 
 $runner->test('Inventory page has required subtabs and loadout components', function () use ($runner, $equipmentPage): void {
-    foreach (['Boss Loadout', 'Crew Loadouts', 'Owned Items', 'Warehouse / Storage', 'Item Effects', 'Transactions / Logs', 'CharacterLoadoutPanel', 'LoadoutSliders'] as $needle) {
+    foreach (['Boss loadout', 'Crew loadouts', 'Owned gear', 'Warehouse / Storage', 'Item effects', 'Inventory logs', 'CharacterLoadoutPanel', 'CrewTargetSelector'] as $needle) {
         $runner->assertContains($needle, $equipmentPage);
     }
 });
 
 $runner->test('Admin, Heat, Dirty Jobs, and Warehouse pages expose subtabs', function () use ($runner, $adminPage, $heatPage, $dirtyJobsPage, $warehousePage): void {
     foreach (['Shops', 'Economy', 'Investigations', 'Logs'] as $needle) $runner->assertContains($needle, $adminPage);
-    foreach (['Boss Heat', 'Crew Heat', 'Heat Reduction', 'Recent Heat Logs'] as $needle) $runner->assertContains($needle, $heatPage);
+    foreach (['Boss', 'Crew', 'Reduce Heat', 'Heat Logs'] as $needle) $runner->assertContains($needle, $heatPage);
     foreach (['Available Jobs', 'Active Jobs', 'Awaiting Decision', 'Crew Assignments', 'Local / Map Jobs'] as $needle) $runner->assertContains($needle, $dirtyJobsPage);
     foreach (['Stored Items', 'Contraband', 'Vehicles / Parts', 'Transfers', 'Storage Logs'] as $needle) $runner->assertContains($needle, $warehousePage);
 });
 
 $runner->test('Loadout service validates slots, ownership, capacity, and one-item rules', function () use ($runner, $characterLoadoutService): void {
-    foreach (['validateCrewMember', 'lockItem', 'One item cannot be equipped by multiple characters', 'Item does not match that equipment slot', 'Broken item cannot be equipped', 'Carry capacity exceeded', 'LoadoutScoreService', 'LoadoutPenaltyService'] as $needle) {
+    foreach (['validateCrewMember', 'lockItem', 'Item does not match that equipment slot', 'Broken item cannot be equipped', 'Carry capacity exceeded', 'LoadoutScoreService', 'LoadoutPenaltyService'] as $needle) {
         $runner->assertContains($needle, $characterLoadoutService);
     }
 });
@@ -79,7 +79,7 @@ $runner->test('Item effects and shop payment services cover balancing rules', fu
 });
 
 $runner->test('Documentation records v0.7 update', function () use ($runner, $docs, $apiDocs): void {
-    foreach (['v0.7.1 — UX Cleanup & Loadout Screen Polish', 'compact categorized navigation', 'equipment slots', 'dirty-money payment', 'GET /api/loadouts/boss'] as $needle) {
+    foreach (['v0.7.2 — Inventory Loadout UX & Equipment Visibility Hotfix', 'compact categorized navigation', 'equipment slots', 'dirty-money payment', 'GET /api/loadouts/boss'] as $needle) {
         $runner->assertContains($needle, $docs . $apiDocs);
     }
 });

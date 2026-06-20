@@ -87,12 +87,18 @@ final class ItemController
     {
         $payload = Request::json();
         try {
+            $assetType = (string) ($payload['asset_type'] ?? 'item');
+            $assetId = $assetType === 'weapon'
+                ? (int) ($payload['weapon_id'] ?? $payload['item_id'] ?? 0)
+                : (int) ($payload['item_id'] ?? 0);
+
             Response::json((new CharacterLoadoutService())->equip(
                 $context['user'],
                 (string) $params['characterType'],
                 (int) $params['characterId'],
-                (int) ($payload['item_id'] ?? 0),
-                (string) ($payload['slot'] ?? '')
+                $assetId,
+                (string) ($payload['slot'] ?? ''),
+                $assetType
             ));
         } catch (Throwable $exception) {
             Response::json(['message' => $exception->getMessage()], 422);

@@ -28,12 +28,12 @@ $baseDistrict = [
     'police_presence' => 45,
 ];
 
-$runner->test('Version is v0.7.1', function () use ($runner): void {
-    $runner->assertSame('0.7.1', GameConfig::VERSION);
+$runner->test('Version is v0.7.2', function () use ($runner): void {
+    $runner->assertSame('0.7.2', GameConfig::VERSION);
 });
 
 $runner->test('Release title identifies meaningful travel', function () use ($runner): void {
-    $runner->assertContains('UX Cleanup & Loadout Screen Polish', GameConfig::RELEASE_TITLE);
+    $runner->assertContains('Inventory Loadout UX & Equipment Visibility Hotfix', GameConfig::RELEASE_TITLE);
 });
 
 $runner->test('New-player starting cash is exactly 500', function () use ($runner): void {

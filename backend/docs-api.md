@@ -1,12 +1,13 @@
-# Criminal Empire Online v0.7.1 API
+# Criminal Empire Online v0.7.2 API
 
-## v0.7.1 UX Cleanup & Loadout Screen Polish
+## v0.7.2 Inventory Loadout UX & Equipment Visibility Hotfix
 
-This patch does not introduce breaking gameplay API changes. It keeps the v0.7 loadout, inventory log, admin log, warehouse log, heat log, and shop payment endpoints intact while polishing the frontend navigation, loadout screen, warehouse subtabs, and world-map region layout.
+This patch keeps the v0.7 API shape but improves how loadout data is returned and rendered.
 
-- `GET /api/loadouts/boss`, `GET /api/loadouts/crew`, and `GET /api/loadouts/crew/{id}` continue to power the polished loadout board.
-- `GET /api/warehouse/logs?page=&limit=30` remains the source for Storage Logs and should be displayed only in the Warehouse logs subtab.
-- `GET /api/admin/logs?type=&page=&limit=30` and other log routes remain capped at 30 records.
+- `POST /api/loadouts/{characterType}/{characterId}/equip` now accepts `asset_type` (`item` or `weapon`) plus `item_id`/`weapon_id`, so owned weapons can appear in visual loadout slots.
+- `GET /api/loadouts/crew` and `GET /api/loadouts/crew/{id}` return equipped item/weapon rows with `asset_type`, `equipped_slot`, name/category/class, and effect metadata for visual slot cards.
+- `GET /api/inventory` returns normalized item effects, item effect metadata, allowed slots, and available quantities that account for equipped/carried copies.
+- `GET /api/warehouse/logs?page=&limit=30`, `GET /api/admin/logs?type=&page=&limit=30`, and other log routes remain capped at 30 records.
 
 ---
 

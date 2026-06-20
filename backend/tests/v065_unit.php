@@ -10,12 +10,12 @@ use Tests\TestRunner;
 
 $runner = new TestRunner();
 
-$runner->test('Version is v0.7.1', function () use ($runner): void {
-    $runner->assertSame('0.7.1', GameConfig::VERSION);
+$runner->test('Version is v0.7.2', function () use ($runner): void {
+    $runner->assertSame('0.7.2', GameConfig::VERSION);
 });
 
 $runner->test('Release title identifies map shop UX hotfix', function () use ($runner): void {
-    $runner->assertContains('UX Cleanup & Loadout Screen Polish', GameConfig::RELEASE_TITLE);
+    $runner->assertContains('Inventory Loadout UX & Equipment Visibility Hotfix', GameConfig::RELEASE_TITLE);
 });
 
 $runner->test('Shop config exposes core shops and catalog items', function () use ($runner): void {

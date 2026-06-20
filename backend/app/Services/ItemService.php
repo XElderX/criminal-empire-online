@@ -177,9 +177,14 @@ final class ItemService
 
         foreach ($items as &$item) {
             $item['effects'] = $this->decodeJson($item['effects']);
+            $item['item_effects'] = $this->decodeJson($item['item_effects'] ?? null);
+            $item['allowed_slots'] = $this->decodeJson($item['allowed_slots'] ?? null);
+            $item['item_tags'] = $this->decodeJson($item['item_tags'] ?? null);
             $item['available_quantity'] = max(
                 0,
-                (int) $item['quantity'] - (int) $item['equipped_quantity']
+                (int) $item['quantity']
+                - (int) $item['equipped_quantity']
+                - $this->carriedQuantity((int) $user['id'], 'item', (int) $item['id'])
             );
         }
 
@@ -208,6 +213,13 @@ final class ItemService
 
         foreach ($weapons as &$weapon) {
             $weapon['effects'] = $this->decodeJson($weapon['effects']);
+            $weapon['asset_type'] = 'weapon';
+            $weapon['category'] = 'weapon';
+            $weapon['size_class'] = in_array(($weapon['class'] ?? ''), ['shotgun', 'smg', 'assault_rifle'], true) ? 'large' : 'medium';
+            $weapon['carry_units'] = in_array(($weapon['class'] ?? ''), ['shotgun', 'smg', 'assault_rifle'], true) ? 3 : 2;
+            $weapon['legality'] = ((int) ($weapon['illegal'] ?? 1) === 1) ? 'illegal' : 'legal';
+            $weapon['visible_illegal'] = (int) ($weapon['illegal'] ?? 1);
+            $weapon['allowed_slots'] = $this->weaponSlots((string) ($weapon['class'] ?? ''), (string) ($weapon['equipment_slot'] ?? ''));
             $weapon['available_quantity'] = max(
                 0,
                 (int) $weapon['quantity'] - (int) $weapon['equipped_quantity']
@@ -238,6 +250,41 @@ final class ItemService
             ],
             'equipment_slots' => (new EquipmentSlotService())->slots(),
         ];
+    }
+
+
+    private function carriedQuantity(int $userId, string $assetType, int $assetId): int
+    {
+        if (!$this->tableExists('character_carry_items')) {
+            return 0;
+        }
+
+        $statement = Database::pdo()->prepare(
+            'SELECT COALESCE(SUM(quantity), 0) FROM character_carry_items WHERE user_id = ? AND asset_type = ? AND asset_id = ?'
+        );
+        $statement->execute([$userId, $assetType, $assetId]);
+
+        return (int) $statement->fetchColumn();
+    }
+
+    private function weaponSlots(string $class, string $legacySlot): array
+    {
+        $class = strtolower($class);
+        $legacySlot = strtolower($legacySlot);
+        if (str_contains($class, 'pistol') || str_contains($class, 'revolver') || $legacySlot === 'sidearm') {
+            return ['sidearm'];
+        }
+        if (str_contains($class, 'knife') || str_contains($class, 'baton') || str_contains($class, 'melee')) {
+            return ['melee'];
+        }
+        return ['primary_weapon'];
+    }
+
+    private function tableExists(string $tableName): bool
+    {
+        $statement = Database::pdo()->prepare('SHOW TABLES LIKE ?');
+        $statement->execute([$tableName]);
+        return (bool) $statement->fetchColumn();
     }
 
     private function requirementsMet(array $user, array $requirements): bool
