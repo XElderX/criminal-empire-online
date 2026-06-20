@@ -95,8 +95,8 @@ export function WorldMapPage({
         <span>Display heat: <strong>{overview.summary.display_heat}</strong></span>
       </div>
 
-      <div className="map-layout-grid">
-        <div className="card map-card">
+      <div className="map-layout-grid world-map-command-grid">
+        <div className="card map-card world-map-main-card">
           {overview.regions.length === 0 ? (
             <EmptyState title="No regions seeded" message="Run the v0.6 world map seeder to populate Grimwater County." />
           ) : (
@@ -104,22 +104,32 @@ export function WorldMapPage({
           )}
         </div>
 
-        <div className="map-side-stack">
+        <aside className="map-side-stack world-map-command-panel">
           {selectedRegion && <MapTooltip item={selectedRegion} />}
           <TravelPanel selectedRegion={selectedRegion} busy={false} onEnterRegion={enterRegion} />
-          <div className="region-card-list">
-            {overview.regions.map((region) => (
-              <MapRegionCard
-                key={region.slug}
-                region={region}
-                selected={selectedRegion?.slug === region.slug}
-                onSelect={(region) => setSelectedSlug(region.slug)}
-              />
-            ))}
-          </div>
           <MapLegend entries={overview.legend} />
-        </div>
+        </aside>
       </div>
+
+      <section className="card map-region-dock">
+        <div className="section-heading-row">
+          <div>
+            <p className="eyebrow">Region access</p>
+            <h2>Choose a region</h2>
+          </div>
+          <span className="muted">Compact cards replace the old long side list.</span>
+        </div>
+        <div className="region-card-list compact-region-grid">
+          {overview.regions.map((region) => (
+            <MapRegionCard
+              key={region.slug}
+              region={region}
+              selected={selectedRegion?.slug === region.slug}
+              onSelect={(region) => setSelectedSlug(region.slug)}
+            />
+          ))}
+        </div>
+      </section>
     </section>
   );
 }

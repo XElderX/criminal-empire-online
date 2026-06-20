@@ -1,3 +1,15 @@
+# Criminal Empire Online v0.7.1 API
+
+## v0.7.1 UX Cleanup & Loadout Screen Polish
+
+This patch does not introduce breaking gameplay API changes. It keeps the v0.7 loadout, inventory log, admin log, warehouse log, heat log, and shop payment endpoints intact while polishing the frontend navigation, loadout screen, warehouse subtabs, and world-map region layout.
+
+- `GET /api/loadouts/boss`, `GET /api/loadouts/crew`, and `GET /api/loadouts/crew/{id}` continue to power the polished loadout board.
+- `GET /api/warehouse/logs?page=&limit=30` remains the source for Storage Logs and should be displayed only in the Warehouse logs subtab.
+- `GET /api/admin/logs?type=&page=&limit=30` and other log routes remain capped at 30 records.
+
+---
+
 # Criminal Empire Online v0.7 API
 
 ## v0.7 UX Navigation & Inventory Loadout Expansion

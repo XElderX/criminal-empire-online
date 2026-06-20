@@ -70,10 +70,10 @@ export function Navigation({ user, page, onNavigate, onLogout, onOpenTutorial }:
     <nav className="nav compact-nav" aria-label="Primary navigation">
       <div className="brand">
         Criminal Empire
-        <span className="version-badge">v 0.7</span>
+        <span className="version-badge">v 0.7.1</span>
       </div>
 
-      <div className="nav-links nav-dropdown-groups">
+      <div className="nav-links nav-dropdown-groups" role="menubar">
         {groups.map((group) => (
           <NavigationGroup key={group.key} group={group} page={page} onNavigate={onNavigate} />
         ))}

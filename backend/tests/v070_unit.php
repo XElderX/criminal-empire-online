@@ -14,12 +14,12 @@ use Tests\TestRunner;
 
 $runner = new TestRunner();
 
-$runner->test('Version is v0.7.0', function () use ($runner): void {
-    $runner->assertSame('0.7.0', GameConfig::VERSION);
+$runner->test('Version is v0.7.1', function () use ($runner): void {
+    $runner->assertSame('0.7.1', GameConfig::VERSION);
 });
 
 $runner->test('Release title identifies v0.7 loadout expansion', function () use ($runner): void {
-    $runner->assertContains('UX Navigation & Inventory Loadout Expansion', GameConfig::RELEASE_TITLE);
+    $runner->assertContains('UX Cleanup & Loadout Screen Polish', GameConfig::RELEASE_TITLE);
 });
 
 $runner->test('Equipment slots include body and utility slots', function () use ($runner): void {
