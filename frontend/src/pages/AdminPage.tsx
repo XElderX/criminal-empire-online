@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api } from '../api/client';
 import { Notice } from '../components/Notice';
+import { LogTypeTabs, type LogType } from '../components/logs/LogTypeTabs';
+import { PaginatedLogTable } from '../components/logs/PaginatedLogTable';
 import { getItemIcon } from '../data/assetManifest';
 import type { AdminNpcDetailResponse, AdminNpcListResponse, AdminNpcSummary, User } from '../types';
 
@@ -30,7 +32,7 @@ interface AdminUserSummary {
 
 type AdminAssetType = 'item' | 'weapon' | 'drug';
 type AdminAssetFilter = AdminAssetType | 'all';
-type AdminTab = 'players' | 'catalog' | 'npcs' | 'logs';
+type AdminTab = 'players' | 'catalog' | 'shops' | 'economy' | 'heat' | 'investigations' | 'npcs' | 'logs' | 'map' | 'system';
 
 interface AdminCatalogAsset {
   id: number;
@@ -58,6 +60,9 @@ interface AdminCatalogResponse {
 export function AdminPage({ currentUser, onChanged }: AdminPageProps) {
   const [stats, setStats] = useState<Record<string, unknown> | null>(null);
   const [logs, setLogs] = useState<AuditLog[]>([]);
+  const [paginatedLogs, setPaginatedLogs] = useState<{ data: Array<Record<string, unknown>>; pagination?: { page: number; per_page: number; total: number; total_pages: number; has_next: boolean; has_previous: boolean } }>({ data: [] });
+  const [logType, setLogType] = useState<LogType>('audit');
+  const [logPage, setLogPage] = useState(1);
   const [users, setUsers] = useState<AdminUserSummary[]>([]);
   const [assets, setAssets] = useState<AdminCatalogAsset[]>([]);
   const [targetUserId, setTargetUserId] = useState(String(currentUser.id));
@@ -88,9 +93,21 @@ export function AdminPage({ currentUser, onChanged }: AdminPageProps) {
     }
   }
 
+  async function loadAdminLogs(type = logType, page = logPage): Promise<void> {
+    try {
+      setPaginatedLogs(await api(`/admin/logs?type=${type}&page=${page}&limit=30`));
+    } catch (requestError) {
+      setError((requestError as Error).message);
+    }
+  }
+
   useEffect(() => {
     void load();
   }, []);
+
+  useEffect(() => {
+    void loadAdminLogs(logType, logPage);
+  }, [logType, logPage]);
 
   const grantOptions = useMemo(
     () => assets.filter((asset) => asset.asset_type === grantType),
@@ -235,8 +252,14 @@ export function AdminPage({ currentUser, onChanged }: AdminPageProps) {
         {([
           ['players', 'Players & tools'],
           ['catalog', 'Asset catalog'],
+          ['shops', 'Shops'],
+          ['economy', 'Economy'],
+          ['heat', 'Heat'],
+          ['investigations', 'Investigations'],
           ['npcs', 'NPC browser'],
-          ['logs', 'Audit log'],
+          ['logs', 'Logs'],
+          ['map', 'Map'],
+          ['system', 'System'],
         ] as Array<[AdminTab, string]>).map(([tab, label]) => (
           <button
             key={tab}
@@ -470,15 +493,24 @@ export function AdminPage({ currentUser, onChanged }: AdminPageProps) {
 
       {activeTab === 'logs' && (
         <section className="card section-card">
-          <h2>Audit log</h2>
-          <div className="timeline compact-timeline">
-            {logs.map((log) => (
-              <article key={log.id}>
-                <span>{new Date(log.created_at).toLocaleString()}</span>
-                <strong>{log.action}</strong>
-              </article>
-            ))}
+          <div className="card-heading">
+            <div>
+              <p className="eyebrow">Paginated admin logs</p>
+              <h2>Logs</h2>
+              <p className="muted">System, audit, economy, heat, crime, dirty job, shop, travel, tutorial, and error-style views are separated. Backend caps every request at 30 records.</p>
+            </div>
           </div>
+          <LogTypeTabs active={logType} onChange={(type) => { setLogType(type); setLogPage(1); }} />
+          <PaginatedLogTable logs={paginatedLogs.data} pagination={paginatedLogs.pagination} onPage={setLogPage} />
+        </section>
+      )}
+
+      {(['shops', 'economy', 'heat', 'investigations', 'map', 'system'] as AdminTab[]).includes(activeTab) && (
+        <section className="card section-card">
+          <p className="eyebrow">Admin {activeTab}</p>
+          <h2>{activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}</h2>
+          <p className="muted">This tab keeps the admin page navigable. Detailed records are available through the paginated Logs tab and existing API panels.</p>
+          <pre>{JSON.stringify(stats, null, 2)}</pre>
         </section>
       )}
     </section>

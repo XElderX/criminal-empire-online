@@ -153,6 +153,7 @@ $router->get('/api/shops/{slug}', [ShopController::class, 'show'], [AuthMiddlewa
 $router->get('/api/shops/{slug}/items', [ShopController::class, 'items'], [AuthMiddleware::class]);
 $router->post('/api/shops/{slug}/buy', [ShopController::class, 'buy'], [AuthMiddleware::class]);
 $router->post('/api/shops/{slug}/sell', [ShopController::class, 'sell'], [AuthMiddleware::class]);
+$router->get('/api/shops/{slug}/payment-options', [ShopController::class, 'paymentOptions'], [AuthMiddleware::class]);
 $router->get('/api/shops/{slug}/transactions', [ShopController::class, 'transactions'], [AuthMiddleware::class]);
 $router->get('/api/world-map/locations/{slug}/shops', [ShopController::class, 'locationShops'], [AuthMiddleware::class]);
 
@@ -167,6 +168,15 @@ $router->get(
     [ItemController::class, 'inventory'],
     [AuthMiddleware::class]
 );
+$router->get('/api/inventory/logs', [ItemController::class, 'inventoryLogs'], [AuthMiddleware::class]);
+$router->get('/api/loadouts/boss', [ItemController::class, 'bossLoadout'], [AuthMiddleware::class]);
+$router->get('/api/loadouts/crew', [ItemController::class, 'crewLoadouts'], [AuthMiddleware::class]);
+$router->get('/api/loadouts/crew/{id}', [ItemController::class, 'crewLoadout'], [AuthMiddleware::class]);
+$router->post('/api/loadouts/{characterType}/{characterId}/equip', [ItemController::class, 'equipLoadout'], [AuthMiddleware::class]);
+$router->post('/api/loadouts/{characterType}/{characterId}/unequip', [ItemController::class, 'unequipLoadout'], [AuthMiddleware::class]);
+$router->post('/api/loadouts/{characterType}/{characterId}/carry', [ItemController::class, 'carryLoadout'], [AuthMiddleware::class]);
+$router->post('/api/loadouts/{characterType}/{characterId}/drop-or-store', [ItemController::class, 'storeLoadoutItem'], [AuthMiddleware::class]);
+$router->get('/api/items/effects', [ItemController::class, 'itemEffects'], [AuthMiddleware::class]);
 
 $router->get('/api/weapons', [ShopController::class, 'weapons'], [AuthMiddleware::class]);
 $router->post(
@@ -210,6 +220,7 @@ $router->post(
     [WarehouseController::class, 'purchaseUpgrade'],
     [AuthMiddleware::class]
 );
+$router->get('/api/warehouse/logs', [WarehouseController::class, 'logs'], [AuthMiddleware::class]);
 
 
 $router->get('/api/world-map', [WorldMapController::class, 'index'], [AuthMiddleware::class]);
@@ -350,6 +361,7 @@ $router->get(
     [AdminController::class, 'audit'],
     [AuthMiddleware::class]
 );
+$router->get('/api/admin/logs', [AdminController::class, 'logs'], [AuthMiddleware::class]);
 
 $router->get(
     '/api/admin/npcs',

@@ -1,3 +1,31 @@
+# Criminal Empire Online v0.7 API
+
+## v0.7 UX Navigation & Inventory Loadout Expansion
+
+### Inventory / loadouts
+
+- `GET /api/inventory` — owned items, drugs, weapons, equipment slots, and loadout summary.
+- `GET /api/inventory/logs?page=&limit=30` — paginated inventory/equipment logs capped at 30.
+- `GET /api/loadouts/boss` — boss loadout summary.
+- `GET /api/loadouts/crew` — all crew loadouts.
+- `GET /api/loadouts/crew/{id}` — one crew member loadout.
+- `POST /api/loadouts/{characterType}/{characterId}/equip` — equip an owned item to a validated slot.
+- `POST /api/loadouts/{characterType}/{characterId}/unequip` — unequip by slot.
+- `POST /api/loadouts/{characterType}/{characterId}/carry` — assign an item to carried inventory if capacity allows.
+- `POST /api/loadouts/{characterType}/{characterId}/drop-or-store` — return carried item to owned inventory.
+- `GET /api/items/effects` — readable item tags, size, legality, allowed slots, and effects.
+
+### Logs
+
+- `GET /api/admin/logs?type=&page=&limit=30` — admin-only paginated system/audit/economy/heat/crime/dirty-job/shop/travel/tutorial log views. Backend caps limit at 30.
+- `GET /api/heat/logs?page=&limit=30` — player heat logs capped at 30.
+- `GET /api/warehouse/logs?page=&limit=30` — player storage logs capped at 30.
+
+### Shop payments
+
+- `GET /api/shops/{slug}/payment-options` — accepted payment types for a shop.
+- `POST /api/shops/{slug}/buy` now accepts `payment_type` (`cash`, `bank`, or `dirty_money`) and validates against shop config/server-side balances.
+
 # Criminal Empire Online v0.6.5.1 API
 
 

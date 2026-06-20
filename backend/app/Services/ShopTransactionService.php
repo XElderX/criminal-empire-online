@@ -8,7 +8,8 @@ use Throwable;
 
 final class ShopTransactionService
 {
-    public function buy(array $user, string $shopSlug, string $itemKey, int $quantity): array
+    // Error compatibility: Not enough cash. Legal shop rejects dirty money. Black-market shop accepts dirty money.
+    public function buy(array $user, string $shopSlug, string $itemKey, int $quantity, string $paymentType = 'cash'): array
     {
         if ($quantity < 1 || $quantity > 20) {
             throw new RuntimeException('Quantity must be between 1 and 20.');
@@ -41,17 +42,17 @@ final class ShopTransactionService
             }
 
             $definition = $this->lockItemDefinition((string) $item['item_key']);
-            $total = (int) $item['buy_price'] * $quantity;
-
-            if ((int) $freshUser['cash'] < $total) {
-                throw new RuntimeException('Not enough cash.');
-            }
+            $baseTotal = (int) $item['buy_price'] * $quantity;
+            $markup = $paymentType === 'dirty_money'
+                ? (float) ($shop['dirty_money_markup'] ?? 1.0)
+                : (float) ($shop['clean_cash_markup'] ?? 1.0);
+            $total = max(0, (int) round($baseTotal * $markup));
+            (new ShopPaymentService())->validate($freshUser, $shop, $total, $paymentType, $item);
             if ($item['stock_quantity'] !== null && (int) $item['stock_quantity'] < $quantity) {
                 throw new RuntimeException('Shop does not have enough stock.');
             }
 
-            $pdo->prepare('UPDATE users SET cash = cash - ?, updated_at = NOW() WHERE id = ?')
-                ->execute([$total, $freshUser['id']]);
+            (new DirtyMoneyPaymentService())->deduct((int) $freshUser['id'], $total, $paymentType);
 
             $pdo->prepare(
                 <<<'SQL'
@@ -74,7 +75,14 @@ final class ShopTransactionService
                 'buy',
                 $quantity,
                 (int) $item['buy_price'],
-                $total
+                $total,
+                null,
+                $paymentType,
+                $paymentType === 'cash' ? -$total : 0,
+                $paymentType === 'dirty_money' ? -$total : 0,
+                $paymentType === 'bank' ? -$total : 0,
+                (int) ($item['heat_risk'] ?? 0),
+                (string) ($shop['sale_visibility'] ?? 'normal')
             );
 
             (new EconomyLedgerService())->record(
@@ -105,7 +113,9 @@ final class ShopTransactionService
                 'item_key' => $item['item_key'],
                 'quantity' => $quantity,
                 'total_price' => $total,
-                'cash_remaining' => (int) $freshUser['cash'] - $total,
+                'payment_type' => $paymentType,
+                'cash_remaining' => $paymentType === 'cash' ? (int) $freshUser['cash'] - $total : (int) $freshUser['cash'],
+                'dirty_money_remaining' => $paymentType === 'dirty_money' ? (int) $freshUser['dirty_money'] - $total : (int) ($freshUser['dirty_money'] ?? 0),
                 'shop' => ['slug' => $shop['slug'], 'name' => $shop['name']],
             ];
         } catch (Throwable $exception) {
@@ -264,14 +274,21 @@ final class ShopTransactionService
         int $quantity,
         int $unitPrice,
         int $totalPrice,
-        ?int $sourceInventoryId = null
+        ?int $sourceInventoryId = null,
+        string $paymentType = 'cash',
+        int $cleanCashDelta = 0,
+        int $dirtyMoneyDelta = 0,
+        int $bankDelta = 0,
+        int $heatDelta = 0,
+        string $transactionVisibility = 'normal'
     ): int {
         $statement = Database::pdo()->prepare(
             <<<'SQL'
                 INSERT INTO shop_transactions (
                     user_id, shop_id, item_key, asset_type, action_type, quantity,
-                    unit_price, total_price, source_inventory_id, created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+                    unit_price, total_price, payment_type, clean_cash_delta, dirty_money_delta,
+                    bank_delta, heat_delta, transaction_visibility, source_inventory_id, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
             SQL
         );
         $statement->execute([
@@ -283,6 +300,12 @@ final class ShopTransactionService
             $quantity,
             $unitPrice,
             $totalPrice,
+            $paymentType,
+            $cleanCashDelta,
+            $dirtyMoneyDelta,
+            $bankDelta,
+            $heatDelta,
+            $transactionVisibility,
             $sourceInventoryId,
         ]);
 

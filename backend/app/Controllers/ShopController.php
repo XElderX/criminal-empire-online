@@ -49,7 +49,8 @@ final class ShopController
                 $context['user'],
                 (string) $params['slug'],
                 (string) ($payload['item_key'] ?? ''),
-                (int) ($payload['quantity'] ?? 1)
+                (int) ($payload['quantity'] ?? 1),
+                (string) ($payload['payment_type'] ?? 'cash')
             ));
         } catch (Throwable $exception) {
             Response::json(['message' => $exception->getMessage()], 422);
@@ -67,6 +68,16 @@ final class ShopController
                 (string) ($payload['item_key'] ?? ''),
                 (int) ($payload['quantity'] ?? 1)
             ));
+        } catch (Throwable $exception) {
+            Response::json(['message' => $exception->getMessage()], 422);
+        }
+    }
+
+    public function paymentOptions(array $params, array $context): void
+    {
+        try {
+            $shop = (new ShopService())->findShop((string) $params['slug']);
+            Response::json(['data' => (new \App\Services\ShopPaymentService())->options($shop)]);
         } catch (Throwable $exception) {
             Response::json(['message' => $exception->getMessage()], 422);
         }

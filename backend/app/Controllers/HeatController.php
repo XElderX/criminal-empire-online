@@ -21,7 +21,7 @@ final class HeatController
     public function logs(array $params, array $context): void
     {
         try {
-            Response::json((new HeatService())->logs($context['user']));
+            Response::json((new HeatService())->logs($context['user'], $_GET));
         } catch (Throwable $exception) {
             Response::json(['message' => $exception->getMessage()], 422);
         }

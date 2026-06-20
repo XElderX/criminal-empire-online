@@ -6,6 +6,9 @@ use App\Core\Request;
 use App\Core\Response;
 use App\Services\ItemService;
 use App\Services\ShopCatalogService;
+use App\Services\InventoryLogService;
+use App\Services\ItemEffectService;
+use App\Services\CharacterLoadoutService;
 use Throwable;
 
 final class ItemController
@@ -54,4 +57,92 @@ final class ItemController
     {
         Response::json((new ItemService())->inventory($context['user']));
     }
+
+    public function inventoryLogs(array $params, array $context): void
+    {
+        Response::json((new InventoryLogService())->paginated($context['user'], $_GET));
+    }
+
+    public function itemEffects(array $params, array $context): void
+    {
+        Response::json((new ItemEffectService())->definitions());
+    }
+
+    public function bossLoadout(array $params, array $context): void
+    {
+        Response::json((new CharacterLoadoutService())->boss($context['user']));
+    }
+
+    public function crewLoadouts(array $params, array $context): void
+    {
+        Response::json((new CharacterLoadoutService())->crew($context['user']));
+    }
+
+    public function crewLoadout(array $params, array $context): void
+    {
+        Response::json((new CharacterLoadoutService())->forCharacter($context['user'], 'crew', (int) $params['id']));
+    }
+
+    public function equipLoadout(array $params, array $context): void
+    {
+        $payload = Request::json();
+        try {
+            Response::json((new CharacterLoadoutService())->equip(
+                $context['user'],
+                (string) $params['characterType'],
+                (int) $params['characterId'],
+                (int) ($payload['item_id'] ?? 0),
+                (string) ($payload['slot'] ?? '')
+            ));
+        } catch (Throwable $exception) {
+            Response::json(['message' => $exception->getMessage()], 422);
+        }
+    }
+
+    public function unequipLoadout(array $params, array $context): void
+    {
+        $payload = Request::json();
+        try {
+            Response::json((new CharacterLoadoutService())->unequip(
+                $context['user'],
+                (string) $params['characterType'],
+                (int) $params['characterId'],
+                (string) ($payload['slot'] ?? '')
+            ));
+        } catch (Throwable $exception) {
+            Response::json(['message' => $exception->getMessage()], 422);
+        }
+    }
+
+    public function carryLoadout(array $params, array $context): void
+    {
+        $payload = Request::json();
+        try {
+            Response::json((new CharacterLoadoutService())->carry(
+                $context['user'],
+                (string) $params['characterType'],
+                (int) $params['characterId'],
+                (int) ($payload['item_id'] ?? 0),
+                (int) ($payload['quantity'] ?? 1)
+            ));
+        } catch (Throwable $exception) {
+            Response::json(['message' => $exception->getMessage()], 422);
+        }
+    }
+
+    public function storeLoadoutItem(array $params, array $context): void
+    {
+        $payload = Request::json();
+        try {
+            Response::json((new CharacterLoadoutService())->store(
+                $context['user'],
+                (string) $params['characterType'],
+                (int) $params['characterId'],
+                (int) ($payload['item_id'] ?? 0)
+            ));
+        } catch (Throwable $exception) {
+            Response::json(['message' => $exception->getMessage()], 422);
+        }
+    }
+
 }

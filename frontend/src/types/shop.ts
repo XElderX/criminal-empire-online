@@ -22,6 +22,10 @@ export interface ShopSummary {
   min_reputation: number;
   catalog_count?: number | null;
   travel_hint?: string | null;
+  accepted_payment_types?: Array<'cash' | 'bank' | 'dirty_money'>;
+  accepts_dirty_money?: boolean;
+  accepts_clean_cash?: boolean;
+  accepts_bank?: boolean;
 }
 
 export interface ShopItem {
@@ -49,6 +53,7 @@ export interface ShopItem {
   warnings: string[];
   owned_quantity: number;
   is_illegal: boolean;
+  allowed_payment_types?: Array<'cash' | 'bank' | 'dirty_money'>;
 }
 
 export interface SellableInventoryItem {
@@ -87,6 +92,8 @@ export interface ShopTransactionResponse {
   total_price: number;
   cash_remaining?: number;
   cash_after_sale?: number;
+  dirty_money_remaining?: number;
+  payment_type?: 'cash' | 'bank' | 'dirty_money';
   shop: {
     slug: string;
     name: string;

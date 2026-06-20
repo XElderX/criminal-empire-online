@@ -6,6 +6,7 @@ import { ShopCard } from '../components/shop/ShopCard';
 import { ShopCategoryFilter } from '../components/shop/ShopCategoryFilter';
 import { ShopItemCard } from '../components/shop/ShopItemCard';
 import { ShopLocationNotice } from '../components/shop/ShopLocationNotice';
+import { PaymentTypeSelector, type PaymentType } from '../components/shop/PaymentTypeSelector';
 import { ShopTransactionPanel } from '../components/shop/ShopTransactionPanel';
 import type { PageName } from '../types';
 import type { SellableInventoryItem, ShopDetailResponse, ShopItem, ShopSummary } from '../types/shop';
@@ -42,6 +43,7 @@ export function ShopsPage({ onChanged, onNavigate }: ShopsPageProps) {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
+  const [paymentType, setPaymentType] = useState<PaymentType>('cash');
 
   useEffect(() => {
     void loadShops();
@@ -111,7 +113,7 @@ export function ShopsPage({ onChanged, onNavigate }: ShopsPageProps) {
     setMessage('');
     setError('');
     try {
-      const response = await buyFromShop(detail.shop.slug, item.item_key, 1);
+      const response = await buyFromShop(detail.shop.slug, item.item_key, 1, paymentType);
       setMessage(response.message);
       await loadDetail(detail.shop.slug);
       await loadShops();
@@ -222,6 +224,11 @@ export function ShopsPage({ onChanged, onNavigate }: ShopsPageProps) {
               <span className="info-pill">Heat risk {detail.shop.heat_risk}</span>
               <span className="info-pill">Catalog {detail.items.length}</span>
             </div>
+            <PaymentTypeSelector
+              value={paymentType}
+              options={(detail.shop.accepted_payment_types || (detail.shop.is_black_market ? ['dirty_money', 'cash'] : ['cash'])) as PaymentType[]}
+              onChange={setPaymentType}
+            />
             <button className="btn full-width" onClick={() => onNavigate('world map')}>Open map location</button>
           </aside>
 

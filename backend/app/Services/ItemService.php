@@ -230,6 +230,13 @@ final class ItemService
             'items' => $items,
             'weapons' => $weapons,
             'drugs' => $drugStatement->fetchAll(),
+            'loadout_summary' => [
+                'total_owned_items' => array_sum(array_map(static fn (array $item): int => (int) $item['quantity'], $items)),
+                'equipped_items' => array_sum(array_map(static fn (array $item): int => (int) ($item['equipped_quantity'] ?? 0), $items)),
+                'illegal_carried_items' => array_values(array_filter($items, static fn (array $item): bool => (int) ($item['illegal'] ?? 0) === 1)),
+                'warnings' => ['Inventory is now owned-item management; use loadouts to equip or carry gear and map shops to buy.'],
+            ],
+            'equipment_slots' => (new EquipmentSlotService())->slots(),
         ];
     }
 

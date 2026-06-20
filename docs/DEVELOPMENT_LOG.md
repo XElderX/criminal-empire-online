@@ -1,3 +1,17 @@
+## 2026-06-20 — Criminal Empire Online v0.7 — UX Navigation & Inventory Loadout Expansion
+
+- Treated the former v0.6.6 scope as the larger v0.7 milestone and bumped backend/frontend version metadata to `0.7.0` with release title `Criminal Empire Online v0.7 — UX Navigation & Inventory Loadout Expansion`.
+- Added compact categorized navigation with dropdowns plus a mobile quick navigation / More pattern.
+- Added admin sections for players, catalog, shops, economy, heat, investigations, NPCs, logs, map, and system context.
+- Added paginated log handling with backend cap of 30 records per page for admin logs, heat logs, warehouse logs, and inventory logs.
+- Reorganized Heat & Police, Dirty Jobs, and Warehouse pages with subtabs so large pages are easier to scan without removing existing actions.
+- Redesigned Inventory around boss/crew loadouts, owned items, warehouse guidance, item effects, and inventory transaction logs.
+- Added equipment slots: head, torso, legs, boots, hands, primary weapon, sidearm, melee, tool, utility slots, bag, armor, and disguise.
+- Added carried inventory model with carry units, item size classes, carry capacity, and warning/penalty summaries.
+- Added structured item effects and loadout scores for stealth, intimidation, protection, carry capacity, police suspicion, mobility, evidence safety, and utility.
+- Added dirty-money payment support for shady/black-market shops; legal shops reject dirty money unless configured otherwise.
+- Added `018_v070_inventory_loadouts_ux.sql`, `018_v070_inventory_loadouts_ux_seed.sql`, v0.7 tests, and API documentation.
+
 ## 2026-06-19 — Criminal Empire Online v0.6.5.1 — Map Shop UX & Navigation Hotfix
 
 - Bumped backend and frontend version metadata to `0.6.5.1` with release title `Criminal Empire Online v0.6.5.1 — Map Shop UX & Navigation Hotfix`.

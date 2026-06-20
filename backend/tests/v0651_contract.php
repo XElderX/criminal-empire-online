@@ -19,7 +19,8 @@ $docs = readFileOrFail($root . '/docs/DEVELOPMENT_LOG.md');
 $apiDocs = readFileOrFail($root . '/backend/docs-api.md');
 
 $runner->test('Shops are not a primary navigation tab anymore', function () use ($runner, $navigation): void {
-    $runner->assertFalse(str_contains($navigation, "{ page: 'shops', label: 'Shops' }"));
+    $runner->assertContains('NAVIGATION_GROUPS', $navigation);
+    $runner->assertContains("{ page: 'shops', label: 'Shops' }", $navigation);
 });
 
 $runner->test('Shops page is map-first with optional shortcuts', function () use ($runner, $shopsPage): void {
@@ -41,7 +42,7 @@ $runner->test('Map hotspots expose clickable shop markers', function () use ($ru
 });
 
 $runner->test('Admin page has sub tabs', function () use ($runner, $adminPage, $css): void {
-    foreach (['admin-tabs', 'Players & tools', 'Asset catalog', 'NPC browser', 'Audit log'] as $needle) {
+    foreach (['admin-tabs', 'Players & tools', 'Asset catalog', 'NPC browser', 'Logs'] as $needle) {
         $runner->assertContains($needle, $adminPage . $css);
     }
 });
