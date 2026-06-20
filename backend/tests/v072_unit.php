@@ -55,4 +55,8 @@ $runner->test('Equipment page exposes boss as a selectable loadout target', func
     $runner->assertContains('/loadouts/${selectedTarget.type}/${selectedTarget.id}/equip', $pageSource);
 });
 
+$runner->test('Boss loadout schema fix migration exists', function () use ($runner): void {
+    $runner->assertTrue(is_file(dirname(__DIR__) . '/database/migrations/019_v0721_boss_loadout_schema_fix.sql'));
+});
+
 exit($runner->finish());
