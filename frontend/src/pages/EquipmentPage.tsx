@@ -138,6 +138,25 @@ export function EquipmentPage({ onChanged, onNavigate }: EquipmentPageProps) {
     }
   }
 
+  async function unequip(slot: string): Promise<void> {
+    setLoading(true);
+    setMessage('');
+    setError('');
+
+    try {
+      const response = await api<{ message: string }>(`/loadouts/${selectedTarget.type}/${selectedTarget.id}/unequip`, {
+        method: 'POST',
+        body: JSON.stringify({ slot }),
+      });
+
+      await refreshAfterLoadoutChange(response.message || `${humanize(slot)} unequipped from ${selectedTargetName || 'target loadout'}.`);
+    } catch (requestError) {
+      setError((requestError as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   const ownedAssets = useMemo(() => [...inventory.items, ...inventory.weapons], [inventory.items, inventory.weapons]);
 
   return (
@@ -178,7 +197,7 @@ export function EquipmentPage({ onChanged, onNavigate }: EquipmentPageProps) {
         </div>
       )}
 
-      {activeTab === 'boss' && <CharacterLoadoutPanel title="Boss loadout" loadout={bossLoadout} />}
+      {activeTab === 'boss' && <CharacterLoadoutPanel title="Boss loadout" loadout={bossLoadout} loading={loading} onUnequip={unequip} />}
 
       {activeTab === 'crew' && (
         <SectionCard>
@@ -188,7 +207,12 @@ export function EquipmentPage({ onChanged, onNavigate }: EquipmentPageProps) {
             selectedTarget={selectedTarget}
             onSelect={setSelectedTarget}
           />
-          <CharacterLoadoutPanel title={selectedTarget.type === 'boss' ? 'Boss loadout' : selectedMember ? displayName(selectedMember) : 'Choose a crew member'} loadout={selectedLoadout} />
+          <CharacterLoadoutPanel
+            title={selectedTarget.type === 'boss' ? 'Boss loadout' : selectedMember ? displayName(selectedMember) : 'Choose a crew member'}
+            loadout={selectedLoadout}
+            loading={loading}
+            onUnequip={unequip}
+          />
         </SectionCard>
       )}
 

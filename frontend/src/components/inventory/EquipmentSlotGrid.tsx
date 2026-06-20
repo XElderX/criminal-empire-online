@@ -14,6 +14,8 @@ interface EquippedEntry {
 interface EquipmentSlotGridProps {
   slots: string[];
   equipped?: EquippedEntry[];
+  loading?: boolean;
+  onUnequip?: (slot: string) => void;
 }
 
 const SLOT_META: Record<string, { label: string; icon: string; area: string; hint: string }> = {
@@ -50,7 +52,7 @@ const DEFAULT_SLOT_ORDER = [
   'bag',
 ];
 
-export function EquipmentSlotGrid({ slots, equipped = [] }: EquipmentSlotGridProps) {
+export function EquipmentSlotGrid({ slots, equipped = [], loading = false, onUnequip }: EquipmentSlotGridProps) {
   const orderedSlots = normalizeSlots(slots);
 
   return (
@@ -63,18 +65,48 @@ export function EquipmentSlotGrid({ slots, equipped = [] }: EquipmentSlotGridPro
         const item = equipped.find((entry) => entry.equipped_slot === slot);
         const meta = SLOT_META[slot] ?? { label: humanize(slot), icon: '□', area: 'other', hint: 'Gear slot' };
         return (
-          <EquipmentSlotCard item={item} meta={meta} slot={slot} key={slot} />
+          <EquipmentSlotCard item={item} meta={meta} slot={slot} key={slot} loading={loading} onUnequip={onUnequip} />
         );
       })}
     </div>
   );
 }
 
-function EquipmentSlotCard({ item, meta, slot }: { item?: EquippedEntry; meta: { label: string; icon: string; area: string; hint: string }; slot: string }) {
+function EquipmentSlotCard({
+  item,
+  meta,
+  slot,
+  loading,
+  onUnequip,
+}: {
+  item?: EquippedEntry;
+  meta: { label: string; icon: string; area: string; hint: string };
+  slot: string;
+  loading: boolean;
+  onUnequip?: (slot: string) => void;
+}) {
   const [imageSource, setImageSource] = useState(item ? getItemIcon(item.name, item.category || item.class || item.asset_type) : '');
+  const clickable = Boolean(item && onUnequip);
 
   return (
-    <article className={`equipment-slot-card ${item ? 'filled visual-filled' : 'empty'} slot-${meta.area}`}>
+    <article
+      className={`equipment-slot-card ${item ? 'filled visual-filled' : 'empty'} ${clickable ? 'clickable' : ''} ${loading ? 'busy' : ''} slot-${meta.area}`}
+      onClick={() => {
+        if (!item || !onUnequip || loading) return;
+        onUnequip(slot);
+      }}
+      role={clickable ? 'button' : undefined}
+      tabIndex={clickable ? 0 : undefined}
+      aria-disabled={clickable ? loading : undefined}
+      onKeyDown={(event) => {
+        if (!item || !onUnequip || loading) return;
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          onUnequip(slot);
+        }
+      }}
+      title={item ? `Click to unequip ${item.name}` : undefined}
+    >
       {item ? (
         <>
           <div className="slot-item-image">
@@ -82,7 +114,7 @@ function EquipmentSlotCard({ item, meta, slot }: { item?: EquippedEntry; meta: {
           </div>
           <span className="slot-label">{meta.label}</span>
           <strong title={item.name}>{item.name}</strong>
-          <small>{humanize(item.category || item.class || item.asset_type || 'equipped')}</small>
+          <small>{loading ? 'Updating...' : `Click to unequip · ${humanize(item.category || item.class || item.asset_type || 'equipped')}`}</small>
         </>
       ) : (
         <>
