@@ -402,15 +402,18 @@ export interface InventoryAsset {
   visible_illegal?: number | boolean;
   allowed_slots?: string[];
   item_tags?: string[];
-  item_effects?: Record<string, number>;
+  item_effects?: Record<string, number> | string;
+  is_equippable?: number | boolean;
+  is_carryable?: number | boolean;
 }
+
 
 export interface LoadoutSummary {
   character_type: string;
   character_id: number;
   slots: string[];
-  equipped: Array<{ id?: number; equipped_slot?: string; name: string }>;
-  carried: Array<{ name: string; quantity?: number; carry_units?: number }>;
+  equipped: Array<{ id?: number; asset_type?: string; equipped_slot?: string; name: string; category?: string; class?: string; description?: string; image?: string }>;
+  carried: Array<{ id?: number; asset_type?: string; name: string; quantity?: number; carry_units?: number; category?: string; class?: string; description?: string }>;
   carry_capacity_units: number;
   used_carry_units: number;
   scores: Record<string, number>;

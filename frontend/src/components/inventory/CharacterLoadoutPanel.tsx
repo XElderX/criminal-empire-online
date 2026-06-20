@@ -14,9 +14,11 @@ interface CharacterLoadoutPanelProps {
     carry_capacity_units?: number;
     used_carry_units?: number;
   } | null;
+  loading?: boolean;
+  onUnequip?: (slot: string) => void;
 }
 
-export function CharacterLoadoutPanel({ title, loadout }: CharacterLoadoutPanelProps) {
+export function CharacterLoadoutPanel({ title, loadout, loading = false, onUnequip }: CharacterLoadoutPanelProps) {
   const usedCarry = Number(loadout?.used_carry_units ?? 0);
   const maxCarry = Number(loadout?.carry_capacity_units ?? 5);
 
@@ -32,7 +34,7 @@ export function CharacterLoadoutPanel({ title, loadout }: CharacterLoadoutPanelP
       </div>
 
       <div className="loadout-workspace">
-        <EquipmentSlotGrid slots={loadout?.slots ?? []} equipped={loadout?.equipped ?? []} />
+        <EquipmentSlotGrid slots={loadout?.slots ?? []} equipped={loadout?.equipped ?? []} loading={loading} onUnequip={onUnequip} />
         <aside className="loadout-side-panel">
           <CarryInventoryGrid carried={loadout?.carried ?? []} />
           <LoadoutSliders scores={loadout?.scores} />

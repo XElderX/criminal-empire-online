@@ -1,14 +1,16 @@
-# Criminal Empire Online v0.7.1 — UX Cleanup & Loadout Screen Polish
+# Criminal Empire Online v0.7.2 — Inventory Loadout UX & Equipment Visibility Hotfix
 
 This patch builds on **v0.7 — UX Navigation & Inventory Loadout Expansion** and focuses on fixing the rough UI reported during review.
 
-## v0.7.1 highlights
+## v0.7.2 highlights
 
-- Reworked the categorized navigation so groups open as clean dropdown menus instead of ugly always-open inline button rows.
-- Polished the Inventory / Loadouts screen into a real equipment-board layout with a character silhouette, slot cards, carried inventory, and readable loadout sliders.
-- Fixed page tabs so they render as noir pill controls instead of raw grey browser-looking labels.
-- Moved Warehouse storage logs fully into the **Storage Logs** subtab and stopped rendering every warehouse section at once.
-- Reworked the World Map layout so region cards sit in a compact region dock instead of a long awkward side stack under the map.
+- Rebuilt the Inventory / Loadouts **Owned gear** view as polished item cards instead of a raw table plus duplicated cards.
+- Added a clear selected-crew banner and selector so equip/carry actions say exactly which crew member will receive the item.
+- Equipped items now visually appear in the loadout slot board with item thumbnails, including boots, tools, and weapons.
+- Carried items now visually appear in the carried inventory panel with thumbnails and carry-unit text.
+- Item effects now render as readable badges instead of raw JSON/string fragments.
+- Loadout equip now supports both item definitions and owned weapons through the v0.7 loadout endpoint.
+- Heat & Police now renders only the selected subtab; Recent Heat Logs no longer appear as a giant wall on the main page.
 - Preserved v0.7 backend loadout APIs, dirty-money shop payments, map-first shops, tutorial fix, and Street Job NPC assignment requirements.
 
 ## Install/update
