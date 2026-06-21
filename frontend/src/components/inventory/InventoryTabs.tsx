@@ -1,13 +1,11 @@
-export type InventoryTab = 'overview' | 'boss' | 'crew' | 'owned' | 'warehouse' | 'effects' | 'logs';
+export type InventoryTab = 'loadout' | 'owned' | 'warehouse' | 'effects' | 'logs';
 
 const TABS: Array<[InventoryTab, string]> = [
-  ['overview', 'Overview'],
-  ['boss', 'Boss'],
-  ['crew', 'Crew Loadouts'],
-  ['owned', 'Owned Items'],
+  ['loadout', 'Loadout Builder'],
+  ['owned', 'All Owned Items'],
   ['warehouse', 'Storage'],
-  ['effects', 'Effects'],
-  ['logs', 'Logs'],
+  ['effects', 'Item Effects Guide'],
+  ['logs', 'Inventory Logs'],
 ];
 
 export function InventoryTabs({ active, onChange }: { active: InventoryTab; onChange: (tab: InventoryTab) => void }) {

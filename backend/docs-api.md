@@ -1,3 +1,27 @@
+# Criminal Empire Online v0.7.3 API
+
+## v0.7.3 Loadout UX & Carry Inventory Polish
+
+New/updated endpoint:
+
+```text
+GET /api/loadouts/workspace?character_type=boss|crew&character_id=0&selected_slot=tool
+```
+
+Returns the full character-centered loadout builder payload: character list with portraits, selected character dossier, equipped slots, carried inventory, owned item pool with compatibility data, item role guide, warnings, and score context.
+
+Existing loadout endpoints remain compatible:
+
+```text
+GET  /api/loadouts/boss
+GET  /api/loadouts/crew
+GET  /api/loadouts/crew/{id}
+POST /api/loadouts/{characterType}/{characterId}/equip
+POST /api/loadouts/{characterType}/{characterId}/unequip
+POST /api/loadouts/{characterType}/{characterId}/carry
+POST /api/loadouts/{characterType}/{characterId}/drop-or-store
+```
+
 # Criminal Empire Online v0.7.2 API
 
 ## v0.7.2 Inventory Loadout UX & Equipment Visibility Hotfix

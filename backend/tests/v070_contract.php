@@ -79,7 +79,7 @@ $runner->test('Item effects and shop payment services cover balancing rules', fu
 });
 
 $runner->test('Documentation records v0.7 update', function () use ($runner, $docs, $apiDocs): void {
-    foreach (['v0.7.2 — Inventory Loadout UX & Equipment Visibility Hotfix', 'compact categorized navigation', 'equipment slots', 'dirty-money payment', 'GET /api/loadouts/boss'] as $needle) {
+    foreach (['v0.7.3 — Loadout UX & Carry Inventory Polish', 'compact categorized navigation', 'equipment slots', 'dirty-money payment', 'GET /api/loadouts/boss'] as $needle) {
         $runner->assertContains($needle, $docs . $apiDocs);
     }
 });

@@ -1,3 +1,29 @@
+# Criminal Empire Online v0.7.3 — Loadout UX & Carry Inventory Polish
+
+A single-player criminal empire simulation with a custom PHP REST backend, MySQL/MariaDB persistence, and React/Vite frontend.
+
+## v0.7.3 highlights
+
+- Added a character-centered **Loadout Builder** as the default Inventory workspace.
+- Boss and crew/NPC portraits are visible directly in loadout management.
+- Selected character loadout, equipment slots, carried inventory, and owned item pool now live in one working area.
+- Owned items include backend compatibility data: compatible slots, recommended slot, available quantity, currently equipped/carried by whom, and unavailable reasons.
+- Carried inventory is clarified as consumables, tools, task items, and crime-use utility instead of a second equipment panel.
+- Equip, unequip, carry, and remove/store actions are available from the same loadout builder workspace.
+- Loadout warnings, score explanations, item benefits, and tradeoffs are easier to read.
+- Added `GET /api/loadouts/workspace` for the frontend loadout builder.
+- Added v0.7.3 migration/seed metadata for item roles and carried-purpose fields.
+- Preserves v0.7.2 equipment visibility fixes, v0.7 loadout APIs, map shops, tutorial/help, meaningful travel, and Street Job NPC assignment rules.
+
+## Install/update
+
+```bash
+php backend/database/migrate.php
+cd frontend
+npm install
+npm run build
+```
+
 # Criminal Empire Online v0.7.2 — Inventory Loadout UX & Equipment Visibility Hotfix
 
 This patch builds on **v0.7 — UX Navigation & Inventory Loadout Expansion** and focuses on fixing the rough UI reported during review.

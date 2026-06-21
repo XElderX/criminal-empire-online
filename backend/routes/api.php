@@ -169,6 +169,7 @@ $router->get(
     [AuthMiddleware::class]
 );
 $router->get('/api/inventory/logs', [ItemController::class, 'inventoryLogs'], [AuthMiddleware::class]);
+$router->get('/api/loadouts/workspace', [ItemController::class, 'loadoutWorkspace'], [AuthMiddleware::class]);
 $router->get('/api/loadouts/boss', [ItemController::class, 'bossLoadout'], [AuthMiddleware::class]);
 $router->get('/api/loadouts/crew', [ItemController::class, 'crewLoadouts'], [AuthMiddleware::class]);
 $router->get('/api/loadouts/crew/{id}', [ItemController::class, 'crewLoadout'], [AuthMiddleware::class]);

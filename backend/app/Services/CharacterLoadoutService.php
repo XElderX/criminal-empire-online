@@ -17,17 +17,36 @@ final class CharacterLoadoutService
     {
         $statement = Database::pdo()->prepare(
             <<<'SQL'
-                SELECT member.*, npc.first_name, npc.last_name, npc.nickname
+                SELECT
+                    member.*,
+                    npc.first_name,
+                    npc.last_name,
+                    npc.nickname,
+                    npc.gender,
+                    npc.age,
+                    npc.biography,
+                    npc.background,
+                    npc.occupation,
+                    npc.personal_cash,
+                    npc.criminal_reputation,
+                    npc.portrait_set_key,
+                    npc.portrait_stage_cache,
+                    npc.portrait_focal_x,
+                    npc.portrait_focal_y,
+                    territory.name AS territory_name
                 FROM player_gang_members member
                 JOIN npcs npc ON npc.id = member.npc_id
+                LEFT JOIN territories territory ON territory.id = npc.home_territory_id
                 WHERE member.user_id = ? AND member.status != 'dismissed'
                 ORDER BY member.status, member.level DESC, member.id ASC
             SQL
         );
         $statement->execute([$user['id']]);
         $members = [];
+        $presenter = new CrewPresentationService();
         foreach ($statement->fetchAll() as $member) {
-            $members[] = array_merge($member, ['loadout' => $this->forCharacter($user, 'crew', (int) $member['id'])]);
+            $presented = $presenter->present($member);
+            $members[] = array_merge($presented, ['loadout' => $this->forCharacter($user, 'crew', (int) $member['id'])]);
         }
         return ['data' => $members];
     }
@@ -168,6 +187,9 @@ final class CharacterLoadoutService
         (new EquipmentValidationService())->validateCrewMember($user, $characterType, $characterId);
         $item = (new EquipmentValidationService())->lockItem((int) $user['id'], $itemId);
         if ((int) ($item['is_carryable'] ?? 1) !== 1) throw new RuntimeException('This item cannot be carried.');
+        if (!$this->itemCanBeCarriedAsTaskGear($item)) {
+            throw new RuntimeException('This item belongs in an equipment slot, not carried inventory.');
+        }
         $available = (int) ($item['quantity'] ?? 0) - $this->equippedQuantity((int) $user['id'], 'item', (int) $item['item_definition_id']) - $this->carriedQuantity((int) $user['id'], 'item', (int) $item['item_definition_id']);
         if ($available < $quantity) throw new RuntimeException('No available copy of this item is left to carry.');
         $loadout = $this->forCharacter($user, $characterType, $characterId);
@@ -353,6 +375,35 @@ final class CharacterLoadoutService
 
         Database::pdo()->prepare('UPDATE character_carry_items SET quantity = quantity - 1, updated_at = NOW() WHERE id = ?')
             ->execute([(int) $row['id']]);
+    }
+
+    private function itemCanBeCarriedAsTaskGear(array $item): bool
+    {
+        $category = strtolower((string) ($item['category'] ?? ''));
+        $tags = $this->decode($item['item_tags'] ?? []);
+        $effects = array_merge($this->decode($item['effects'] ?? []), $this->decode($item['item_effects'] ?? []));
+
+        if ((int) ($item['is_storage_only'] ?? 0) === 1) {
+            return false;
+        }
+
+        if (in_array($category, ['tool', 'utility', 'stolen_good', 'vehicle_part', 'production_supply', 'general'], true)) {
+            return true;
+        }
+
+        foreach (['medical', 'event_unlock', 'contact_safety', 'low_light', 'task_item', 'entry_tool', 'stealth_entry', 'vehicle_crime'] as $tag) {
+            if (in_array($tag, $tags, true)) {
+                return true;
+            }
+        }
+
+        foreach (['first_aid_event_unlock', 'contact_exposure_reduction', 'vehicle_crime_bonus', 'forced_entry_bonus'] as $effectKey) {
+            if (array_key_exists($effectKey, $effects)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function normalizeAssetRow(array $row): array

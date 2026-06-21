@@ -48,7 +48,7 @@ $runner->test('Heat page renders one active subtab instead of every panel and lo
 });
 
 $runner->test('Documentation records v0.7.2 hotfix', function () use ($runner, $docs): void {
-    foreach (['v0.7.2 — Inventory Loadout UX & Equipment Visibility Hotfix', 'owned gear cards', 'equipped items now visually appear', 'Heat & Police'] as $needle) {
+    foreach (['v0.7.3 — Loadout UX & Carry Inventory Polish', 'owned gear cards', 'equipped items now visually appear', 'Heat & Police'] as $needle) {
         $runner->assertContains($needle, $docs);
     }
 });
