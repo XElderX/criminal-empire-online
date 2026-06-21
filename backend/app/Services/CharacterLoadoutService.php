@@ -81,20 +81,23 @@ final class CharacterLoadoutService
                 }
                 $definitionId = (int) $asset['item_definition_id'];
                 $ownedQuantity = (int) ($asset['quantity'] ?? 0);
+                $carriedForCharacter = $this->carriedQuantityForCharacter((int) $user['id'], $characterType, $characterId, 'item', $definitionId);
             } else {
                 $slot = $this->normalizeWeaponSlot($asset, $slot);
                 $definitionId = (int) $asset['weapon_id'];
                 $ownedQuantity = (int) ($asset['quantity'] ?? 0);
+                $carriedForCharacter = 0;
             }
 
             $equippedQuantity = $this->equippedQuantity((int) $user['id'], $assetType, $definitionId);
+            $carriedQuantity = $this->carriedQuantity((int) $user['id'], $assetType, $definitionId);
             $alreadyThisSlot = $this->equipmentInSlot((int) $user['id'], $characterType, $characterId, $slot);
             if ($alreadyThisSlot && $alreadyThisSlot['asset_type'] === $assetType && (int) $alreadyThisSlot['asset_id'] === $definitionId) {
                 $pdo->commit();
                 return ['message' => "{$asset['name']} is already equipped in {$slot}.", 'loadout' => $this->forCharacter($user, $characterType, $characterId)];
             }
 
-            $available = $ownedQuantity - $equippedQuantity;
+            $available = $ownedQuantity - $equippedQuantity - $carriedQuantity + $carriedForCharacter;
             if ($alreadyThisSlot) {
                 $pdo->prepare('DELETE FROM crew_equipment WHERE id = ? AND user_id = ?')->execute([$alreadyThisSlot['id'], $user['id']]);
                 $available += 1;
@@ -118,6 +121,9 @@ final class CharacterLoadoutService
             ]);
 
             if ($assetType === 'item') {
+                if ($carriedForCharacter > 0) {
+                    $this->removeOneCarriedItem((int) $user['id'], $characterType, $characterId, $definitionId);
+                }
                 $pdo->prepare('UPDATE user_items SET current_location_type = \'equipped\', holder_type = ?, holder_id = ?, equipped_slot = ?, updated_at = NOW() WHERE user_id = ? AND item_definition_id = ?')
                     ->execute([$characterType, $characterId, $slot, $user['id'], $definitionId]);
             }
@@ -316,6 +322,37 @@ final class CharacterLoadoutService
         $statement = Database::pdo()->prepare('SELECT COALESCE(SUM(quantity), 0) FROM character_carry_items WHERE user_id = ? AND asset_type = ? AND asset_id = ?');
         $statement->execute([$userId, $assetType, $assetId]);
         return (int) $statement->fetchColumn();
+    }
+
+    private function carriedQuantityForCharacter(int $userId, string $characterType, int $characterId, string $assetType, int $assetId): int
+    {
+        $statement = Database::pdo()->prepare(
+            'SELECT COALESCE(SUM(quantity), 0) FROM character_carry_items WHERE user_id = ? AND character_type = ? AND character_id = ? AND asset_type = ? AND asset_id = ?'
+        );
+        $statement->execute([$userId, $characterType, $characterId, $assetType, $assetId]);
+
+        return (int) $statement->fetchColumn();
+    }
+
+    private function removeOneCarriedItem(int $userId, string $characterType, int $characterId, int $assetId): void
+    {
+        $statement = Database::pdo()->prepare(
+            'SELECT id, quantity FROM character_carry_items WHERE user_id = ? AND character_type = ? AND character_id = ? AND asset_type = \'item\' AND asset_id = ? LIMIT 1 FOR UPDATE'
+        );
+        $statement->execute([$userId, $characterType, $characterId, $assetId]);
+        $row = $statement->fetch();
+
+        if (!$row) {
+            return;
+        }
+
+        if ((int) $row['quantity'] <= 1) {
+            Database::pdo()->prepare('DELETE FROM character_carry_items WHERE id = ?')->execute([(int) $row['id']]);
+            return;
+        }
+
+        Database::pdo()->prepare('UPDATE character_carry_items SET quantity = quantity - 1, updated_at = NOW() WHERE id = ?')
+            ->execute([(int) $row['id']]);
     }
 
     private function normalizeAssetRow(array $row): array

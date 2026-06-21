@@ -70,4 +70,28 @@ $runner->test('Equipment slot grid supports click-to-unequip interactions', func
     $runner->assertContains('Click to unequip', $gridSource);
 });
 
+$runner->test('Carried inventory supports click-to-equip interactions', function () use ($runner): void {
+    $gridSource = file_get_contents(__DIR__ . '/../../frontend/src/components/inventory/CarryInventoryGrid.tsx');
+    $serviceSource = file_get_contents(__DIR__ . '/../app/Services/CharacterLoadoutService.php');
+    if ($gridSource === false || $serviceSource === false) {
+        $runner->assertTrue(false, 'Unable to read carry inventory sources.');
+    }
+
+    $runner->assertContains('onEquip?: (item: CarryItem) => void;', $gridSource);
+    $runner->assertContains('Click to equip', $gridSource);
+    $runner->assertContains('removeOneCarriedItem', $serviceSource);
+});
+
+$runner->test('Legacy clothing slot items are inferred into modern equipment slots', function () use ($runner): void {
+    $frontendSource = file_get_contents(__DIR__ . '/../../frontend/src/pages/EquipmentPage.tsx');
+    $slotServiceSource = file_get_contents(__DIR__ . '/../app/Services/EquipmentSlotService.php');
+    if ($frontendSource === false || $slotServiceSource === false) {
+        $runner->assertTrue(false, 'Unable to read slot inference sources.');
+    }
+
+    $runner->assertContains("containsAny(haystack, ['boot', 'shoe'])", $frontendSource);
+    $runner->assertContains("containsAny(\$haystack, ['boot', 'shoe'])", $slotServiceSource);
+    $runner->assertContains("\$legacySlot === 'clothing'", $slotServiceSource);
+});
+
 exit($runner->finish());

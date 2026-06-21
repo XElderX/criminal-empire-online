@@ -8,7 +8,19 @@ interface CharacterLoadoutPanelProps {
   loadout?: {
     slots?: string[];
     equipped?: Array<{ equipped_slot?: string; name: string; id?: number }>;
-    carried?: Array<{ name: string; quantity?: number; carry_units?: number }>;
+    carried?: Array<{
+      id?: number;
+      name: string;
+      quantity?: number;
+      carry_units?: number;
+      carry_units_each?: number;
+      category?: string;
+      class?: string;
+      asset_type?: string;
+      equipment_slot?: string;
+      allowed_slots?: string[];
+      is_equippable?: number | boolean;
+    }>;
     scores?: Record<string, number>;
     warnings?: string[];
     carry_capacity_units?: number;
@@ -16,9 +28,22 @@ interface CharacterLoadoutPanelProps {
   } | null;
   loading?: boolean;
   onUnequip?: (slot: string) => void;
+  onEquipCarried?: (item: {
+    id?: number;
+    name: string;
+    quantity?: number;
+    carry_units?: number;
+    carry_units_each?: number;
+    category?: string;
+    class?: string;
+    asset_type?: string;
+    equipment_slot?: string;
+    allowed_slots?: string[];
+    is_equippable?: number | boolean;
+  }) => void;
 }
 
-export function CharacterLoadoutPanel({ title, loadout, loading = false, onUnequip }: CharacterLoadoutPanelProps) {
+export function CharacterLoadoutPanel({ title, loadout, loading = false, onUnequip, onEquipCarried }: CharacterLoadoutPanelProps) {
   const usedCarry = Number(loadout?.used_carry_units ?? 0);
   const maxCarry = Number(loadout?.carry_capacity_units ?? 5);
 
@@ -36,7 +61,7 @@ export function CharacterLoadoutPanel({ title, loadout, loading = false, onUnequ
       <div className="loadout-workspace">
         <EquipmentSlotGrid slots={loadout?.slots ?? []} equipped={loadout?.equipped ?? []} loading={loading} onUnequip={onUnequip} />
         <aside className="loadout-side-panel">
-          <CarryInventoryGrid carried={loadout?.carried ?? []} />
+          <CarryInventoryGrid carried={loadout?.carried ?? []} loading={loading} onEquip={onEquipCarried} />
           <LoadoutSliders scores={loadout?.scores} />
           <LoadoutWarningList warnings={loadout?.warnings} />
         </aside>
