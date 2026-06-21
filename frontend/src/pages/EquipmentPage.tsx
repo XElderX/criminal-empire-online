@@ -18,6 +18,20 @@ interface CrewLoadoutsResponse {
   data: Array<CrewMember & { loadout?: LoadoutSummary }>;
 }
 
+interface CarriedLoadoutAsset {
+  id?: number;
+  name: string;
+  quantity?: number;
+  carry_units?: number;
+  carry_units_each?: number;
+  category?: string;
+  class?: string;
+  asset_type?: string;
+  equipment_slot?: string;
+  allowed_slots?: string[];
+  is_equippable?: number | boolean;
+}
+
 type LoadoutTarget =
   | { type: 'boss'; id: 0 }
   | { type: 'crew'; id: number };
@@ -157,6 +171,44 @@ export function EquipmentPage({ onChanged, onNavigate }: EquipmentPageProps) {
     }
   }
 
+  async function equipCarried(item: CarriedLoadoutAsset): Promise<void> {
+    if (!item.id) {
+      setError('This carried item cannot be equipped right now.');
+      return;
+    }
+
+    setLoading(true);
+    setMessage('');
+    setError('');
+
+    try {
+      const recommendedSlot = getRecommendedSlot({
+        id: item.id,
+        name: item.name,
+        quantity: item.quantity ?? 1,
+        category: item.category,
+        class: item.class,
+        equipment_slot: item.equipment_slot,
+        allowed_slots: item.allowed_slots,
+      }, 'item');
+
+      const response = await api<{ message: string }>(`/loadouts/${selectedTarget.type}/${selectedTarget.id}/equip`, {
+        method: 'POST',
+        body: JSON.stringify({
+          asset_type: item.asset_type || 'item',
+          item_id: item.id,
+          slot: recommendedSlot,
+        }),
+      });
+
+      await refreshAfterLoadoutChange(response.message || `${item.name} equipped to ${selectedTargetName || 'target loadout'}.`);
+    } catch (requestError) {
+      setError((requestError as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   const ownedAssets = useMemo(() => [...inventory.items, ...inventory.weapons], [inventory.items, inventory.weapons]);
 
   return (
@@ -197,7 +249,15 @@ export function EquipmentPage({ onChanged, onNavigate }: EquipmentPageProps) {
         </div>
       )}
 
-      {activeTab === 'boss' && <CharacterLoadoutPanel title="Boss loadout" loadout={bossLoadout} loading={loading} onUnequip={unequip} />}
+      {activeTab === 'boss' && (
+        <CharacterLoadoutPanel
+          title="Boss loadout"
+          loadout={bossLoadout}
+          loading={loading}
+          onUnequip={unequip}
+          onEquipCarried={equipCarried}
+        />
+      )}
 
       {activeTab === 'crew' && (
         <SectionCard>
@@ -212,6 +272,7 @@ export function EquipmentPage({ onChanged, onNavigate }: EquipmentPageProps) {
             loadout={selectedLoadout}
             loading={loading}
             onUnequip={unequip}
+            onEquipCarried={equipCarried}
           />
         </SectionCard>
       )}
@@ -400,9 +461,22 @@ function getRecommendedSlot(asset: InventoryAsset, assetType: 'item' | 'weapon')
   }
   const allowed = Array.isArray(asset.allowed_slots) ? asset.allowed_slots.filter(Boolean) : [];
   if (allowed.length > 0) return allowed[0];
-  const legacySlot = String(asset.equipment_slot || '').trim();
+  const legacySlot = String(asset.equipment_slot || '').trim().toLowerCase();
+  if (['head', 'torso', 'legs', 'boots', 'hands', 'primary_weapon', 'sidearm', 'melee', 'tool', 'utility_1', 'utility_2', 'bag', 'armor', 'disguise'].includes(legacySlot)) {
+    return legacySlot;
+  }
   if (legacySlot === 'weapon') return 'primary_weapon';
-  return legacySlot || 'tool';
+  const haystack = `${String(asset.name || '').toLowerCase()} ${String(asset.category || '').toLowerCase()} ${Array.isArray(asset.item_tags) ? asset.item_tags.join(' ').toLowerCase() : ''}`.trim();
+  if (containsAny(haystack, ['boot', 'shoe'])) return 'boots';
+  if (containsAny(haystack, ['glove'])) return 'hands';
+  if (containsAny(haystack, ['mask', 'beanie', 'cap', 'helmet', 'hat', 'hood', 'face shield'])) return 'head';
+  if (containsAny(haystack, ['vest', 'armor', 'armour', 'protective'])) return 'armor';
+  if (containsAny(haystack, ['pants', 'jeans', 'trouser'])) return 'legs';
+  if (containsAny(haystack, ['bag', 'backpack', 'duffel'])) return 'bag';
+  if (containsAny(haystack, ['crowbar', 'lockpick', 'tool', 'screwdriver'])) return 'tool';
+  if (containsAny(haystack, ['flashlight', 'radio', 'phone', 'med', 'medical', 'kit'])) return 'utility_1';
+  if (legacySlot === 'clothing' || String(asset.category || '').toLowerCase() === 'clothing') return 'torso';
+  return 'tool';
 }
 
 function normalizeEffects(value: unknown): Record<string, number | string> {
@@ -428,6 +502,10 @@ function formatEffectValue(value: string | number): string {
 
 function isIllegal(asset: InventoryAsset): boolean {
   return asset.illegal === true || asset.illegal === 1 || String(asset.legality || '').includes('illegal');
+}
+
+function containsAny(haystack: string, needles: string[]): boolean {
+  return needles.some((needle) => needle !== '' && haystack.includes(needle));
 }
 
 function humanize(value: string): string {

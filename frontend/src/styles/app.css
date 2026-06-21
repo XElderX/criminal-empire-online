@@ -4351,6 +4351,26 @@ small {
   pointer-events: none;
 }
 
+.carry-card.clickable {
+  cursor: pointer;
+}
+
+.carry-card.clickable:hover {
+  border-color: rgba(73, 151, 227, 0.6);
+  box-shadow: 0 0 0 1px rgba(73, 151, 227, 0.22), 0 12px 30px rgba(0, 0, 0, 0.22);
+  transform: translateY(-1px);
+}
+
+.carry-card.clickable:focus-visible {
+  outline: 2px solid rgba(73, 151, 227, 0.9);
+  outline-offset: 2px;
+}
+
+.carry-card.busy {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
 .silhouette-body {
   width: 8.4rem;
   height: 24rem;
