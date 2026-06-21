@@ -4,7 +4,7 @@ namespace App\Config;
 
 final class ShopConfig
 {
-    public const VERSION = '0.7.2';
+    public const VERSION = '0.7.3';
 
     /**
      * Config is the source of truth for what can be sold where.

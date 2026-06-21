@@ -9,6 +9,7 @@ use App\Services\ShopCatalogService;
 use App\Services\InventoryLogService;
 use App\Services\ItemEffectService;
 use App\Services\CharacterLoadoutService;
+use App\Services\LoadoutWorkspaceService;
 use Throwable;
 
 final class ItemController
@@ -66,6 +67,12 @@ final class ItemController
     public function itemEffects(array $params, array $context): void
     {
         Response::json((new ItemEffectService())->definitions());
+    }
+
+
+    public function loadoutWorkspace(array $params, array $context): void
+    {
+        Response::json((new LoadoutWorkspaceService())->workspace($context['user'], $_GET));
     }
 
     public function bossLoadout(array $params, array $context): void

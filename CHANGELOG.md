@@ -1,3 +1,15 @@
+# Criminal Empire Online v0.7.3 — Loadout UX & Carry Inventory Polish
+
+## v0.7.3 highlights
+
+- Reworked Inventory / Loadouts into a portrait-driven Loadout Builder.
+- Added boss/crew character selector cards with status, health, heat, equipped count, carried count, and warning count.
+- Combined selected-character equipment slots, carried inventory, and owned item compatibility pool in one tab.
+- Added item compatibility data and clearer role labels for equipped gear, carry tools, consumables, crime utility, task items, and storage-only items.
+- Added clearer equip/unequip/carry/remove flows without switching away from the selected character.
+- Added backend workspace endpoint and item role/carry-purpose seed metadata.
+- Added v0.7.3 tests and refreshed documentation.
+
 # Criminal Empire Online v0.7.2 — Inventory Loadout UX & Equipment Visibility Hotfix
 
 This patch builds on **v0.7 — UX Navigation & Inventory Loadout Expansion** and focuses on fixing the rough UI reported during review.

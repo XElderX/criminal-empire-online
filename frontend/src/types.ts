@@ -433,6 +433,83 @@ export interface InventoryResponse {
   };
 }
 
+
+export interface LoadoutCharacterSummary {
+  key: string;
+  character_type: 'boss' | 'crew';
+  character_id: number;
+  id: number;
+  npc_id?: number | null;
+  first_name: string;
+  last_name: string;
+  nickname?: string | null;
+  display_name: string;
+  gender?: string | null;
+  age?: number | string | null;
+  role?: CrewRolePresentation | { name: string };
+  role_code?: string;
+  status: string;
+  health: number;
+  max_health: number;
+  morale?: number | null;
+  loyalty?: number | null;
+  personal_heat?: number;
+  portrait?: CrewPortraitData | null;
+  portrait_set_key?: string | null;
+  current_assignment_type?: string | null;
+  current_assignment_id?: number | null;
+  equipped_count: number;
+  carried_count: number;
+  used_carry_units: number;
+  carry_capacity_units: number;
+  loadout_warning_count: number;
+  loadout_status: 'ready' | 'warning' | 'overloaded' | string;
+}
+
+export interface LoadoutWorkspaceItem extends InventoryAsset {
+  asset_type: 'item' | 'weapon';
+  item_role?: string;
+  carry_role?: string;
+  role_label?: string;
+  quantity_available?: number;
+  quantityAvailable?: number;
+  canEquip?: boolean;
+  canCarry?: boolean;
+  canUseForSelectedCharacter?: boolean;
+  compatibleSlots?: string[];
+  compatible_slots?: string[];
+  recommendedSlot?: string | null;
+  recommended_slot?: string | null;
+  selectedSlotCompatible?: boolean;
+  unavailableReason?: string | null;
+  unavailable_reason?: string | null;
+  currentlyEquippedBy?: Array<{ character_type: string; character_id: number; display_name: string; slot?: string }>;
+  currentlyCarriedBy?: Array<{ character_type: string; character_id: number; display_name: string; quantity?: number }>;
+  equippedBySelected?: { equipped_slot?: string; name: string } | null;
+  carriedBySelected?: { quantity?: number; name: string } | null;
+  requiresTransferFromWarehouse?: boolean;
+  isBroken?: boolean;
+  isReserved?: boolean;
+  benefits?: string[];
+  tradeoffs?: string[];
+  carryPurpose?: string;
+}
+
+export interface LoadoutWorkspaceResponse {
+  version: string;
+  selected_slot?: string;
+  characters: LoadoutCharacterSummary[];
+  selected_character: LoadoutCharacterSummary;
+  loadout: LoadoutSummary;
+  owned_items: LoadoutWorkspaceItem[];
+  item_role_guide: Array<{ label: string; description: string }>;
+  warnings: {
+    bonuses: string[];
+    tradeoffs: string[];
+    problems: string[];
+  };
+}
+
 export interface StarterJob {
   opportunity_id: number;
   job_id: number;

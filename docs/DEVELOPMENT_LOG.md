@@ -1,3 +1,15 @@
+## 2026-06-20 — Criminal Empire Online v0.7.3 — Loadout UX & Carry Inventory Polish
+
+- Bumped backend/frontend version metadata to `0.7.3` with release title `Criminal Empire Online v0.7.3 — Loadout UX & Carry Inventory Polish`.
+- Made Loadout Builder the default Inventory workspace.
+- Added portrait-driven boss/crew loadout selection and selected-character dossier cards.
+- Combined equipment slots, carried inventory, and owned item pool into the same loadout workflow.
+- Added owned-item compatibility data for selected character/slot, including recommended slots, unavailable reasons, current holder/carry users, benefits, tradeoffs, and carry purpose.
+- Clarified carried inventory as consumables, task tools, crime utility, loot/task objects, and future quest items rather than another gear-slot panel.
+- Added `GET /api/loadouts/workspace` and `LoadoutWorkspaceService`.
+- Added migration and seeder `020_v073_loadout_ux_carry_inventory_polish` for item roles, carry roles, consumable/task flags, and reservation/task metadata.
+- Added v0.7.3 unit/contract tests.
+
 ## 2026-06-20 — Criminal Empire Online v0.7.2 — Inventory Loadout UX & Equipment Visibility Hotfix
 
 - Bumped backend/frontend version metadata to `0.7.2` with release title `Criminal Empire Online v0.7.2 — Inventory Loadout UX & Equipment Visibility Hotfix`.
