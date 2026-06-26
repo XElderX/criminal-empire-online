@@ -340,14 +340,18 @@ final class QuickCrimeService
                     'run' => $this->hydrateRun($run, $event),
                     'outcome_payload' => (new OutcomePayloadService())->action(
                         'Quick Crimes',
-                        'Quick Crime Event',
-                        'A street event needs your decision before the result is known.',
+                        (string) ($event['title'] ?? 'Quick Crime Event'),
+                        (string) ($event['description'] ?? 'A street event needs your decision before the result is known.'),
                         'warning',
                         'high',
                         [],
                         [[
-                            'label' => 'Choose response',
-                            'description' => 'Pick an event response to resolve the quick crime.'
+                            'label' => 'Choose in modal',
+                            'description' => 'Pick one of the response buttons in this focused report to resolve the quick crime.'
+                        ]],
+                        [[
+                            'label' => 'Decision required',
+                            'kind' => 'warning'
                         ]]
                     ),
                 ];

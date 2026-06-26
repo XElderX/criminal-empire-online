@@ -28,8 +28,8 @@ $baseDistrict = [
     'police_presence' => 45,
 ];
 
-$runner->test('Version is v0.7.4', function () use ($runner): void {
-    $runner->assertSame('0.7.4', GameConfig::VERSION);
+$runner->test('Version is v0.7.4.1', function () use ($runner): void {
+    $runner->assertSame('0.7.4.1', GameConfig::VERSION);
 });
 
 $runner->test('Release title identifies meaningful travel', function () use ($runner): void {

@@ -1,4 +1,13 @@
-# Criminal Empire Online v0.7.4 — Global UX, Notifications & Outcome Focus Polish
+# Criminal Empire Online v0.7.4.1 — Global UX, Notifications & Outcome Focus Polish — Quick Crime Decision Modal Hotfix
+
+## v0.7.4.1 highlights
+
+- Quick Crime street events that require a decision now show the decision choices directly inside the focused outcome modal.
+- Events such as `Target Notices Something` no longer force the player to hunt for the decision card lower on the Crimes page.
+- The modal stays focused while the decision is pending, supports a clear `Decide later` escape path, and replaces itself with the resolved Quick Crime report after a choice is submitted.
+- Decision buttons show labels, descriptions, and effect hints where available.
+- Preserves v0.7.4 global notifications/outcome overlays, v0.7.3 Loadout Builder, map shops, tutorial, travel, and Street Job NPC assignment rules.
+
 
 A single-player criminal empire simulation with a custom PHP REST backend, MySQL/MariaDB persistence, and React/Vite frontend.
 

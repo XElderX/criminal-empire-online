@@ -1,3 +1,12 @@
+## 2026-06-26 — Criminal Empire Online v0.7.4.1 — Global UX, Notifications & Outcome Focus Polish — Quick Crime Decision Modal Hotfix
+
+- Bumped backend/frontend version metadata to `0.7.4.1` with release title `Criminal Empire Online v0.7.4.1 — Global UX, Notifications & Outcome Focus Polish — Quick Crime Decision Modal Hotfix`.
+- Improved the v0.7.4 outcome overlay so Quick Crime runs with pending street events render decision choices directly inside the modal.
+- Added a focused decision panel for events such as `Target Notices Something`, including choice labels, descriptions, and effect hints.
+- The decision panel posts to the existing Quick Crime decision endpoint and lets the global outcome system replace the modal with the resolved report.
+- Added a safe `Decide later` path and kept the page-level active-event card for compatibility.
+- Added v0.7.4.1 tests and updated documentation.
+
 ## 2026-06-26 — Criminal Empire Online v0.7.4 — Global UX, Notifications & Outcome Focus Polish
 
 - Bumped backend/frontend version metadata to `0.7.4` with release title `Criminal Empire Online v0.7.4 — Global UX, Notifications & Outcome Focus Polish`.

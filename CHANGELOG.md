@@ -1,3 +1,12 @@
+# Criminal Empire Online v0.7.4.1 — Global UX, Notifications & Outcome Focus Polish — Quick Crime Decision Modal Hotfix
+
+## v0.7.4.1 highlights
+
+- Quick Crime decision events are now resolved directly from the focused outcome modal.
+- The modal renders street-event choices with descriptions/effect hints and calls the existing `/api/quick-crimes/runs/{id}/decision` endpoint.
+- The report remains focused while a decision is pending and then updates through the existing global notification/outcome system.
+- Added v0.7.4.1 tests and refreshed documentation.
+
 # Criminal Empire Online v0.7.4 — Global UX, Notifications & Outcome Focus Polish
 
 ## v0.7.4 highlights

@@ -5455,3 +5455,90 @@ small {
   .app-tabs, .page-tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: thin; }
   .app-tab-button, .page-tabs button { white-space: nowrap; }
 }
+
+/* v0.7.4.1 Quick Crime decision modal hotfix */
+.outcome-focus-panel.outcome-needs-decision {
+  border-color: rgba(245, 158, 11, 0.55);
+  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.72), 0 0 0 1px rgba(245, 158, 11, 0.24) inset;
+}
+
+.outcome-decision-panel {
+  margin: 1rem 0;
+  padding: 1rem;
+  border: 1px solid rgba(245, 158, 11, 0.34);
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(120, 53, 15, 0.34), rgba(15, 23, 42, 0.76));
+}
+
+.decision-panel-heading {
+  display: grid;
+  gap: 0.35rem;
+  margin-bottom: 0.9rem;
+}
+
+.decision-panel-heading strong {
+  color: var(--text-strong, #f8fafc);
+  font-size: 1.02rem;
+}
+
+.decision-panel-heading p {
+  margin: 0;
+  color: var(--text-muted, #94a3b8);
+}
+
+.outcome-decision-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 0.75rem;
+}
+
+.outcome-decision-choice {
+  display: grid;
+  gap: 0.35rem;
+  min-height: 112px;
+  padding: 0.95rem;
+  text-align: left;
+  border: 1px solid rgba(148, 163, 184, 0.26);
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.82);
+  color: inherit;
+  cursor: pointer;
+  transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+}
+
+.outcome-decision-choice:hover:not(:disabled),
+.outcome-decision-choice:focus-visible:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: rgba(245, 158, 11, 0.7);
+  background: rgba(30, 41, 59, 0.92);
+  outline: none;
+}
+
+.outcome-decision-choice:disabled {
+  opacity: 0.64;
+  cursor: wait;
+}
+
+.outcome-decision-choice strong {
+  color: var(--text-strong, #f8fafc);
+}
+
+.outcome-decision-choice span {
+  color: var(--text-muted, #94a3b8);
+  line-height: 1.35;
+}
+
+.outcome-decision-choice em {
+  color: #facc15;
+  font-style: normal;
+  font-size: 0.78rem;
+  text-transform: capitalize;
+}
+
+.decision-error {
+  padding: 0.7rem 0.8rem;
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  border-radius: 12px;
+  background: rgba(127, 29, 29, 0.35);
+  color: #fecaca;
+}

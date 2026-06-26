@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { api } from '../../api/client';
 import { buildOutcomeFromApiResponse, normalizeOutcome } from './outcomeAdapter';
 import type { ActionOutcome, NotificationEntry, NotificationPriority, NotificationType } from './types';
 
@@ -225,8 +226,11 @@ function OutcomeFocusOverlay({ outcome, onDismiss }: { outcome: ActionOutcome; o
   const badges = normalizedOutcome.badges || [];
   const sections = normalizedOutcome.sections || [];
   const nextActions = normalizedOutcome.nextActions || [];
+  const quickDecision = quickCrimeDecisionContext(normalizedOutcome);
   const dialogRef = useRef<HTMLDivElement | null>(null);
-  const dismissible = normalizedOutcome.dismissible !== false && normalizedOutcome.priority !== 'critical';
+  const [decisionBusy, setDecisionBusy] = useState<string>('');
+  const [decisionError, setDecisionError] = useState<string>('');
+  const dismissible = normalizedOutcome.dismissible !== false && normalizedOutcome.priority !== 'critical' && !quickDecision;
 
   useEffect(() => {
     dialogRef.current?.focus();
@@ -237,6 +241,23 @@ function OutcomeFocusOverlay({ outcome, onDismiss }: { outcome: ActionOutcome; o
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [dismissible, onDismiss]);
 
+  async function submitQuickDecision(choiceCode: string): Promise<void> {
+    if (!quickDecision || decisionBusy) return;
+
+    setDecisionBusy(choiceCode);
+    setDecisionError('');
+    try {
+      await api(`/quick-crimes/runs/${quickDecision.runId}/decision`, {
+        method: 'POST',
+        body: JSON.stringify({ decision_code: choiceCode }),
+      });
+    } catch (error) {
+      setDecisionError((error as Error).message);
+    } finally {
+      setDecisionBusy('');
+    }
+  }
+
   return (
     <div
       className={`outcome-backdrop priority-${normalizedOutcome.priority}`}
@@ -245,7 +266,7 @@ function OutcomeFocusOverlay({ outcome, onDismiss }: { outcome: ActionOutcome; o
       }}
     >
       <section
-        className={`outcome-focus-panel outcome-${normalizedOutcome.type}`}
+        className={`outcome-focus-panel outcome-${normalizedOutcome.type} ${quickDecision ? 'outcome-needs-decision' : ''}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="outcome-focus-title"
@@ -255,8 +276,8 @@ function OutcomeFocusOverlay({ outcome, onDismiss }: { outcome: ActionOutcome; o
         <div className="outcome-panel-header">
           <div>
             <p className="eyebrow">{normalizedOutcome.source || 'Action report'}</p>
-            <h2 id="outcome-focus-title">{normalizedOutcome.title}</h2>
-            <p>{normalizedOutcome.message}</p>
+            <h2 id="outcome-focus-title">{quickDecision?.title || normalizedOutcome.title}</h2>
+            <p>{quickDecision?.description || normalizedOutcome.message}</p>
           </div>
           <OutcomeBadge type={normalizedOutcome.type} priority={normalizedOutcome.priority} />
         </div>
@@ -265,6 +286,32 @@ function OutcomeFocusOverlay({ outcome, onDismiss }: { outcome: ActionOutcome; o
           <div className="outcome-badge-row">
             {badges.map((badge) => <span className={`outcome-chip ${badge.kind || 'info'}`} key={`${badge.label}-${badge.value}`}>{badge.label}{badge.value ? ` ${badge.value}` : ''}</span>)}
           </div>
+        )}
+
+        {quickDecision && (
+          <section className="outcome-decision-panel" aria-label="Quick crime decision required">
+            <div className="decision-panel-heading">
+              <span className="outcome-chip warning">Decision required</span>
+              <strong>Choose how to handle this street event.</strong>
+              <p>Resolve it here to reveal the Quick Crime result. The report will update after your choice.</p>
+            </div>
+            {decisionError && <p className="decision-error">{decisionError}</p>}
+            <div className="outcome-decision-grid">
+              {quickDecision.choices.map((choice) => (
+                <button
+                  key={choice.code}
+                  type="button"
+                  className="outcome-decision-choice"
+                  disabled={decisionBusy !== ''}
+                  onClick={() => void submitQuickDecision(choice.code)}
+                >
+                  <strong>{decisionBusy === choice.code ? 'Resolving…' : choice.label}</strong>
+                  {choice.description && <span>{choice.description}</span>}
+                  {choice.effects.length > 0 && <em>{choice.effects.join(' · ')}</em>}
+                </button>
+              ))}
+            </div>
+          </section>
         )}
 
         <div className="outcome-section-grid">
@@ -278,7 +325,7 @@ function OutcomeFocusOverlay({ outcome, onDismiss }: { outcome: ActionOutcome; o
           ))}
         </div>
 
-        {nextActions.length > 0 && (
+        {nextActions.length > 0 && !quickDecision && (
           <div className="next-action-grid">
             {nextActions.map((action) => (
               <div className="next-action-card" key={action.label}>
@@ -290,12 +337,69 @@ function OutcomeFocusOverlay({ outcome, onDismiss }: { outcome: ActionOutcome; o
         )}
 
         <div className="outcome-footer">
-          <button className="btn primary" type="button" onClick={onDismiss}>{normalizedOutcome.priority === 'critical' ? 'Continue' : 'Close report'}</button>
+          <button className="btn primary" type="button" disabled={decisionBusy !== ''} onClick={onDismiss}>
+            {quickDecision ? 'Decide later' : (normalizedOutcome.priority === 'critical' ? 'Continue' : 'Close report')}
+          </button>
+          {quickDecision && <small>This report stays focused until you choose or decide later.</small>}
           {dismissible && <small>Press Escape or click outside to dismiss.</small>}
         </div>
       </section>
     </div>
   );
+}
+
+
+interface QuickCrimeDecisionChoice {
+  code: string;
+  label: string;
+  description?: string;
+  effects: string[];
+}
+
+interface QuickCrimeDecisionContext {
+  runId: number;
+  title: string;
+  description: string;
+  choices: QuickCrimeDecisionChoice[];
+}
+
+function quickCrimeDecisionContext(outcome: ActionOutcome): QuickCrimeDecisionContext | null {
+  const raw = isRecord(outcome.raw) ? outcome.raw : null;
+  const run = isRecord(raw?.run) ? raw.run : null;
+  const event = isRecord(run?.event) ? run.event : null;
+  const choices = Array.isArray(event?.choices) ? event.choices.filter(isRecord) : [];
+  const status = String(run?.status || '').toLowerCase();
+
+  if (!run || !event || choices.length === 0 || status !== 'awaiting_decision') {
+    return null;
+  }
+
+  return {
+    runId: Number(run.id),
+    title: String(event.title || 'Street Event Needs a Decision'),
+    description: String(event.description || outcome.message || 'Choose how to handle this quick crime event.'),
+    choices: choices.map((choice) => ({
+      code: String(choice.code || ''),
+      label: String(choice.label || choice.code || 'Choose response'),
+      description: choice.description ? String(choice.description) : undefined,
+      effects: formatDecisionEffects(isRecord(choice.effects) ? choice.effects : {}),
+    })).filter((choice) => choice.code),
+  };
+}
+
+function formatDecisionEffects(effects: Record<string, unknown>): string[] {
+  return Object.entries(effects)
+    .map(([key, value]) => {
+      const num = Number(value);
+      if (!Number.isFinite(num) || num === 0) return '';
+      const label = key.replace(/_/g, ' ');
+      return `${label} ${num > 0 ? '+' : ''}${num}`;
+    })
+    .filter(Boolean);
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 function OutcomeBadge({ type, priority }: { type: NotificationType; priority: NotificationPriority }) {

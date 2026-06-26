@@ -1,4 +1,21 @@
-# Criminal Empire Online v0.7.4 API
+# Criminal Empire Online v0.7.4.1 API
+
+## v0.7.4.1 Quick Crime Decision Modal Hotfix
+
+Quick Crime start responses that include `run.status = awaiting_decision` and `run.event.choices` are now consumed by the frontend outcome overlay. The existing decision endpoint remains unchanged:
+
+```http
+POST /api/quick-crimes/runs/{id}/decision
+```
+
+Request body:
+
+```json
+{ "decision_code": "stay_calm" }
+```
+
+The response still returns the resolved `run` and structured `outcome_payload`, which drives the final focused result report.
+
 
 ## v0.7.4 Global UX, Notifications & Outcome Focus Polish
 
