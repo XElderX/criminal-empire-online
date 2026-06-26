@@ -4,8 +4,8 @@ namespace App\Config;
 
 final class GameConfig
 {
-    public const VERSION = '0.7.3';
-    public const RELEASE_TITLE = 'Criminal Empire Online v0.7.3 — Loadout UX & Carry Inventory Polish';
+    public const VERSION = '0.7.4';
+    public const RELEASE_TITLE = 'Criminal Empire Online v0.7.4 — Global UX, Notifications & Outcome Focus Polish';
 
     public const STARTING_CASH = 500;
     public const STARTING_BANK_CASH = 0;

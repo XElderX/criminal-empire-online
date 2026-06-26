@@ -63,6 +63,15 @@ final class CrimeService
             'reward' => $reward,
             'heat_gained' => (int)$crime['heat_gain'],
             'cooldown_seconds' => self::FALLBACK_STREET_ACTION_COOLDOWN_SECONDS,
+            'outcome_payload' => (new OutcomePayloadService())->crime(
+                (string) $crime['name'],
+                [
+                    'success' => $success,
+                    'reward' => $reward,
+                    'heat_gained' => (int) $crime['heat_gain'],
+                ],
+                $success ? 'Street action succeeded.' : 'Street action failed.'
+            ),
         ];
     }
 }

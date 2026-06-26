@@ -180,6 +180,22 @@ final class TravelService
             'exploration' => $exploration,
             'currentLocation' => $travel['currentLocation'],
             'updatedPlayerStats' => $travel['updatedPlayerStats'],
+            'outcome_payload' => (new OutcomePayloadService())->action(
+                'World Map',
+                'Travel & Explore Report',
+                $travel['message'] . ' ' . $exploration['message'],
+                'travel',
+                'high',
+                [
+                    'cash' => -1 * (int) ($travel['costs']['cash'] ?? 0),
+                    'energy' => -1 * (int) ($travel['costs']['energy'] ?? 0),
+                    'heat' => (int) ($travel['heatChange'] ?? 0),
+                ],
+                [[
+                    'label' => 'Use the lead',
+                    'description' => 'Check nearby local actions and map opportunities.'
+                ]]
+            ),
         ];
     }
 
@@ -301,6 +317,12 @@ final class TravelService
                 'heat' => max(0, (int) ($freshUser['heat'] ?? 0) + $heatDelta),
             ],
             'possibleActions' => (new WorldMapService())->activityLinks((int) $location['id']),
+            'outcome_payload' => (new OutcomePayloadService())->travel([
+                'message' => $message,
+                'event' => $event,
+                'costs' => $costs,
+                'heatChange' => $heatDelta,
+            ]),
         ];
     }
 

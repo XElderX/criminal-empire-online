@@ -8,12 +8,12 @@ use Tests\TestRunner;
 
 $runner = new TestRunner();
 
-$runner->test('Version is v0.7.3', function () use ($runner): void {
-    $runner->assertSame('0.7.3', GameConfig::VERSION);
+$runner->test('Version is v0.7.4', function () use ($runner): void {
+    $runner->assertSame('0.7.4', GameConfig::VERSION);
 });
 
 $runner->test('Release title identifies world tutorial update', function () use ($runner): void {
-    $runner->assertContains('Loadout UX & Carry Inventory Polish', GameConfig::RELEASE_TITLE);
+    $runner->assertContains('Global UX, Notifications & Outcome Focus Polish', GameConfig::RELEASE_TITLE);
 });
 
 $runner->test('Full tutorial contains twenty guided steps', function () use ($runner): void {

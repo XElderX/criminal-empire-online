@@ -328,6 +328,15 @@ final class JobService
                 'message' => 'Job started.',
                 'job_run_id' => $runId,
                 'duration_seconds' => $duration,
+                'outcome_payload' => (new OutcomePayloadService())->action(
+                    'Street Jobs',
+                    'Street Job Started',
+                    'A crew member is working this job now.',
+                    'info',
+                    'medium',
+                    ['energy' => -1 * (int) $job['energy_cost']],
+                    [['label' => 'Wait for completion', 'description' => 'Return when the timer ends to collect or resolve the job.']]
+                ),
             ];
         } catch (Throwable $exception) {
             if ($pdo->inTransaction()) {
@@ -468,6 +477,19 @@ final class JobService
                 'reward' => $reward,
                 'heat_gained' => $heat,
                 'success_chance' => $successChance,
+                'outcome_payload' => (new OutcomePayloadService())->action(
+                    'Street Jobs',
+                    $success ? 'Street Job Complete' : 'Street Job Failed',
+                    $success ? 'The assigned crew finished the job.' : 'The job went wrong and heat increased.',
+                    $success ? 'reward' : 'danger',
+                    'high',
+                    [
+                        'cash' => $reward,
+                        'heat' => $heat,
+                        'xp' => (int) $run['experience_gain'],
+                    ],
+                    [['label' => 'Review crew', 'description' => 'Check crew heat and status after the result.']]
+                ),
             ];
         } catch (Throwable $exception) {
             if ($pdo->inTransaction()) {

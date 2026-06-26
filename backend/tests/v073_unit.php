@@ -9,12 +9,12 @@ use Tests\TestRunner;
 $runner = new TestRunner();
 $root = dirname(__DIR__, 2);
 
-$runner->test('Version is v0.7.3', function () use ($runner): void {
-    $runner->assertSame('0.7.3', GameConfig::VERSION);
+$runner->test('Version is v0.7.4', function () use ($runner): void {
+    $runner->assertSame('0.7.4', GameConfig::VERSION);
 });
 
 $runner->test('Release title identifies loadout UX carry polish', function () use ($runner): void {
-    $runner->assertContains('Loadout UX & Carry Inventory Polish', GameConfig::RELEASE_TITLE);
+    $runner->assertContains('Global UX, Notifications & Outcome Focus Polish', GameConfig::RELEASE_TITLE);
 });
 
 $runner->test('Loadout workspace service returns character-centered fields', function () use ($runner): void {

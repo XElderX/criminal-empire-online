@@ -338,6 +338,18 @@ final class QuickCrimeService
                 return [
                     'message' => 'Quick crime started, but a street event needs a decision.',
                     'run' => $this->hydrateRun($run, $event),
+                    'outcome_payload' => (new OutcomePayloadService())->action(
+                        'Quick Crimes',
+                        'Quick Crime Event',
+                        'A street event needs your decision before the result is known.',
+                        'warning',
+                        'high',
+                        [],
+                        [[
+                            'label' => 'Choose response',
+                            'description' => 'Pick an event response to resolve the quick crime.'
+                        ]]
+                    ),
                 ];
             }
 
@@ -347,6 +359,7 @@ final class QuickCrimeService
             return [
                 'message' => 'Quick crime resolved.',
                 'run' => $result,
+                'outcome_payload' => (new OutcomePayloadService())->crime('Quick Crime', $result, $result['result_text'] ?? 'Quick crime resolved.'),
             ];
         } catch (Throwable $exception) {
             $pdo->rollBack();
@@ -418,6 +431,7 @@ final class QuickCrimeService
             return [
                 'message' => 'Quick crime event resolved.',
                 'run' => $result,
+                'outcome_payload' => (new OutcomePayloadService())->crime('Quick Crime', $result, $result['result_text'] ?? 'Quick crime event resolved.'),
             ];
         } catch (Throwable $exception) {
             $pdo->rollBack();
@@ -467,6 +481,7 @@ final class QuickCrimeService
             return [
                 'message' => 'Quick crime resolved.',
                 'run' => $result,
+                'outcome_payload' => (new OutcomePayloadService())->crime('Quick Crime', $result, $result['result_text'] ?? 'Quick crime resolved.'),
             ];
         } catch (Throwable $exception) {
             $pdo->rollBack();
