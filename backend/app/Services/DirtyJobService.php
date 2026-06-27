@@ -1092,6 +1092,14 @@ final class DirtyJobService
             'crew_consequences' => $crewConsequences,
             'equipment_consequences' => $equipmentConsequences,
             'estimated_success_chance' => $calculation['success_chance'],
+            'outcome_payload' => (new OutcomePayloadService())->dirtyJob([
+                'outcome' => $outcome,
+                'result_text' => $resultText,
+                'cash_reward' => $cashReward,
+                'dirty_cash_reward' => $dirtyCashReward,
+                'heat_gained' => $calculation['heat'],
+                'experience_gained' => $experience,
+            ]),
         ];
     }
 

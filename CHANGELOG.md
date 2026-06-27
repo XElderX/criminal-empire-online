@@ -1,3 +1,24 @@
+# Criminal Empire Online v0.7.4.1 — Global UX, Notifications & Outcome Focus Polish — Quick Crime Decision Modal Hotfix
+
+## v0.7.4.1 highlights
+
+- Quick Crime decision events are now resolved directly from the focused outcome modal.
+- The modal renders street-event choices with descriptions/effect hints and calls the existing `/api/quick-crimes/runs/{id}/decision` endpoint.
+- The report remains focused while a decision is pending and then updates through the existing global notification/outcome system.
+- Added v0.7.4.1 tests and refreshed documentation.
+
+# Criminal Empire Online v0.7.4 — Global UX, Notifications & Outcome Focus Polish
+
+## v0.7.4 highlights
+
+- Added global notifications, toast messages, notification drawer, notification bell, and outcome focus reports.
+- Added dimmed important action reports for crime, quick crime, dirty job, travel/explore, shop, inventory/loadout, heat, and police-style outcomes.
+- Added reusable `AppTabs`, loading, empty, error, warning, stat delta, next-action, and outcome badge components.
+- Added frontend API notification adapter so structured action responses become consistent reports.
+- Added backend `OutcomePayloadService` and structured outcome payloads for key action responses.
+- Improved accessibility with dialog role, focus management, Escape close, click-outside dismiss for safe reports, and aria-live notification announcements.
+- Added v0.7.4 tests and refreshed documentation.
+
 # Criminal Empire Online v0.7.3 — Loadout UX & Carry Inventory Polish
 
 ## v0.7.3 highlights

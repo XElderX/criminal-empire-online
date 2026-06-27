@@ -1,3 +1,5 @@
+import { AppTabs } from '../ui/AppTabs';
+
 export type InventoryTab = 'loadout' | 'owned' | 'warehouse' | 'effects' | 'logs';
 
 const TABS: Array<[InventoryTab, string]> = [
@@ -10,12 +12,11 @@ const TABS: Array<[InventoryTab, string]> = [
 
 export function InventoryTabs({ active, onChange }: { active: InventoryTab; onChange: (tab: InventoryTab) => void }) {
   return (
-    <div className="page-tabs inventory-tabs" role="tablist" aria-label="Inventory sections">
-      {TABS.map(([key, label]) => (
-        <button type="button" key={key} className={active === key ? 'active' : ''} onClick={() => onChange(key)}>
-          {label}
-        </button>
-      ))}
-    </div>
+    <AppTabs
+      tabs={TABS.map(([key, label]) => ({ key, label }))}
+      active={active}
+      onChange={onChange}
+      ariaLabel="Inventory sections"
+    />
   );
 }

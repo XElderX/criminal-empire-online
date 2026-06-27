@@ -100,7 +100,7 @@ export function HeatPolicePage({ onChanged }: HeatPolicePageProps) {
   if (!overview) {
     return (
       <section className="page-section heat-page">
-        <GameHeader eyebrow="v0.7.3 heat command" title="Heat & Police" description="Loading boss, gang, crew, district heat, and active investigations…" />
+        <GameHeader eyebrow="v0.7.4.1 heat command" title="Heat & Police" description="Loading boss, gang, crew, district heat, and active investigations…" />
         {error && <Notice message={error} kind="error" />}
       </section>
     );

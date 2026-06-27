@@ -1,19 +1,26 @@
-# Criminal Empire Online v0.7.3 — Loadout UX & Carry Inventory Polish
+# Criminal Empire Online v0.7.4.1 — Global UX, Notifications & Outcome Focus Polish — Quick Crime Decision Modal Hotfix
+
+## v0.7.4.1 highlights
+
+- Quick Crime street events that require a decision now show the decision choices directly inside the focused outcome modal.
+- Events such as `Target Notices Something` no longer force the player to hunt for the decision card lower on the Crimes page.
+- The modal stays focused while the decision is pending, supports a clear `Decide later` escape path, and replaces itself with the resolved Quick Crime report after a choice is submitted.
+- Decision buttons show labels, descriptions, and effect hints where available.
+- Preserves v0.7.4 global notifications/outcome overlays, v0.7.3 Loadout Builder, map shops, tutorial, travel, and Street Job NPC assignment rules.
+
 
 A single-player criminal empire simulation with a custom PHP REST backend, MySQL/MariaDB persistence, and React/Vite frontend.
 
-## v0.7.3 highlights
+## v0.7.4 highlights
 
-- Added a character-centered **Loadout Builder** as the default Inventory workspace.
-- Boss and crew/NPC portraits are visible directly in loadout management.
-- Selected character loadout, equipment slots, carried inventory, and owned item pool now live in one working area.
-- Owned items include backend compatibility data: compatible slots, recommended slot, available quantity, currently equipped/carried by whom, and unavailable reasons.
-- Carried inventory is clarified as consumables, tools, task items, and crime-use utility instead of a second equipment panel.
-- Equip, unequip, carry, and remove/store actions are available from the same loadout builder workspace.
-- Loadout warnings, score explanations, item benefits, and tradeoffs are easier to read.
-- Added `GET /api/loadouts/workspace` for the frontend loadout builder.
-- Added v0.7.3 migration/seed metadata for item roles and carried-purpose fields.
-- Preserves v0.7.2 equipment visibility fixes, v0.7 loadout APIs, map shops, tutorial/help, meaningful travel, and Street Job NPC assignment rules.
+- Added a centralized frontend notification system with toast messages, notification bell, notification drawer, unread/read state, and session-level recent event history.
+- Added focused outcome reports with dimmed background for high-priority actions such as crimes, quick crimes, dirty jobs, travel events, shop transactions, and important loadout changes.
+- Added reusable UX components for consistent tabs, loading skeletons, polished empty/error states, warning callouts, stat deltas, next-action cards, and outcome badges.
+- API actions now emit structured `outcome_payload` / `notification_payload` style data where practical, while preserving existing response fields for compatibility.
+- The frontend API adapter converts action responses into notifications/reports so results answer what happened, what changed, and what to do next.
+- Important reports support click-outside dismiss, Escape key dismiss for non-critical reports, and accessible dialog semantics.
+- Tabs now share an `AppTabs` component so Inventory, logs, and future tabbed pages can use consistent noir controls.
+- Preserves v0.7.3 Loadout Builder, v0.7.2 equipment visibility fixes, v0.7 dirty-money payments/log pagination, map shops, tutorial/help, meaningful travel, and Street Job NPC assignment rules.
 
 ## Install/update
 
@@ -23,6 +30,17 @@ cd frontend
 npm install
 npm run build
 ```
+
+# Criminal Empire Online v0.7.3 — Loadout UX & Carry Inventory Polish
+
+## v0.7.3 highlights
+
+- Added a character-centered **Loadout Builder** as the default Inventory workspace.
+- Boss and crew/NPC portraits are visible directly in loadout management.
+- Selected character loadout, equipment slots, carried inventory, and owned item pool live in one working area.
+- Owned items include backend compatibility data and clearer item roles.
+- Carried inventory is clarified as consumables, tools, task items, and crime-use utility.
+- Added `GET /api/loadouts/workspace` for the frontend loadout builder.
 
 # Criminal Empire Online v0.7.2 — Inventory Loadout UX & Equipment Visibility Hotfix
 

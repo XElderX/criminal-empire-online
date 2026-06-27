@@ -1,3 +1,65 @@
+# Criminal Empire Online v0.7.4.1 API
+
+## v0.7.4.1 Quick Crime Decision Modal Hotfix
+
+Quick Crime start responses that include `run.status = awaiting_decision` and `run.event.choices` are now consumed by the frontend outcome overlay. The existing decision endpoint remains unchanged:
+
+```http
+POST /api/quick-crimes/runs/{id}/decision
+```
+
+Request body:
+
+```json
+{ "decision_code": "stay_calm" }
+```
+
+The response still returns the resolved `run` and structured `outcome_payload`, which drives the final focused result report.
+
+
+## v0.7.4 Global UX, Notifications & Outcome Focus Polish
+
+Key action responses now preserve existing fields and may also include a structured `outcome_payload` suitable for the frontend notification/outcome system.
+
+Example shape:
+
+```json
+{
+  "message": "Quick crime resolved.",
+  "run": {},
+  "outcome_payload": {
+    "type": "reward",
+    "priority": "high",
+    "title": "Quick Crime — Success",
+    "message": "What happened in clear language.",
+    "source": "Quick Crimes",
+    "badges": [],
+    "sections": [],
+    "next_actions": []
+  }
+}
+```
+
+Updated action categories include:
+
+```text
+POST /api/quick-crimes/{id}/start
+POST /api/quick-crimes/runs/{id}/decision
+POST /api/quick-crimes/runs/{id}/resolve
+POST /api/crimes/{id}/commit
+POST /api/dirty-job-runs/{id}/resolve
+POST /api/world-map/travel
+POST /api/world-map/travel-and-explore
+POST /api/shops/{slug}/buy
+POST /api/shops/{slug}/sell
+POST /api/loadouts/{characterType}/{characterId}/equip
+POST /api/loadouts/{characterType}/{characterId}/unequip
+POST /api/loadouts/{characterType}/{characterId}/carry
+POST /api/loadouts/{characterType}/{characterId}/drop-or-store
+```
+
+The global notification system uses frontend-only session notifications are exposed through the React `NotificationProvider`, not a separate backend persistence table in this patch. Existing server logs remain the recoverable history source.
+
 # Criminal Empire Online v0.7.3 API
 
 ## v0.7.3 Loadout UX & Carry Inventory Polish
@@ -10,17 +72,7 @@ GET /api/loadouts/workspace?character_type=boss|crew&character_id=0&selected_slo
 
 Returns the full character-centered loadout builder payload: character list with portraits, selected character dossier, equipped slots, carried inventory, owned item pool with compatibility data, item role guide, warnings, and score context.
 
-Existing loadout endpoints remain compatible:
-
-```text
-GET  /api/loadouts/boss
-GET  /api/loadouts/crew
-GET  /api/loadouts/crew/{id}
-POST /api/loadouts/{characterType}/{characterId}/equip
-POST /api/loadouts/{characterType}/{characterId}/unequip
-POST /api/loadouts/{characterType}/{characterId}/carry
-POST /api/loadouts/{characterType}/{characterId}/drop-or-store
-```
+Existing loadout endpoints remain compatible.
 
 # Criminal Empire Online v0.7.2 API
 

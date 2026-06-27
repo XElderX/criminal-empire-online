@@ -113,7 +113,11 @@ final class CharacterLoadoutService
             $alreadyThisSlot = $this->equipmentInSlot((int) $user['id'], $characterType, $characterId, $slot);
             if ($alreadyThisSlot && $alreadyThisSlot['asset_type'] === $assetType && (int) $alreadyThisSlot['asset_id'] === $definitionId) {
                 $pdo->commit();
-                return ['message' => "{$asset['name']} is already equipped in {$slot}.", 'loadout' => $this->forCharacter($user, $characterType, $characterId)];
+                return [
+                    'message' => "{$asset['name']} is already equipped in {$slot}.",
+                    'loadout' => $this->forCharacter($user, $characterType, $characterId),
+                    'outcome_payload' => (new OutcomePayloadService())->action('Inventory / Loadouts', 'Gear already equipped', "{$asset['name']} is already equipped in {$slot}.", 'item', 'medium'),
+                ];
             }
 
             $available = $ownedQuantity - $equippedQuantity - $carriedQuantity + $carriedForCharacter;
@@ -156,7 +160,22 @@ final class CharacterLoadoutService
                 'to_holder' => $slot,
             ]);
             $pdo->commit();
-            return ['message' => "{$asset['name']} equipped to {$slot}.", 'loadout' => $this->forCharacter($user, $characterType, $characterId)];
+            return [
+                'message' => "{$asset['name']} equipped to {$slot}.",
+                'loadout' => $this->forCharacter($user, $characterType, $characterId),
+                'outcome_payload' => (new OutcomePayloadService())->action(
+                    'Inventory / Loadouts',
+                    'Gear equipped',
+                    "{$asset['name']} equipped to {$slot}.",
+                    'item',
+                    'medium',
+                    [],
+                    [[
+                        'label' => 'Review sliders',
+                        'description' => 'Check stealth, suspicion, protection, and utility after gear changes.'
+                    ]]
+                ),
+            ];
         } catch (Throwable $exception) {
             if ($pdo->inTransaction()) $pdo->rollBack();
             throw $exception;
@@ -178,7 +197,11 @@ final class CharacterLoadoutService
         (new InventoryLogService())->record((int) $user['id'], 'unequip', "Unequipped {$slot} from {$characterType} {$characterId}.", [
             'character_type' => $characterType, 'character_id' => $characterId, 'from_holder' => $slot,
         ]);
-        return ['message' => 'Item unequipped.', 'loadout' => $this->forCharacter($user, $characterType, $characterId)];
+        return [
+            'message' => 'Item unequipped.',
+            'loadout' => $this->forCharacter($user, $characterType, $characterId),
+            'outcome_payload' => (new OutcomePayloadService())->action('Inventory / Loadouts', 'Gear unequipped', 'Item returned to owned inventory.', 'item', 'medium'),
+        ];
     }
 
     public function carry(array $user, string $characterType, int $characterId, int $itemId, int $quantity): array
@@ -209,7 +232,22 @@ final class CharacterLoadoutService
         (new InventoryLogService())->record((int) $user['id'], 'carry', "Assigned {$item['name']} to carried inventory.", [
             'character_type' => $characterType, 'character_id' => $characterId, 'asset_type' => 'item', 'asset_id' => $item['item_definition_id'], 'quantity' => $quantity,
         ]);
-        return ['message' => "{$item['name']} carried by {$characterType} {$characterId}.", 'loadout' => $this->forCharacter($user, $characterType, $characterId)];
+        return [
+            'message' => "{$item['name']} carried by {$characterType} {$characterId}.",
+            'loadout' => $this->forCharacter($user, $characterType, $characterId),
+            'outcome_payload' => (new OutcomePayloadService())->action(
+                'Inventory / Loadouts',
+                'Item carried',
+                "{$item['name']} is now carried for tasks, crimes, or events.",
+                'item',
+                'medium',
+                [],
+                [[
+                    'label' => 'Watch capacity',
+                    'description' => 'Carried task items use carry units and can add suspicion if suspicious.'
+                ]]
+            ),
+        ];
     }
 
     public function store(array $user, string $characterType, int $characterId, int $itemId): array
@@ -219,7 +257,11 @@ final class CharacterLoadoutService
             ->execute([$user['id'], $characterType, $characterId, $itemId]);
         Database::pdo()->prepare('UPDATE user_items SET current_location_type = \'owned\', holder_type = \'user\', holder_id = NULL, carried_slot = NULL, updated_at = NOW() WHERE user_id = ? AND item_definition_id = ?')
             ->execute([$user['id'], $itemId]);
-        return ['message' => 'Item returned to owned inventory.', 'loadout' => $this->forCharacter($user, $characterType, $characterId)];
+        return [
+            'message' => 'Item returned to owned inventory.',
+            'loadout' => $this->forCharacter($user, $characterType, $characterId),
+            'outcome_payload' => (new OutcomePayloadService())->action('Inventory / Loadouts', 'Carried item removed', 'Item returned to owned inventory.', 'item', 'medium'),
+        ];
     }
 
     private function equippedItems(int $userId, string $characterType, int $characterId): array

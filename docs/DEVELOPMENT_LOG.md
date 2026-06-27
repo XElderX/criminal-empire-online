@@ -1,3 +1,23 @@
+## 2026-06-26 — Criminal Empire Online v0.7.4.1 — Global UX, Notifications & Outcome Focus Polish — Quick Crime Decision Modal Hotfix
+
+- Bumped backend/frontend version metadata to `0.7.4.1` with release title `Criminal Empire Online v0.7.4.1 — Global UX, Notifications & Outcome Focus Polish — Quick Crime Decision Modal Hotfix`.
+- Improved the v0.7.4 outcome overlay so Quick Crime runs with pending street events render decision choices directly inside the modal.
+- Added a focused decision panel for events such as `Target Notices Something`, including choice labels, descriptions, and effect hints.
+- The decision panel posts to the existing Quick Crime decision endpoint and lets the global outcome system replace the modal with the resolved report.
+- Added a safe `Decide later` path and kept the page-level active-event card for compatibility.
+- Added v0.7.4.1 tests and updated documentation.
+
+## 2026-06-26 — Criminal Empire Online v0.7.4 — Global UX, Notifications & Outcome Focus Polish
+
+- Bumped backend/frontend version metadata to `0.7.4` with release title `Criminal Empire Online v0.7.4 — Global UX, Notifications & Outcome Focus Polish`.
+- Added a global notification system and centralized frontend notification system with toast notifications, notification bell, notification drawer, read/unread handling, and aria-live announcements.
+- Added focused outcome reports with dimmed background, Escape close, click-outside dismiss for safe reports, and Continue behavior for critical reports.
+- Crime, Quick Crime, Dirty Job, Travel, Shop, Street Job, and Inventory/Loadout action responses now expose structured outcome/notification payloads where practical.
+- Added reusable UX components: `AppTabs`, loading skeletons, polished empty/error states, warning callouts, info highlights, stat deltas, next-action cards, and outcome badges.
+- Added frontend response adapter so action responses produce consistent toasts or cinematic reports without each page parsing raw text.
+- Improved tab consistency and empty/loading/error state foundations across the app while preserving existing pages and gameplay systems.
+- Added v0.7.4 unit/contract tests and refreshed documentation.
+
 ## 2026-06-20 — Criminal Empire Online v0.7.3 — Loadout UX & Carry Inventory Polish
 
 - Bumped backend/frontend version metadata to `0.7.3` with release title `Criminal Empire Online v0.7.3 — Loadout UX & Carry Inventory Polish`.

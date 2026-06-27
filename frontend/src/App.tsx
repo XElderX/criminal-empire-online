@@ -5,6 +5,7 @@ import { ContextualHelpButton } from './components/ContextualHelpButton';
 import { PlayerStats } from './components/PlayerStats';
 import { TutorialPanel } from './components/TutorialPanel';
 import { UpdateNoticeModal } from './components/UpdateNoticeModal';
+import { NotificationProvider } from './components/notifications/NotificationProvider';
 import { AdminPage } from './pages/AdminPage';
 import { AuthPage } from './pages/AuthPage';
 import { CrimesPage } from './pages/CrimesPage';
@@ -162,7 +163,7 @@ export function App() {
     return (
       <main className="auth-shell">
         <section className="card auth-card">
-          <p className="eyebrow">Criminal Empire Online v 0.7.3</p>
+          <p className="eyebrow">Criminal Empire Online v 0.7.4.1</p>
           <h1>Loading city state…</h1>
         </section>
       </main>
@@ -174,7 +175,7 @@ export function App() {
   }
 
   return (
-    <>
+    <NotificationProvider>
       <GameLayout
         user={user}
         page={page}
@@ -209,7 +210,7 @@ export function App() {
           setTutorialOpen(false);
         }}
       />
-    </>
+    </NotificationProvider>
   );
 }
 

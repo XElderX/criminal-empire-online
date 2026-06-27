@@ -117,6 +117,22 @@ final class ShopTransactionService
                 'cash_remaining' => $paymentType === 'cash' ? (int) $freshUser['cash'] - $total : (int) $freshUser['cash'],
                 'dirty_money_remaining' => $paymentType === 'dirty_money' ? (int) $freshUser['dirty_money'] - $total : (int) ($freshUser['dirty_money'] ?? 0),
                 'shop' => ['slug' => $shop['slug'], 'name' => $shop['name']],
+                'outcome_payload' => (new OutcomePayloadService())->action(
+                    'Shops',
+                    'Purchase complete',
+                    "Purchased {$quantity} × {$item['item_name']}.",
+                    (int) ($item['heat_risk'] ?? 0) > 0 ? 'warning' : 'shop',
+                    (int) ($item['heat_risk'] ?? 0) > 3 ? 'high' : 'medium',
+                    [
+                        'cash' => $paymentType === 'cash' ? -$total : 0,
+                        'dirty_money' => $paymentType === 'dirty_money' ? -$total : 0,
+                        'heat' => (int) ($item['heat_risk'] ?? 0),
+                    ],
+                    [[
+                        'label' => 'Assign the item',
+                        'description' => 'Open Inventory / Loadouts to equip or carry this gear.'
+                    ]]
+                ),
             ];
         } catch (Throwable $exception) {
             if ($pdo->inTransaction()) {
@@ -214,6 +230,18 @@ final class ShopTransactionService
                 'total_price' => $total,
                 'cash_after_sale' => (int) $freshUser['cash'] + $total,
                 'shop' => ['slug' => $shop['slug'], 'name' => $shop['name']],
+                'outcome_payload' => (new OutcomePayloadService())->action(
+                    'Shops',
+                    'Sale complete',
+                    "Sold {$quantity} × {$definition['name']}.",
+                    'money',
+                    'medium',
+                    ['cash' => $total],
+                    [[
+                        'label' => 'Watch heat',
+                        'description' => 'Fences and shady sales can matter if police pressure rises.'
+                    ]]
+                ),
             ];
         } catch (Throwable $exception) {
             if ($pdo->inTransaction()) {

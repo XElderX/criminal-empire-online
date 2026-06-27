@@ -12,6 +12,13 @@ export function clearToken(): void {
   localStorage.removeItem('token');
 }
 
+function emitApiFeedback(path: string, method: string, ok: boolean, data: unknown, error?: string): void {
+  if (typeof window === 'undefined') return;
+  window.dispatchEvent(new CustomEvent('ceo:api-feedback', {
+    detail: { path, method, ok, data, error },
+  }));
+}
+
 export async function api<T>(
   path: string,
   options: RequestInit = {},
@@ -27,6 +34,7 @@ export async function api<T>(
     headers.Authorization = `Bearer ${token}`;
   }
 
+  const method = String(options.method || 'GET').toUpperCase();
   const response = await fetch(`${API_URL}${path}`, {
     ...options,
     headers,
@@ -35,8 +43,11 @@ export async function api<T>(
   const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    throw new Error(data.message || 'API request failed.');
+    const message = typeof data?.message === 'string' ? data.message : 'API request failed.';
+    emitApiFeedback(path, method, false, data, message);
+    throw new Error(message);
   }
 
+  emitApiFeedback(path, method, true, data);
   return data as T;
 }

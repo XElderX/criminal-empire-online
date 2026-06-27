@@ -338,6 +338,22 @@ final class QuickCrimeService
                 return [
                     'message' => 'Quick crime started, but a street event needs a decision.',
                     'run' => $this->hydrateRun($run, $event),
+                    'outcome_payload' => (new OutcomePayloadService())->action(
+                        'Quick Crimes',
+                        (string) ($event['title'] ?? 'Quick Crime Event'),
+                        (string) ($event['description'] ?? 'A street event needs your decision before the result is known.'),
+                        'warning',
+                        'high',
+                        [],
+                        [[
+                            'label' => 'Choose in modal',
+                            'description' => 'Pick one of the response buttons in this focused report to resolve the quick crime.'
+                        ]],
+                        [[
+                            'label' => 'Decision required',
+                            'kind' => 'warning'
+                        ]]
+                    ),
                 ];
             }
 
@@ -347,6 +363,7 @@ final class QuickCrimeService
             return [
                 'message' => 'Quick crime resolved.',
                 'run' => $result,
+                'outcome_payload' => (new OutcomePayloadService())->crime('Quick Crime', $result, $result['result_text'] ?? 'Quick crime resolved.'),
             ];
         } catch (Throwable $exception) {
             $pdo->rollBack();
@@ -418,6 +435,7 @@ final class QuickCrimeService
             return [
                 'message' => 'Quick crime event resolved.',
                 'run' => $result,
+                'outcome_payload' => (new OutcomePayloadService())->crime('Quick Crime', $result, $result['result_text'] ?? 'Quick crime event resolved.'),
             ];
         } catch (Throwable $exception) {
             $pdo->rollBack();
@@ -467,6 +485,7 @@ final class QuickCrimeService
             return [
                 'message' => 'Quick crime resolved.',
                 'run' => $result,
+                'outcome_payload' => (new OutcomePayloadService())->crime('Quick Crime', $result, $result['result_text'] ?? 'Quick crime resolved.'),
             ];
         } catch (Throwable $exception) {
             $pdo->rollBack();
