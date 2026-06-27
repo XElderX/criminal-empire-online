@@ -10,12 +10,12 @@ use Tests\TestRunner;
 $runner = new TestRunner();
 $root = dirname(__DIR__, 2);
 
-$runner->test('Version is v0.7.4.1', function () use ($runner): void {
-    $runner->assertSame('0.7.4.1', GameConfig::VERSION);
+$runner->test('Version is v0.7.4.2', function () use ($runner): void {
+    $runner->assertSame('0.7.4.2', GameConfig::VERSION);
 });
 
 $runner->test('Release title identifies global UX outcome focus polish', function () use ($runner): void {
-    $runner->assertContains('Global UX, Notifications & Outcome Focus Polish', GameConfig::RELEASE_TITLE);
+    $runner->assertContains('Recruitment Identity Diversity Hotfix', GameConfig::RELEASE_TITLE);
 });
 
 $runner->test('Outcome payload service creates structured action payloads', function () use ($runner): void {

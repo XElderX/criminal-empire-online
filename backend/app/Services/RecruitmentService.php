@@ -600,6 +600,23 @@ final class RecruitmentService
         array $candidate,
         array $excludedKeys
     ): array {
+        if (!$this->portraitMatchesCandidateGender($candidate)) {
+            Database::pdo()->prepare(
+                <<<'SQL'
+                    UPDATE npcs
+                    SET
+                        portrait_set_key = NULL,
+                        portrait_stage_cache = NULL,
+                        portrait_focal_x = 50,
+                        portrait_focal_y = 42,
+                        updated_at = NOW()
+                    WHERE id = ?
+                SQL
+            )->execute([(int) $candidate['npc_id']]);
+            $candidate['portrait_set_key'] = null;
+            $candidate['portrait_stage_cache'] = null;
+        }
+
         if (empty($candidate['portrait_set_key'])) {
             $npc = (new PortraitAssignmentService())->assignToNpc(
                 (int) $candidate['npc_id'],
@@ -618,6 +635,31 @@ final class RecruitmentService
         }
 
         return $candidate;
+    }
+
+    /**
+     * @param array<string, mixed> $candidate
+     */
+    private function portraitMatchesCandidateGender(array $candidate): bool
+    {
+        if (empty($candidate['portrait_set_key'])) {
+            return true;
+        }
+
+        $manifest = new PortraitManifestService();
+        $set = $manifest->find((string) $candidate['portrait_set_key']);
+
+        if ($set === null) {
+            return false;
+        }
+
+        $candidateGender = $manifest->normalizeGender($candidate['gender'] ?? null);
+
+        if ($candidateGender === null) {
+            return true;
+        }
+
+        return ($set['gender'] ?? null) === $candidateGender;
     }
 
     /**
@@ -830,18 +872,12 @@ final class RecruitmentService
      */
     private function createGeneratedRecruitableNpc(): array
     {
-        $profiles = [
-            ['first' => 'Arin', 'last' => 'Kade', 'nick' => 'Side Street', 'gender' => 'male'],
-            ['first' => 'Mira', 'last' => 'Vale', 'nick' => 'Short Fuse', 'gender' => 'female'],
-            ['first' => 'Jon', 'last' => 'Hale', 'nick' => 'Quickstep', 'gender' => 'male'],
-            ['first' => 'Nina', 'last' => 'Rook', 'nick' => 'Low Key', 'gender' => 'female'],
-            ['first' => 'Drew', 'last' => 'Cross', 'nick' => 'Night Shift', 'gender' => 'male'],
-            ['first' => 'Tess', 'last' => 'Marlow', 'nick' => 'Back Alley', 'gender' => 'female'],
-        ];
-        $profile = $profiles[array_rand($profiles)];
+        $gender = $this->nextGeneratedRecruitGender();
+        $profile = $this->generatedRecruitProfile($gender);
         $territoryId = $this->randomTerritoryId();
         $personalCash = $this->randomNumber(20, 150);
         $stats = $this->generatedStats();
+        $occupation = $this->generatedRecruitOccupation();
 
         $insert = Database::pdo()->prepare(
             <<<'SQL'
@@ -902,9 +938,9 @@ final class RecruitmentService
             $profile['nick'],
             $this->randomNumber(19, 44),
             $profile['gender'],
-            'A locally generated recruitable NPC created by world processing.',
+            'A locally generated recruitable NPC created by world processing. Recruitment identity diversity was refreshed in v0.7.4.2.',
             'A city resident whose life can now intersect with the crew.',
-            'Unemployed local',
+            $occupation,
             $territoryId,
             $personalCash,
             $stats['reputation'],
@@ -930,6 +966,137 @@ final class RecruitmentService
         $statement->execute([$npcId]);
 
         return $statement->fetch() ?: [];
+    }
+
+    private function nextGeneratedRecruitGender(): string
+    {
+        $statement = Database::pdo()->query(
+            <<<'SQL'
+                SELECT LOWER(COALESCE(npc.gender, 'unknown')) AS gender, COUNT(*) AS total
+                FROM recruitment_candidates candidate
+                JOIN npcs npc ON npc.id = candidate.npc_id
+                WHERE candidate.status = 'available'
+                  AND candidate.available_from <= NOW()
+                  AND (candidate.expires_at IS NULL OR candidate.expires_at > NOW())
+                GROUP BY LOWER(COALESCE(npc.gender, 'unknown'))
+            SQL
+        );
+
+        $counts = [
+            'male' => 0,
+            'female' => 0,
+        ];
+
+        foreach ($statement->fetchAll() as $row) {
+            if (isset($counts[$row['gender']])) {
+                $counts[$row['gender']] = (int) $row['total'];
+            }
+        }
+
+        if ($counts['male'] < $counts['female']) {
+            return 'male';
+        }
+
+        if ($counts['female'] < $counts['male']) {
+            return 'female';
+        }
+
+        return $this->randomNumber(0, 1) === 0 ? 'male' : 'female';
+    }
+
+    /**
+     * @return array{first: string, last: string, nick: string, gender: string}
+     */
+    private function generatedRecruitProfile(string $gender): array
+    {
+        $firstNames = [
+            'male' => [
+                'Darius', 'Leon', 'Viktor', 'Tomas', 'Rafi', 'Owen',
+                'Marcus', 'Caleb', 'Roman', 'Elias', 'Milo', 'Jonas',
+                'Kai', 'Silas', 'Niko', 'Dante', 'Reed', 'Goran',
+            ],
+            'female' => [
+                'Lena', 'Mara', 'Irena', 'Sofia', 'Dana', 'Vera',
+                'Amara', 'Kira', 'Nadia', 'Zara', 'Talia', 'Petra',
+                'Mila', 'Anya', 'Eliza', 'Rosa', 'Selma', 'Liv',
+            ],
+        ];
+        $lastNames = [
+            'Venn', 'Cross', 'Rook', 'Vale', 'Marlow', 'Dusk', 'Kade',
+            'Harlow', 'Sable', 'Locke', 'Mercer', 'Dray', 'Volk', 'Stone',
+            'Wex', 'Calder', 'Frost', 'Quinn', 'Bishop', 'Arden', 'Moss',
+            'Ridge', 'Holt', 'Slate', 'Nox', 'Keller',
+        ];
+        $nicknames = [
+            'Axle', 'Low Key', 'Short Fuse', 'Side Street', 'Quickstep',
+            'Night Shift', 'Back Alley', 'Sparks', 'Latch', 'Noon Smoke',
+            'Quiet Hand', 'Switch', 'Crowbar', 'Blue Note', 'Iron Luck',
+            'Soft Step', 'Roadsign', 'Needle', 'Gravel', 'Moth', 'Northside',
+            'Cold Deck', 'Patch', 'Red Line', 'Ghost Light', 'Lockjaw',
+        ];
+
+        $gender = in_array($gender, ['male', 'female'], true) ? $gender : 'male';
+
+        for ($attempt = 0; $attempt < 40; $attempt++) {
+            $profile = [
+                'first' => $firstNames[$gender][array_rand($firstNames[$gender])],
+                'last' => $lastNames[array_rand($lastNames)],
+                'nick' => $nicknames[array_rand($nicknames)],
+                'gender' => $gender,
+            ];
+
+            if (!$this->profileAlreadyExists($profile)) {
+                return $profile;
+            }
+        }
+
+        return [
+            'first' => $firstNames[$gender][array_rand($firstNames[$gender])],
+            'last' => $lastNames[array_rand($lastNames)],
+            'nick' => $nicknames[array_rand($nicknames)] . ' ' . $this->randomNumber(2, 99),
+            'gender' => $gender,
+        ];
+    }
+
+    /**
+     * @param array{first: string, last: string, nick: string, gender: string} $profile
+     */
+    private function profileAlreadyExists(array $profile): bool
+    {
+        $statement = Database::pdo()->prepare(
+            <<<'SQL'
+                SELECT COUNT(*)
+                FROM npcs
+                WHERE first_name = ?
+                  AND last_name = ?
+                  AND nickname = ?
+            SQL
+        );
+        $statement->execute([
+            $profile['first'],
+            $profile['last'],
+            $profile['nick'],
+        ]);
+
+        return (int) $statement->fetchColumn() > 0;
+    }
+
+    private function generatedRecruitOccupation(): string
+    {
+        $occupations = [
+            'Unemployed local',
+            'Garage hand',
+            'Night-shift porter',
+            'Dock runner',
+            'Bar lookout',
+            'Scrapyard helper',
+            'Market courier',
+            'Warehouse temp',
+            'Street mechanic',
+            'Club door watcher',
+        ];
+
+        return $occupations[array_rand($occupations)];
     }
 
     /**

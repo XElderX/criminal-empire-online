@@ -1,4 +1,12 @@
-# Criminal Empire Online v0.7.4.1 — Global UX, Notifications & Outcome Focus Polish — Quick Crime Decision Modal Hotfix
+# Criminal Empire Online v0.7.4.2 — Recruitment Identity Diversity Hotfix
+
+## v0.7.4.2 highlights
+
+- Added recruitment identity diversity hotfix.
+- Generated recruitment candidates now use a much larger first-name, surname, nickname, and occupation pool.
+- New candidate generation balances male/female recruits against the visible available pool.
+- Existing available generated recruits are renamed/rebalanced and their portraits are reassigned through migration.
+- Added tests and refreshed documentation.
 
 ## v0.7.4.1 highlights
 
