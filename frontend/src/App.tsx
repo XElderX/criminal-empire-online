@@ -163,7 +163,7 @@ export function App() {
     return (
       <main className="auth-shell">
         <section className="card auth-card">
-          <p className="eyebrow">Criminal Empire Online v 0.7.4.1</p>
+          <p className="eyebrow">Criminal Empire Online v 0.7.4.2</p>
           <h1>Loading city state…</h1>
         </section>
       </main>

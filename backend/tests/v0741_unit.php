@@ -9,9 +9,9 @@ use Tests\TestRunner;
 $runner = new TestRunner();
 $root = dirname(__DIR__, 2);
 
-$runner->test('Version is v0.7.4.1', function () use ($runner): void {
-    $runner->assertSame('0.7.4.1', GameConfig::VERSION);
-    $runner->assertContains('Quick Crime Decision Modal Hotfix', GameConfig::RELEASE_TITLE);
+$runner->test('Version is v0.7.4.2', function () use ($runner): void {
+    $runner->assertSame('0.7.4.2', GameConfig::VERSION);
+    $runner->assertContains('Recruitment Identity Diversity Hotfix', GameConfig::RELEASE_TITLE);
 });
 
 $runner->test('Quick crime decision outcome uses event title and modal language', function () use ($runner, $root): void {

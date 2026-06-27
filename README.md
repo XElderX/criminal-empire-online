@@ -1,4 +1,12 @@
-# Criminal Empire Online v0.7.4.1 — Global UX, Notifications & Outcome Focus Polish — Quick Crime Decision Modal Hotfix
+# Criminal Empire Online v0.7.4.2 — Recruitment Identity Diversity Hotfix
+
+## v0.7.4.2 highlights
+
+- Fixes recruitment candidate repetition by replacing the tiny six-profile generated recruit pool with balanced male/female identity generation.
+- Generated recruits now use broader first-name, surname, nickname, and occupation pools.
+- Existing still-available generated recruits are refreshed by migration so the Recruitment page no longer shows the same names/portraits repeatedly.
+- Portrait assignment now repairs gender/portrait mismatches before rendering candidates.
+- Preserves v0.7.4.1 Quick Crime decision modal behavior, v0.7.4 notifications/outcome overlays, v0.7.3 Loadout Builder, map shops, tutorial, travel, and Street Job NPC assignment rules.
 
 ## v0.7.4.1 highlights
 

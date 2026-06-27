@@ -1,4 +1,10 @@
-# Criminal Empire Online v0.7.4.1 API
+# Criminal Empire Online v0.7.4.2 API
+
+## v0.7.4.2 Recruitment Identity Diversity Hotfix
+
+- Recruitment candidate generation now uses balanced male/female profile selection and larger first-name, surname, nickname, and occupation pools.
+- Migration `021_v0742_recruitment_identity_diversity.sql` refreshes still-available generated recruits and clears their portrait keys so the existing portrait assignment system assigns matching portraits.
+- No recruitment API route changed; `GET /api/recruitment` continues to return candidates, but generated candidates should now be more varied and less gender-skewed.
 
 ## v0.7.4.1 Quick Crime Decision Modal Hotfix
 

@@ -1,3 +1,12 @@
+## 2026-06-27 — Criminal Empire Online v0.7.4.2 — Recruitment Identity Diversity Hotfix
+
+- Bumped backend/frontend version metadata to `0.7.4.2` with release title `Criminal Empire Online v0.7.4.2 — Recruitment Identity Diversity Hotfix`.
+- Replaced the tiny generated recruit profile pool with broader first-name, surname, nickname, and occupation pools.
+- New generated recruits now balance male/female identity selection against the currently available recruitment pool.
+- Added a migration to refresh still-available generated recruits so duplicate names like repeated `Nina “Low Key” Rook` and `Tess “Back Alley” Marlow` are cleaned up for existing saves.
+- Recruitment portrait assignment now repairs gender/portrait mismatches before showing candidates.
+- Added v0.7.4.2 tests and updated documentation.
+
 ## 2026-06-26 — Criminal Empire Online v0.7.4.1 — Global UX, Notifications & Outcome Focus Polish — Quick Crime Decision Modal Hotfix
 
 - Bumped backend/frontend version metadata to `0.7.4.1` with release title `Criminal Empire Online v0.7.4.1 — Global UX, Notifications & Outcome Focus Polish — Quick Crime Decision Modal Hotfix`.
